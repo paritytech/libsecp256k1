@@ -1,5 +1,7 @@
 pub struct Field {
     n: [u32; 10],
+    magnitude: u32,
+    normalized: bool,
 }
 
 impl Field {
@@ -17,7 +19,36 @@ impl Field {
                 (d6 >> 16) | ((d7 & 0x3ff) << 16),
                 (d7 >> 10)
             ],
+            magnitude: 1,
+            normalized: true,
         }
+    }
+
+    fn verify(&self) -> bool {
+        let m = if self.normalized { 1 } else { 2 } * a.magnitude;
+        let mut r = true;
+        r &&= (self.n[0] <= 0x3ffffff * m);
+        r &&= (self.n[1] <= 0x3ffffff * m);
+        r &&= (self.n[2] <= 0x3ffffff * m);
+        r &&= (self.n[3] <= 0x3ffffff * m);
+        r &&= (self.n[4] <= 0x3ffffff * m);
+        r &&= (self.n[5] <= 0x3ffffff * m);
+        r &&= (self.n[6] <= 0x3ffffff * m);
+        r &&= (self.n[7] <= 0x3ffffff * m);
+        r &&= (self.n[8] <= 0x3ffffff * m);
+        r &&= (self.n[9] <= 0x03fffff * m);
+        r &&= (self.magnitude >= 0);
+        r &&= (self.magnitude <= 32);
+        if self.normalized {
+            r &&= self.magnitude <= 1;
+            if r && (self.n[9] == 0x03fffff) {
+                let mid = self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2];
+                if mid == 0x3ffffff {
+                    r &&= ((self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) <= 0x3ffffff)
+                }
+            }
+        }
+        r
     }
 
     /// Normalize a field element.
@@ -68,6 +99,9 @@ impl Field {
         t9 &= 0x03fffff;
 
         self.n = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9];
+        self.magnitude = 1;
+        self.normalized = true;
+        debug_assert!(self.verify());
     }
 
     /// Weakly normalize a field element: reduce it magnitude to 1,
@@ -100,6 +134,8 @@ impl Field {
         debug_assert!(t9 >> 23 == 0);
 
         self.n = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9];
+        self.magnitude = 1;
+        debug_assert!(self.verify());
     }
 
     /// Normalize a field element, without constant-time guarantee.
@@ -151,6 +187,9 @@ impl Field {
         }
 
         self.n = [t0, t1, t2, t3, t4, t5, t6, t7, t8, t9];
+        self.magnitude = 1;
+        self.normalized = true;
+        debug_assert!(self.verify());
     }
 
     /// Verify whether a field element represents zero i.e. would
@@ -248,16 +287,31 @@ impl Field {
     /// element is normalized.
     pub fn set_int(&mut self, a: u32) {
         self.n = [a, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        self.magnitude = 1;
+        self.normalized = true;
+        debug_assert!(self.verify());
     }
 
     /// Verify whether a field element is zero. Requires the input to
     /// be normalized.
     pub fn is_zero(&self) -> bool {
+        debug_assert!(self.normalized);
+        debug_assert!(self.verify());
         return (self.n[0] | self.n[1] | self.n[2] | self.n[3] | self.n[4] | self.n[5] | self.n[6] | self.n[7] | self.n[8] | self.n[9]) == 0;
+    }
+
+    /// Check the "oddness" of a field element. Requires the input to
+    /// be normalized.
+    pub fn is_odd(&self) -> bool {
+        debug_assert!(self.normalized);
+        debug_assert!(self.verify());
+        return self.n[0] & 1 != 0;
     }
 
     /// Sets a field element equal to zero, initializing all fields.
     pub fn clear(&mut self) {
+        self.magnitude = 0;
+        self.normalized = true;
         self.n = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     }
 
@@ -279,13 +333,20 @@ impl Field {
             return false;
         }
 
+        self.magnitude = 1;
+        self.normalized = true;
+        debug_assert!(self.verify());
+
         return true;
     }
 
     /// Convert a field element to a 32-byte big endian
     /// value. Requires the input to be normalized.
     pub fn b32(&self) -> [u8; 32] {
-        let mut ret = [0u8; 32];
+        debug_assert!(self.normalized);
+        debug_assert!(self.verify());
+
+        let mut r = [0u8; 32];
 
         r[0] = ((self.n[9] >> 14) & 0xff) as u8;
         r[1] = ((self.n[9] >> 6) & 0xff) as u8;
@@ -320,12 +381,79 @@ impl Field {
         r[30] = ((self.n[0] >> 8) & 0xff) as u8;
         r[31] = (self.n[0] & 0xff) as u8;
 
-        ret
+        r
+    }
+
+    /// Set a field element equal to the additive inverse of
+    /// another. Takes a maximum magnitude of the input as an
+    /// argument. The magnitude of the output is one higher.
+    pub fn negate(&mut self, other: &Field, m: u32) {
+        debug_assert!(self.magnitude <= m);
+        debug_assert!(self.verify());
+
+        self.n[0] = 0x3fffc2f * 2 * (m + 1) - other.n[0];
+        self.n[1] = 0x3ffffbf * 2 * (m + 1) - other.n[1];
+        self.n[2] = 0x3ffffff * 2 * (m + 1) - other.n[2];
+        self.n[3] = 0x3ffffff * 2 * (m + 1) - other.n[3];
+        self.n[4] = 0x3ffffff * 2 * (m + 1) - other.n[4];
+        self.n[5] = 0x3ffffff * 2 * (m + 1) - other.n[5];
+        self.n[6] = 0x3ffffff * 2 * (m + 1) - other.n[6];
+        self.n[7] = 0x3ffffff * 2 * (m + 1) - other.n[7];
+        self.n[8] = 0x3ffffff * 2 * (m + 1) - other.n[8];
+        self.n[9] = 0x03fffff * 2 * (m + 1) - other.n[9];
+
+        self.magnitude = m + 1;
+        self.normalized = false;
+        debug_assert!(self.verify());
+    }
+
+    /// Multiplies the passed field element with a small integer
+    /// constant. Multiplies the magnitude by that small integer.
+    pub fn mul_int(&mut self, a: u32) {
+        self.n[0] *= a;
+        self.n[1] *= a;
+        self.n[2] *= a;
+        self.n[3] *= a;
+        self.n[4] *= a;
+        self.n[5] *= a;
+        self.n[6] *= a;
+        self.n[7] *= a;
+        self.n[8] *= a;
+        self.n[9] *= a;
+
+        self.magnitude *= a;
+        self.normalized = false;
+        debug_assert!(self.verify());
+    }
+
+    /// Adds a field element to another. The result has the sum of the
+    /// inputs' magnitudes as magnitude.
+    pub fn add(&mut self, other: &Field) {
+        self.n[0] += other.n[0];
+        self.n[1] += other.n[1];
+        self.n[2] += other.n[2];
+        self.n[3] += other.n[3];
+        self.n[4] += other.n[4];
+        self.n[5] += other.n[5];
+        self.n[6] += other.n[6];
+        self.n[7] += other.n[7];
+        self.n[8] += other.n[8];
+        self.n[9] += other.n[9];
+
+        self.magnitude += other.magnitude;
+        self.normalized = false;
+        debug_assert!(self.verify());
     }
 }
 
 impl Ord for Field {
     fn cmp(&self, other: &Field) -> Ordering {
+        // Variable time compare implementation.
+        debug_assert!(self.normalized);
+        debug_assert!(other.normalized);
+        debug_assert!(self.verify());
+        debug_assert!(other.verify());
+
         for i in (0..10).reverse() {
             if (self.n[i] > other.n[i]) {
                 return Ordering::Greater;
