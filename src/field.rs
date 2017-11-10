@@ -464,6 +464,12 @@ impl Field {
         return Ordering::Equal;
     }
 
+    pub fn eq_var(&self, other: &Field) -> bool {
+        let mut na = self.negate(1);
+        na += other;
+        return na.normalizes_to_zero_var();
+    }
+
     fn mul_inner(&mut self, a: &Field, b: &Field) {
         const M: u64 = 0x3ffffff;
         const R0: u64 = 0x3d10;
