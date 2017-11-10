@@ -33,24 +33,24 @@ impl Field {
     fn verify(&self) -> bool {
         let m = if self.normalized { 1 } else { 2 } * a.magnitude;
         let mut r = true;
-        r &&= (self.n[0] <= 0x3ffffff * m);
-        r &&= (self.n[1] <= 0x3ffffff * m);
-        r &&= (self.n[2] <= 0x3ffffff * m);
-        r &&= (self.n[3] <= 0x3ffffff * m);
-        r &&= (self.n[4] <= 0x3ffffff * m);
-        r &&= (self.n[5] <= 0x3ffffff * m);
-        r &&= (self.n[6] <= 0x3ffffff * m);
-        r &&= (self.n[7] <= 0x3ffffff * m);
-        r &&= (self.n[8] <= 0x3ffffff * m);
-        r &&= (self.n[9] <= 0x03fffff * m);
-        r &&= (self.magnitude >= 0);
-        r &&= (self.magnitude <= 32);
+        r = r && (self.n[0] <= 0x3ffffff * m);
+        r = r && (self.n[1] <= 0x3ffffff * m);
+        r = r && (self.n[2] <= 0x3ffffff * m);
+        r = r && (self.n[3] <= 0x3ffffff * m);
+        r = r && (self.n[4] <= 0x3ffffff * m);
+        r = r && (self.n[5] <= 0x3ffffff * m);
+        r = r && (self.n[6] <= 0x3ffffff * m);
+        r = r && (self.n[7] <= 0x3ffffff * m);
+        r = r && (self.n[8] <= 0x3ffffff * m);
+        r = r && (self.n[9] <= 0x03fffff * m);
+        r = r && (self.magnitude >= 0);
+        r = r && (self.magnitude <= 32);
         if self.normalized {
-            r &&= self.magnitude <= 1;
+            r = r && self.magnitude <= 1;
             if r && (self.n[9] == 0x03fffff) {
                 let mid = self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2];
                 if mid == 0x3ffffff {
-                    r &&= ((self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) <= 0x3ffffff)
+                    r = r && ((self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) <= 0x3ffffff)
                 }
             }
         }
