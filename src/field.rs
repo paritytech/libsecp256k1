@@ -451,6 +451,26 @@ impl Field {
         debug_assert!(self.verify());
     }
 
+    /// Compare two field elements. Requires both inputs to be
+    /// normalized.
+    pub fn cmp_var(&self, other: &Field) -> Ordering {
+        // Variable time compare implementation.
+        debug_assert!(self.normalized);
+        debug_assert!(other.normalized);
+        debug_assert!(self.verify());
+        debug_assert!(other.verify());
+
+        for i in (0..10).reverse() {
+            if (self.n[i] > other.n[i]) {
+                return Ordering::Greater;
+            }
+            if (self.n[i] < other.n[i]) {
+                return Ordering::Less;
+            }
+        }
+        return Ordering::Equal;
+    }
+
     fn mul_inner(&mut self, a: &Field, b: &Field) {
         const M: u32 = 0x3ffffff;
         const R0: u32 = 0x3d10;
@@ -822,10 +842,9 @@ impl Field {
         debug_assert_bits!(a.n[8], 30);
         debug_assert_bits!(a.n[9], 26);
 
-        /** [... a b c] is a shorthand for ... + a<<52 + b<<26 + c<<0 mod n.
-         *  px is a shorthand for sum(a.n[i]*a.n[x-i], i=0..x).
-         *  Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
-         */
+        // [... a b c] is a shorthand for ... + a<<52 + b<<26 + c<<0 mod n.
+        // px is a shorthand for sum(a.n[i]*a.n[x-i], i=0..x).
+        // Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
 
         d = ((a.n[0]*2 as u64) * (a.n[9] as u64)).wrapping_add(
             (a.n[1]*2 as u64) * (a.n[8] as u64)).wrapping_add(
@@ -1086,7 +1105,7 @@ impl Field {
         self.n[1] = d & M; d >>= 26;
         debug_assert_bits!(self.n[1], 26);
         debug_assert_bits!(d, 27);
-        debug_assert!(d <= 0x4000000ULL);
+        debug_assert!(d <= 0x4000000);
         /* [r9 r8 r7 r6 r5 r4 r3 t2+d r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         d   += t2;
         debug_assert_bits!(d, 27);
@@ -1096,32 +1115,30 @@ impl Field {
         /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
     }
 
-
-}
-
-impl Ord for Field {
-    fn cmp(&self, other: &Field) -> Ordering {
-        // Variable time compare implementation.
-        debug_assert!(self.normalized);
-        debug_assert!(other.normalized);
+    /// Sets a field element to be the product of two others. Requires
+    /// the inputs' magnitudes to be at most 8. The output magnitude
+    /// is 1 (but not guaranteed to be normalized).
+    pub fn mul(&mut self, a: &Field, b: &Field) {
+        debug_assert!(a.magnitude <= 8);
+        debug_assert!(b.magnitude <= 8);
+        debug_assert!(a.verify());
+        debug_assert!(b.verify());
+        self.mul_inner(a, b);
+        self.magnitude = 1;
+        self.normalized = false;
         debug_assert!(self.verify());
-        debug_assert!(other.verify());
-
-        for i in (0..10).reverse() {
-            if (self.n[i] > other.n[i]) {
-                return Ordering::Greater;
-            }
-            if (self.n[i] < other.n[i]) {
-                return Ordering::Less;
-            }
-        }
-        return Ordering::Equal;
     }
-}
 
-impl PartialOrd for Field {
-    fn partial_cmp(&self, other: &Field) -> Option<Ordering> {
-        Some(self.cmp(other))
+    /// Sets a field element to be the square of another. Requires the
+    /// input's magnitude to be at most 8. The output magnitude is 1
+    /// (but not guaranteed to be normalized).
+    pub fn sqr(&mut self, a: &Field) {
+        debug_assert!(a.magnitude <= 8);
+        debug_assert!(a.verify());
+        self.sqr_inner(a);
+        self.magnitude = 1;
+        self.normalized = false;
+        debug_assert!(a.verify());
     }
 }
 
