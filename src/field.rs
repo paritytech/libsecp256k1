@@ -261,14 +261,14 @@ impl Field {
             return false;
         }
 
-        t1 = self.0[1];
-        t2 = self.0[2];
-        t3 = self.0[3];
-        t4 = self.0[4];
-        t5 = self.0[5];
-        t6 = self.0[6];
-        t7 = self.0[7];
-        t8 = self.0[8];
+        t1 = self.n[1];
+        t2 = self.n[2];
+        t3 = self.n[3];
+        t4 = self.n[4];
+        t5 = self.n[5];
+        t6 = self.n[6];
+        t7 = self.n[7];
+        t8 = self.n[8];
 
         t9 &= 0x03fffff;
         t1 += x << 6;
@@ -335,7 +335,7 @@ impl Field {
         self.n[8] = (a[5] as u32) | ((a[4] as u32) << 8) | ((a[3] as u32) << 16) | (((a[2] & 0x3) as u32) << 24);
         self.n[9] = (((a[2] >> 2) & 0x3f) as u32) | ((a[1] as u32) << 6) | ((a[0] as u32) << 14);
 
-        if self.n[9] == 0x03fffff && (self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2]) == 0x3ffffff && (self.n[1] + 0x40 + ((self.0 + 0x3d1) >> 26)) > 0x3ffffff {
+        if self.n[9] == 0x03fffff && (self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2]) == 0x3ffffff && (self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) > 0x3ffffff {
             return false;
         }
 
@@ -460,7 +460,7 @@ impl Field {
         debug_assert!(self.verify());
         debug_assert!(other.verify());
 
-        for i in (0..10).reverse() {
+        for i in (0..10).rev() {
             if (self.n[i] > other.n[i]) {
                 return Ordering::Greater;
             }
