@@ -285,7 +285,42 @@ impl Field {
     /// Convert a field element to a 32-byte big endian
     /// value. Requires the input to be normalized.
     pub fn b32(&self) -> [u8; 32] {
+        let mut ret = [0u8; 32];
 
+        r[0] = ((self.n[9] >> 14) & 0xff) as u8;
+        r[1] = ((self.n[9] >> 6) & 0xff) as u8;
+        r[2] = (((self.n[9] & 0x3f) << 2) | ((self.n[8] >> 24) & 0x3)) as u8;
+        r[3] = ((self.n[8] >> 16) & 0xff) as u8;
+        r[4] = ((self.n[8] >> 8) & 0xff) as u8;
+        r[5] = (self.n[8] & 0xff) as u8;
+        r[6] = ((self.n[7] >> 18) & 0xff) as u8;
+        r[7] = ((self.n[7] >> 10) & 0xff) as u8;
+        r[8] = ((self.n[7] >> 2) & 0xff) as u8;
+        r[9] = (((self.n[7] & 0x3) << 6) | ((self.n[6] >> 20) & 0x3f)) as u8;
+        r[10] = ((self.n[6] >> 12) & 0xff) as u8;
+        r[11] = ((self.n[6] >> 4) & 0xff) as u8;
+        r[12] = (((self.n[6] & 0xf) << 4) | ((self.n[5] >> 22) & 0xf)) as u8;
+        r[13] = ((self.n[5] >> 14) & 0xff) as u8;
+        r[14] = ((self.n[5] >> 6) & 0xff) as u8;
+        r[15] = (((self.n[5] & 0x3f) << 2) | ((self.n[4] >> 24) & 0x3)) as u8;
+        r[16] = ((self.n[4] >> 16) & 0xff) as u8;
+        r[17] = ((self.n[4] >> 8) & 0xff) as u8;
+        r[18] = (self.n[4] & 0xff) as u8;
+        r[19] = ((self.n[3] >> 18) & 0xff) as u8;
+        r[20] = ((self.n[3] >> 10) & 0xff) as u8;
+        r[21] = ((self.n[3] >> 2) & 0xff) as u8;
+        r[22] = (((self.n[3] & 0x3) << 6) | ((self.n[2] >> 20) & 0x3f)) as u8;
+        r[23] = ((self.n[2] >> 12) & 0xff) as u8;
+        r[24] = ((self.n[2] >> 4) & 0xff) as u8;
+        r[25] = (((self.n[2] & 0xf) << 4) | ((self.n[1] >> 22) & 0xf)) as u8;
+        r[26] = ((self.n[1] >> 14) & 0xff) as u8;
+        r[27] = ((self.n[1] >> 6) & 0xff) as u8;
+        r[28] = (((self.n[1] & 0x3f) << 2) | ((self.n[0] >> 24) & 0x3)) as u8;
+        r[29] = ((self.n[0] >> 16) & 0xff) as u8;
+        r[30] = ((self.n[0] >> 8) & 0xff) as u8;
+        r[31] = (self.n[0] & 0xff) as u8;
+
+        ret
     }
 }
 
