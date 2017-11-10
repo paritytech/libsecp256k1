@@ -1118,7 +1118,7 @@ impl Field {
     /// Sets a field element to be the square of another. Requires the
     /// input's magnitude to be at most 8. The output magnitude is 1
     /// (but not guaranteed to be normalized).
-    pub fn sqare_in_place(&mut self, a: &Field) {
+    pub fn sqr_in_place(&mut self, a: &Field) {
         debug_assert!(a.magnitude <= 8);
         debug_assert!(a.verify());
         self.sqr_inner(a);
@@ -1127,7 +1127,11 @@ impl Field {
         debug_assert!(a.verify());
     }
 
-
+    pub fn sqr(&self) -> Field {
+        let mut ret = Field::default();
+        ret.sqr_in_place(self);
+        ret
+    }
 }
 
 impl Default for Field {
