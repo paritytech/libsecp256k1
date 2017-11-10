@@ -7,33 +7,39 @@ macro_rules! debug_assert_bits {
     }
 }
 
+macro_rules! field_const {
+    ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
+        Field {
+            n: [
+                $d0 & 0x3ffffff,
+                ($d0 >> 26) | (($d1 & 0xfffff) << 6),
+                ($d1 >> 20) | (($d2 & 0x3fff) << 12),
+                ($d2 >> 14) | (($d3 & 0xff) << 8),
+                ($d3 >> 8)  | (($d4 & 0x3) << 24),
+                ($d4 >> 2) & 0x3ffffff,
+                ($d4 >> 28) | (($d5 & 0x3fffff) << 4),
+                ($d5 >> 22) | (($d6 & 0xffff) << 10),
+                ($d6 >> 16) | (($d7 & 0x3ff) << 16),
+                ($d7 >> 10)
+            ],
+            magnitude: 1,
+            normalized: true,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Field {
-    n: [u32; 10],
-    magnitude: u32,
-    normalized: bool,
+    pub(crate) n: [u32; 10],
+    pub(crate) magnitude: u32,
+    pub(crate) normalized: bool,
 }
 
 impl Field {
     pub fn new(
         d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
     ) -> Self {
-        Field {
-            n: [
-                d0 & 0x3ffffff,
-                (d0 >> 26) | ((d1 & 0xfffff) << 6),
-                (d1 >> 20) | ((d2 & 0x3fff) << 12),
-                (d2 >> 14) | ((d3 & 0xff) << 8),
-                (d3 >> 8)  | ((d4 & 0x3) << 24),
-                (d4 >> 2) & 0x3ffffff,
-                (d4 >> 28) | ((d5 & 0x3fffff) << 4),
-                (d5 >> 22) | ((d6 & 0xffff) << 10),
-                (d6 >> 16) | ((d7 & 0x3ff) << 16),
-                (d7 >> 10)
-            ],
-            magnitude: 1,
-            normalized: true,
-        }
+        field_const!(d7, d6, d5, d4, d3, d2, d1, d0)
     }
 
     fn verify(&self) -> bool {
