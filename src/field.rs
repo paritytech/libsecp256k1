@@ -518,7 +518,7 @@ impl Field {
         debug_assert_bits!(d, 64);
 
         /* [d 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
-        t9 = d & M; d >>= 26;
+        t9 = (d & M) as u32; d >>= 26;
         debug_assert_bits!(t9, 26);
         debug_assert_bits!(d, 38);
         /* [d t9 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
