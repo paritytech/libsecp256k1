@@ -852,7 +852,7 @@ impl Field {
             ((a.n[4]*2) as u64) * (a.n[5] as u64));
         debug_assert_bits!(d, 64);
         /* [d 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
-        t9 = d & M; d >>= 26;
+        t9 = (d & M) as u32; d >>= 26;
         debug_assert_bits!(t9, 26);
         debug_assert_bits!(d, 38);
         /* [d t9 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
@@ -873,7 +873,7 @@ impl Field {
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 61);
         /* [d u0 t9 0 0 0 0 0 0 0 0 c-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        t0 = c & M; c >>= 26; c += v0 * R1;
+        t0 = (c & M) as u32; c >>= 26; c += v0 * R1;
         debug_assert_bits!(t0, 26);
         debug_assert_bits!(c, 37);
         /* [d u0 t9 0 0 0 0 0 0 0 c-u0*R1 t0-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
@@ -895,7 +895,7 @@ impl Field {
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u1 0 t9 0 0 0 0 0 0 0 c-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        t1 = c & M; c >>= 26; c += v1 * R1;
+        t1 = (c & M) as u32; c >>= 26; c += v1 * R1;
         debug_assert_bits!(t1, 26);
         debug_assert_bits!(c, 38);
         /* [d u1 0 t9 0 0 0 0 0 0 c-u1*R1 t1-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
@@ -918,7 +918,7 @@ impl Field {
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u2 0 0 t9 0 0 0 0 0 0 c-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        t2 = c & M; c >>= 26; c += v2 * R1;
+        t2 = (c & M) as u32; c >>= 26; c += v2 * R1;
         debug_assert_bits!(t2, 26);
         debug_assert_bits!(c, 38);
         /* [d u2 0 0 t9 0 0 0 0 0 c-u2*R1 t2-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
@@ -940,7 +940,7 @@ impl Field {
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 64);
         /* [d u3 0 0 0 t9 0 0 0 0 0 c-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        t3 = c & M; c >>= 26; c += v3 * R1;
+        t3 = (c & M) as u32; c >>= 26; c += v3 * R1;
         debug_assert_bits!(t3, 26);
         debug_assert_bits!(c, 39);
         /* [d u3 0 0 0 t9 0 0 0 0 c-u3*R1 t3-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
@@ -963,7 +963,7 @@ impl Field {
         debug_assert_bits!(d, 36);
         debug_assert_bits!(c, 64);
         /* [d u4 0 0 0 0 t9 0 0 0 0 c-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        t4 = c & M; c >>= 26; c += v4 * R1;
+        t4 = (c & M) as u32; c >>= 26; c += v4 * R1;
         debug_assert_bits!(t4, 26);
         debug_assert_bits!(c, 39);
         /* [d u4 0 0 0 0 t9 0 0 0 c-u4*R1 t4-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
@@ -985,7 +985,7 @@ impl Field {
         debug_assert_bits!(d, 36);
         debug_assert_bits!(c, 64);
         /* [d u5 0 0 0 0 0 t9 0 0 0 c-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        t5 = c & M; c >>= 26; c += v5 * R1;
+        t5 = (c & M) as u32; c >>= 26; c += v5 * R1;
         debug_assert_bits!(t5, 26);
         debug_assert_bits!(c, 39);
         /* [d u5 0 0 0 0 0 t9 0 0 c-u5*R1 t5-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
@@ -1008,7 +1008,7 @@ impl Field {
         debug_assert_bits!(d, 35);
         debug_assert_bits!(c, 64);
         /* [d u6 0 0 0 0 0 0 t9 0 0 c-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        t6 = c & M; c >>= 26; c += v6 * R1;
+        t6 = (c & M) as u32; c >>= 26; c += v6 * R1;
         debug_assert_bits!(t6, 26);
         debug_assert_bits!(c, 39);
         /* [d u6 0 0 0 0 0 0 t9 0 c-u6*R1 t6-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
@@ -1032,7 +1032,7 @@ impl Field {
         /* debug_assert_bits!(c, 64); */
         debug_assert!(c <= 0x800001703FFFC2F7);
         /* [d u7 0 0 0 0 0 0 0 t9 0 c-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        t7 = c & M; c >>= 26; c += v7 * R1;
+        t7 = (c & M) as u32; c >>= 26; c += v7 * R1;
         debug_assert_bits!(t7, 26);
         debug_assert_bits!(c, 38);
         /* [d u7 0 0 0 0 0 0 0 t9 c-u7*R1 t7-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
