@@ -7,7 +7,7 @@ macro_rules! debug_assert_bits {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone)]
 pub struct Field {
     n: [u32; 10],
     magnitude: u32,
@@ -399,7 +399,7 @@ impl Field {
     /// Set a field element equal to the additive inverse of
     /// another. Takes a maximum magnitude of the input as an
     /// argument. The magnitude of the output is one higher.
-    pub fn negate(&mut self, other: &Field, m: u32) {
+    pub fn negate_in_place(&mut self, other: &Field, m: u32) {
         debug_assert!(self.magnitude <= m);
         debug_assert!(self.verify());
 
@@ -417,6 +417,12 @@ impl Field {
         self.magnitude = m + 1;
         self.normalized = false;
         debug_assert!(self.verify());
+    }
+
+    pub fn negate(&self, m: u32) -> Field {
+        let mut ret = Field::default();
+        ret.negate_in_place(self, m);
+        ret
     }
 
     /// Multiplies the passed field element with a small integer
@@ -1132,6 +1138,23 @@ impl Field {
         ret.sqr_in_place(self);
         ret
     }
+
+    /// If flag is true, set *r equal to *a; otherwise leave
+    /// it. Constant-time.
+    pub fn cmov(&mut self, other: &Field, flag: bool) {
+        self.n[0] = if flag { other.n[0] } else { self.n[0] };
+        self.n[1] = if flag { other.n[1] } else { self.n[1] };
+        self.n[2] = if flag { other.n[2] } else { self.n[2] };
+        self.n[3] = if flag { other.n[3] } else { self.n[3] };
+        self.n[4] = if flag { other.n[4] } else { self.n[4] };
+        self.n[5] = if flag { other.n[5] } else { self.n[5] };
+        self.n[6] = if flag { other.n[6] } else { self.n[6] };
+        self.n[7] = if flag { other.n[7] } else { self.n[7] };
+        self.n[8] = if flag { other.n[8] } else { self.n[8] };
+        self.n[9] = if flag { other.n[9] } else { self.n[9] };
+        self.magnitude = if flag { other.magnitude } else { self.magnitude };
+        self.normalized = if flag { other.normalized } else { self.normalized };
+    }
 }
 
 impl Default for Field {
@@ -1219,6 +1242,16 @@ impl MulAssign<Field> for Field {
     }
 }
 
+impl PartialEq for Field {
+    fn eq(&self, other: &Field) -> bool {
+        let mut na = self.negate(1);
+        na += other;
+        return na.normalizes_to_zero();
+    }
+}
+
+impl Eq for Field { }
+
 impl Ord for Field {
     fn cmp(&self, other: &Field) -> Ordering {
         self.cmp_var(other)
@@ -1235,6 +1268,14 @@ pub struct FieldStorage {
     n: [u32; 8],
 }
 
+impl Default for FieldStorage {
+    fn default() -> FieldStorage {
+        FieldStorage {
+            n: [0; 8],
+        }
+    }
+}
+
 impl FieldStorage {
     pub fn new(
         d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
@@ -1242,5 +1283,56 @@ impl FieldStorage {
         FieldStorage {
             n: [d0, d1, d2, d3, d4, d5, d6, d7],
         }
+    }
+
+    pub fn cmov(&mut self, other: &Field, flag: bool) {
+        self.n[0] = if flag { other.n[0] } else { self.n[0] };
+        self.n[1] = if flag { other.n[1] } else { self.n[1] };
+        self.n[2] = if flag { other.n[2] } else { self.n[2] };
+        self.n[3] = if flag { other.n[3] } else { self.n[3] };
+        self.n[4] = if flag { other.n[4] } else { self.n[4] };
+        self.n[5] = if flag { other.n[5] } else { self.n[5] };
+        self.n[6] = if flag { other.n[6] } else { self.n[6] };
+        self.n[7] = if flag { other.n[7] } else { self.n[7] };
+    }
+}
+
+impl From<FieldStorage> for Field {
+    fn from(a: FieldStorage) -> Field {
+        let mut r = Field::default();
+
+        r.n[0] = a.n[0] & 0x3FFFFFF;
+        r.n[1] = a.n[0] >> 26 | ((a.n[1] << 6) & 0x3FFFFFF);
+        r.n[2] = a.n[1] >> 20 | ((a.n[2] << 12) & 0x3FFFFFF);
+        r.n[3] = a.n[2] >> 14 | ((a.n[3] << 18) & 0x3FFFFFF);
+        r.n[4] = a.n[3] >> 8 | ((a.n[4] << 24) & 0x3FFFFFF);
+        r.n[5] = (a.n[4] >> 2) & 0x3FFFFFF;
+        r.n[6] = a.n[4] >> 28 | ((a.n[5] << 4) & 0x3FFFFFF);
+        r.n[7] = a.n[5] >> 22 | ((a.n[6] << 10) & 0x3FFFFFF);
+        r.n[8] = a.n[6] >> 16 | ((a.n[7] << 16) & 0x3FFFFFF);
+        r.n[9] = a.n[7] >> 10;
+
+        r.magnitude = 1;
+        r.normalized = true;
+
+        r
+    }
+}
+
+impl Into<FieldStorage> for Field {
+    fn into(self) -> FieldStorage {
+        debug_assert!(self.normalized);
+        let mut r = FieldStorage::default();
+
+        r.n[0] = self.n[0] | self.n[1] << 26;
+        r.n[1] = self.n[1] >> 6 | self.n[2] << 20;
+        r.n[2] = self.n[2] >> 12 | self.n[3] << 14;
+        r.n[3] = self.n[3] >> 18 | self.n[4] << 8;
+        r.n[4] = self.n[4] >> 24 | self.n[5] << 2 | self.n[6] << 28;
+        r.n[5] = self.n[6] >> 4 | self.n[7] << 22;
+        r.n[6] = self.n[7] >> 10 | self.n[8] << 16;
+        r.n[7] = self.n[8] >> 16 | self.n[9] << 10;
+
+        r
     }
 }
