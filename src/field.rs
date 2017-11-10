@@ -472,9 +472,9 @@ impl Field {
     }
 
     fn mul_inner(&mut self, a: &Field, b: &Field) {
-        const M: u32 = 0x3ffffff;
-        const R0: u32 = 0x3d10;
-        const r1: u32 = 0x400;
+        const M: u64 = 0x3ffffff;
+        const R0: u64 = 0x3d10;
+        const r1: u64 = 0x400;
 
         let (mut c, mut d): (u64, u64);
         let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64, u64);
@@ -822,9 +822,9 @@ impl Field {
     }
 
     fn sqr_inner(&mut self, a: &Field) {
-        const M: u32 = 0x3ffffff;
-        const R0: u32 = 0x3d10;
-        const r1: u32 = 0x400;
+        const M: u64 = 0x3ffffff;
+        const R0: u64 = 0x3d10;
+        const R1: u64 = 0x400;
 
         let (mut c, mut d): (u64, u64);
         let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64, u64);
