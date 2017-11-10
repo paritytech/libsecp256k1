@@ -1145,6 +1145,87 @@ impl Field {
         ret
     }
 
+    pub fn sqrt(&self) -> Option<Field> {
+        let mut x2 = self.sqr();
+        x2 *= self;
+
+        let mut x3 = x2.sqr();
+        x3 *= self;
+
+        let mut x6 = x3.clone();
+        for i in 0..3 {
+            x6 = x6.sqr();
+        }
+        x6 *= &x3;
+
+        let mut x9 = x6.clone();
+        for i in 0..3 {
+            x9 = x9.sqr();
+        }
+        x9 *= &x3;
+
+        let mut x11 = x9.clone();
+        for i in 0..2 {
+            x11 = x11.sqr();
+        }
+        x11 *= &x2;
+
+        let mut x22 = x11.clone();
+        for i in 0..11 {
+            x22 = x22.sqr();
+        }
+        x22 *= &x11;
+
+        let mut x44 = x22.clone();
+        for i in 0..22 {
+            x44 = x44.sqr();
+        }
+        x44 *= &x22;
+
+        let mut x88 = x44.clone();
+        for i in 0..44 {
+            x88 = x88.sqr();
+        }
+        x88 *= &x44;
+
+        let mut x176 = x88.clone();
+        for i in 0..88 {
+            x176 = x176.sqr();
+        }
+        x176 *= &x88;
+
+        let mut x220 = x176.clone();
+        for i in 0..44 {
+            x220 = x220.sqr();
+        }
+        x220 *= &x44;
+
+        let mut x223 = x220.clone();
+        for i in 0..3 {
+            x223 = x223.sqr();
+        }
+        x223 *= &x3;
+
+        let mut t1 = x223;
+        for i in 0..23 {
+            t1 = t1.sqr();
+        }
+        t1 *= &x22;
+        for i in 0..6 {
+            t1 = t1.sqr();
+        }
+        t1 *= &x2;
+        t1 = t1.sqr();
+        let mut r = t1.sqr();
+
+        t1 = r.sqr();
+        if &t1 == self {
+            Some(r)
+        } else {
+            None
+        }
+    }
+
     /// If flag is true, set *r equal to *a; otherwise leave
     /// it. Constant-time.
     pub fn cmov(&mut self, other: &Field, flag: bool) {
