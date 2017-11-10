@@ -2,7 +2,7 @@ use field::Field;
 
 macro_rules! affine_const {
     ($x: expr, $y: expr) => {
-        $crate::field::Affine {
+        $crate::group::Affine {
             x: $x, y: $y, infinity: false,
         }
     }
@@ -10,7 +10,7 @@ macro_rules! affine_const {
 
 macro_rules! jacobian_const {
     ($x: expr, $y: expr) => {
-        $crate::field::Jacobian {
+        $crate::group::Jacobian {
             x: $x, y: $y, infinity: false,
             z: field_const!(0, 0, 0, 0, 0, 0, 0, 1),
         }
