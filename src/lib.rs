@@ -1,4 +1,7 @@
+#[macro_use]
 mod field;
+#[macro_use]
+mod group;
 
 #[cfg(test)]
 mod tests {
