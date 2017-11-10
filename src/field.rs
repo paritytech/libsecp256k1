@@ -1023,7 +1023,7 @@ impl Field {
         debug_assert!(c <= 0x8000007C00000007);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[8]*2 as u64) * (a.n[9] as u64));
+            ((a.n[8]*2) as u64) * (a.n[9] as u64));
         debug_assert_bits!(d, 58);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
         v7 = d & M; d >>= 26; c += v7 * R0;
