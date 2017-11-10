@@ -1177,6 +1177,44 @@ impl<'a> AddAssign<&'a Field> for Field {
     }
 }
 
+impl AddAssign<Field> for Field {
+    fn add_assign(&mut self, other: Field) {
+        self.add_assign(&other)
+    }
+}
+
+impl Mul<Field> for Field {
+    type Output = Field;
+    fn mul(self, other: Field) -> Field {
+        let mut ret = Field::default();
+        ret.mul_in_place(&self, &other);
+        ret
+    }
+}
+
+impl<'a, 'b> Mul<&'a Field> for &'b Field {
+    type Output = Field;
+    fn mul(self, other: &'a Field) -> Field {
+        let mut ret = Field::default();
+        ret.mul_in_place(self, other);
+        ret
+    }
+}
+
+impl<'a> MulAssign<&'a Field> for Field {
+    fn mul_assign(&mut self, other: &'a Field) {
+        let mut ret = Field::default();
+        ret.mul_in_place(self, other);
+        *self = ret;
+    }
+}
+
+impl MulAssign<Field> for Field {
+    fn mul_assign(&mut self, other: Field) {
+        self.mul_assign(&other)
+    }
+}
+
 impl Ord for Field {
     fn cmp(&self, other: &Field) -> Ordering {
         self.cmp_var(other)
