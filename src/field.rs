@@ -845,11 +845,11 @@ impl Field {
         // px is a shorthand for sum(a.n[i]*a.n[x-i], i=0..x).
         // Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
 
-        d = ((a.n[0]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[6] as u64)).wrapping_add(
-            (a.n[4]*2 as u64) * (a.n[5] as u64));
+        d = (((a.n[0]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[6] as u64)).wrapping_add(
+            ((a.n[4]*2) as u64) * (a.n[5] as u64));
         debug_assert_bits!(d, 64);
         /* [d 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
         t9 = d & M; d >>= 26;
@@ -861,10 +861,10 @@ impl Field {
         debug_assert_bits!(c, 60);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p9 0 0 0 0 0 0 0 0 p0] */
         d = d.wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[4]*2 as u64) * (a.n[6] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[4]*2) as u64) * (a.n[6] as u64)).wrapping_add(
             (a.n[5] as u64) * (a.n[5] as u64));
         debug_assert_bits!(d, 63);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
@@ -880,14 +880,14 @@ impl Field {
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[1] as u64));
+            ((a.n[0]*2) as u64) * (a.n[1] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 p1 p0] */
         d = d.wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[4]*2 as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[5]*2 as u64) * (a.n[6] as u64));
+            ((a.n[2]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[4]*2) as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[5]*2) as u64) * (a.n[6] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
         v1 = d & M; d >>= 26; c += v1 * R0;
@@ -902,14 +902,14 @@ impl Field {
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[2] as u64)).wrapping_add(
+            ((a.n[0]*2) as u64) * (a.n[2] as u64)).wrapping_add(
             (a.n[1] as u64) * (a.n[1] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[4]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[5]*2 as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[4]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[5]*2) as u64) * (a.n[7] as u64)).wrapping_add(
             (a.n[6] as u64) * (a.n[6] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
@@ -925,14 +925,14 @@ impl Field {
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[3] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[2] as u64));
+            ((a.n[0]*2) as u64) * (a.n[3] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[2] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[4]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[5]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[6]*2 as u64) * (a.n[7] as u64));
+            ((a.n[4]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[5]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[6]*2) as u64) * (a.n[7] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
         v3 = d & M; d >>= 26; c += v3 * R0;
@@ -947,14 +947,14 @@ impl Field {
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[4] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[3] as u64)).wrapping_add(
+            ((a.n[0]*2) as u64) * (a.n[4] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[3] as u64)).wrapping_add(
             (a.n[2] as u64) * (a.n[2] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[5]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[6]*2 as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[5]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[6]*2) as u64) * (a.n[8] as u64)).wrapping_add(
             (a.n[7] as u64) * (a.n[7] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
@@ -970,14 +970,14 @@ impl Field {
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[5] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[4] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[3] as u64));
+            ((a.n[0]*2) as u64) * (a.n[5] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[4] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[3] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[6]*2 as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[7]*2 as u64) * (a.n[8] as u64));
+            ((a.n[6]*2) as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[7]*2) as u64) * (a.n[8] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
         v5 = d & M; d >>= 26; c += v5 * R0;
@@ -992,14 +992,14 @@ impl Field {
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[6] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[5] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[4] as u64)).wrapping_add(
+            ((a.n[0]*2) as u64) * (a.n[6] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[5] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[4] as u64)).wrapping_add(
             (a.n[3] as u64) * (a.n[3] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
         d = d.wrapping_add(
-            (a.n[7]*2 as u64) * (a.n[9] as u64)).wrapping_add(
+            ((a.n[7]*2) as u64) * (a.n[9] as u64)).wrapping_add(
             (a.n[8] as u64) * (a.n[8] as u64));
         debug_assert_bits!(d, 61);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
@@ -1015,10 +1015,10 @@ impl Field {
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[6] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[5] as u64)).wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[4] as u64));
+            ((a.n[0]*2) as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[6] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[5] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[4] as u64));
         debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x8000007C00000007);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
@@ -1039,10 +1039,10 @@ impl Field {
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
 
         c = c.wrapping_add(
-            (a.n[0]*2 as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[1]*2 as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[2]*2 as u64) * (a.n[6] as u64)).wrapping_add(
-            (a.n[3]*2 as u64) * (a.n[5] as u64)).wrapping_add(
+            ((a.n[0]*2) as u64) * (a.n[8] as u64)).wrapping_add(
+            ((a.n[1]*2) as u64) * (a.n[7] as u64)).wrapping_add(
+            ((a.n[2]*2) as u64) * (a.n[6] as u64)).wrapping_add(
+            ((a.n[3]*2) as u64) * (a.n[5] as u64)).wrapping_add(
             (a.n[4] as u64) * (a.n[4] as u64));
         debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x9000007B80000008);
