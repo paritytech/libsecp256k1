@@ -501,10 +501,9 @@ impl Field {
         debug_assert_bits!(b.n[8], 30);
         debug_assert_bits!(b.n[9], 26);
 
-        /** [... a b c] is a shorthand for ... + a<<52 + b<<26 + c<<0 mod n.
-         *  px is a shorthand for sum(a[i]*b[x-i], i=0..x).
-         *  Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
-         */
+        // [... a b c] is a shorthand for ... + a<<52 + b<<26 + c<<0 mod n.
+        // px is a shorthand for sum(a[i]*b[x-i], i=0..x).
+        // Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
 
         d = ((a.n[0] as u64) * (b[9] as u64)).wrapping_add(
             (a.n[1] as u64) * (b[8] as u64)).wrapping_add(
