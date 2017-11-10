@@ -1145,7 +1145,13 @@ impl Field {
         ret
     }
 
-    pub fn sqrt(&self) -> Option<Field> {
+    /// If a has a square root, it is computed in r and 1 is
+    /// returned. If a does not have a square root, the root of its
+    /// negation is computed and 0 is returned. The input's magnitude
+    /// can be at most 8. The output magnitude is 1 (but not
+    /// guaranteed to be normalized). The result in r will always be a
+    /// square itself.
+    pub fn sqrt(&self) -> (Field, bool) {
         let mut x2 = self.sqr();
         x2 *= self;
 
@@ -1219,13 +1225,12 @@ impl Field {
         let mut r = t1.sqr();
 
         t1 = r.sqr();
-        if &t1 == self {
-            Some(r)
-        } else {
-            None
-        }
+        (r, &t1 == self)
     }
 
+    /// Sets a field element to be the (modular) inverse of
+    /// another. Requires the input's magnitude to be at most 8. The
+    /// output magnitude is 1 (but not guaranteed to be normalized).
     pub fn inv(&self) -> Field {
         let mut x2 = self.sqr();
         x2 *= self;
@@ -1305,6 +1310,48 @@ impl Field {
         }
         let r = self * &t1;
         r
+    }
+
+    ///Potentially faster version of secp256k1_fe_inv, without
+    /// constant-time guarantee.
+    pub fn inv_var(&self) -> Field {
+        self.inv()
+    }
+
+    /// Calculate the (modular) inverses of a batch of field
+    /// elements. Requires the inputs' magnitudes to be at most 8. The
+    /// output magnitudes are 1 (but not guaranteed to be
+    /// normalized). The inputs and outputs must not overlap in
+    /// memory.
+    pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
+        if fields.len() == 0 {
+            return Vec::new();
+        }
+
+        let mut ret = Vec::new();
+        ret.push(fields[0].clone());
+
+        for i in 1..fields.len() {
+            ret.push(Field::default());
+            ret[i] = &ret[i - 1] * &fields[i];
+        }
+
+        let mut u = ret[fields.len() - 1].inv_var();
+
+        for i in (1..fields.len()).rev() {
+            let j = i - 1;
+            ret[j] = &ret[i] * &u;
+            u = &u * &fields[j];
+        }
+
+        ret[0] = u;
+        ret
+    }
+
+    /// Checks whether a field element is a quadratic residue.
+    pub fn is_quad_var(&self) -> bool {
+        let (_, ret) = self.sqrt();
+        ret
     }
 
     /// If flag is true, set *r equal to *a; otherwise leave
