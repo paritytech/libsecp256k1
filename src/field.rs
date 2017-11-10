@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 macro_rules! debug_assert_bits {
     ($x: expr, $n: expr) => {
@@ -6,6 +7,7 @@ macro_rules! debug_assert_bits {
     }
 }
 
+#[derive(Clone, Eq, PartialEq)]
 pub struct Field {
     n: [u32; 10],
     magnitude: u32,
@@ -432,25 +434,6 @@ impl Field {
         self.n[9] *= a;
 
         self.magnitude *= a;
-        self.normalized = false;
-        debug_assert!(self.verify());
-    }
-
-    /// Adds a field element to another. The result has the sum of the
-    /// inputs' magnitudes as magnitude.
-    pub fn add(&mut self, other: &Field) {
-        self.n[0] += other.n[0];
-        self.n[1] += other.n[1];
-        self.n[2] += other.n[2];
-        self.n[3] += other.n[3];
-        self.n[4] += other.n[4];
-        self.n[5] += other.n[5];
-        self.n[6] += other.n[6];
-        self.n[7] += other.n[7];
-        self.n[8] += other.n[8];
-        self.n[9] += other.n[9];
-
-        self.magnitude += other.magnitude;
         self.normalized = false;
         debug_assert!(self.verify());
     }
@@ -1121,7 +1104,7 @@ impl Field {
     /// Sets a field element to be the product of two others. Requires
     /// the inputs' magnitudes to be at most 8. The output magnitude
     /// is 1 (but not guaranteed to be normalized).
-    pub fn mul(&mut self, a: &Field, b: &Field) {
+    pub fn mul_in_place(&mut self, a: &Field, b: &Field) {
         debug_assert!(a.magnitude <= 8);
         debug_assert!(b.magnitude <= 8);
         debug_assert!(a.verify());
@@ -1135,13 +1118,74 @@ impl Field {
     /// Sets a field element to be the square of another. Requires the
     /// input's magnitude to be at most 8. The output magnitude is 1
     /// (but not guaranteed to be normalized).
-    pub fn sqr(&mut self, a: &Field) {
+    pub fn sqare_in_place(&mut self, a: &Field) {
         debug_assert!(a.magnitude <= 8);
         debug_assert!(a.verify());
         self.sqr_inner(a);
         self.magnitude = 1;
         self.normalized = false;
         debug_assert!(a.verify());
+    }
+
+
+}
+
+impl Default for Field {
+    fn default() -> Field {
+        Self {
+            n: [0u32; 10],
+            magnitude: 0,
+            normalized: true,
+        }
+    }
+}
+
+impl Add<Field> for Field {
+    type Output = Field;
+    fn add(self, other: Field) -> Field {
+        let mut ret = self.clone();
+        ret.add_assign(&other);
+        ret
+    }
+}
+
+impl<'a, 'b> Add<&'a Field> for &'b Field {
+    type Output = Field;
+    fn add(self, other: &'a Field) -> Field {
+        let mut ret = self.clone();
+        ret.add_assign(other);
+        ret
+    }
+}
+
+impl<'a> AddAssign<&'a Field> for Field {
+    fn add_assign(&mut self, other: &'a Field) {
+        self.n[0] += other.n[0];
+        self.n[1] += other.n[1];
+        self.n[2] += other.n[2];
+        self.n[3] += other.n[3];
+        self.n[4] += other.n[4];
+        self.n[5] += other.n[5];
+        self.n[6] += other.n[6];
+        self.n[7] += other.n[7];
+        self.n[8] += other.n[8];
+        self.n[9] += other.n[9];
+
+        self.magnitude += other.magnitude;
+        self.normalized = false;
+        debug_assert!(self.verify());
+    }
+}
+
+impl Ord for Field {
+    fn cmp(&self, other: &Field) -> Ordering {
+        self.cmp_var(other)
+    }
+}
+
+impl PartialOrd for Field {
+    fn partial_cmp(&self, other: &Field) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
