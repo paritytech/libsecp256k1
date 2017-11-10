@@ -28,6 +28,14 @@ macro_rules! field_const {
     }
 }
 
+macro_rules! field_storage_const {
+    ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
+        $crate::field::FieldStorage {
+            n: [$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7],
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Field {
     pub(crate) n: [u32; 10],
@@ -1486,7 +1494,7 @@ impl PartialOrd for Field {
 }
 
 pub struct FieldStorage {
-    n: [u32; 8],
+    pub(crate) n: [u32; 8],
 }
 
 impl Default for FieldStorage {
@@ -1501,9 +1509,7 @@ impl FieldStorage {
     pub fn new(
         d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
     ) -> Self {
-        FieldStorage {
-            n: [d0, d1, d2, d3, d4, d5, d6, d7],
-        }
+        field_storage_const!(d7, d6, d5, d4, d3, d2, d1, d0)
     }
 
     pub fn cmov(&mut self, other: &Field, flag: bool) {
