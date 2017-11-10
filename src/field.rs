@@ -1,6 +1,6 @@
 macro_rules! debug_assert_bits {
     ($x: expr, $n: expr) => {
-        debug_assert!(x >> n == 0);
+        debug_assert!($x >> $n == 0);
     }
 }
 
@@ -11,7 +11,9 @@ pub struct Field {
 }
 
 impl Field {
-    pub fn new(d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32) {
+    pub fn new(
+        d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
+    ) -> Self {
         Field {
             n: [
                 d0 & 0x3ffffff,
