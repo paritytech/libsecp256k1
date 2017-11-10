@@ -1150,6 +1150,6 @@ impl FieldStorage {
     pub fn new(d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32) {
         FieldStorage {
             n: [d0, d1, d2, d3, d4, d5, d6, d7],
-        },
+        }
     }
 }
