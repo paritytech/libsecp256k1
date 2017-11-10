@@ -1074,7 +1074,7 @@ impl Field {
         debug_assert_bits!(self.n[7], 26);
         /* [d u8 0 0 0 0 0 0 0 0 t9 c-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        self.n[8] = c & M; c >>= 26; c += v8 * R1;
+        self.n[8] = (c & M) as u32; c >>= 26; c += v8 * R1;
         debug_assert_bits!(self.n[8], 26);
         debug_assert_bits!(c, 39);
         /* [d u8 0 0 0 0 0 0 0 0 t9+c-u8*R1 r8-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
@@ -1082,7 +1082,7 @@ impl Field {
         c   += d * R0 + t9;
         debug_assert_bits!(c, 45);
         /* [d 0 0 0 0 0 0 0 0 0 c-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[9] = c & (M >> 4); c >>= 22; c += d * (R1 << 4);
+        self.n[9] = (c & (M >> 4)) as u32; c >>= 22; c += d * (R1 << 4);
         debug_assert_bits!(self.n[9], 22);
         debug_assert_bits!(c, 46);
         /* [d 0 0 0 0 0 0 0 0 r9+((c-d*R1<<4)<<22)-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
@@ -1092,7 +1092,7 @@ impl Field {
         d    = c * (R0 >> 4) + t0;
         debug_assert_bits!(d, 56);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1 d-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[0] = d & M; d >>= 26;
+        self.n[0] = (d & M) as u32; d >>= 26;
         debug_assert_bits!(self.n[0], 26);
         debug_assert_bits!(d, 30);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1+d r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
@@ -1101,7 +1101,7 @@ impl Field {
         debug_assert!(d <= 0x10000003FFFFBF);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 d-c*R1>>4 r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [r9 r8 r7 r6 r5 r4 r3 t2 d r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[1] = d & M; d >>= 26;
+        self.n[1] = (d & M) as u32; d >>= 26;
         debug_assert_bits!(self.n[1], 26);
         debug_assert_bits!(d, 27);
         debug_assert!(d <= 0x4000000);
