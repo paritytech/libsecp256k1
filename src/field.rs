@@ -477,8 +477,8 @@ impl Field {
         const r1: u64 = 0x400;
 
         let (mut c, mut d): (u64, u64);
-        let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64, u64);
-        let (mut t9, mut t1, mut t0, mut t2, mut t3, mut t4, mut t5, mut t6, mut t7): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64);
+        let (mut t9, mut t1, mut t0, mut t2, mut t3, mut t4, mut t5, mut t6, mut t7): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
 
         debug_assert_bits!(a.n[0], 30);
         debug_assert_bits!(a.n[1], 30);
@@ -827,8 +827,8 @@ impl Field {
         const R1: u64 = 0x400;
 
         let (mut c, mut d): (u64, u64);
-        let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64, u64);
-        let (mut t9, mut t0, mut t1, mut t2, mut t3, mut t4, mut t5, mut t6, mut t7): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (mut v0, mut v1, mut v2, mut v3, mut v4, mut v5, mut v6, mut v7, mut v8): (u64, u64, u64, u64, u64, u64, u64, u64, u64);
+        let (mut t9, mut t0, mut t1, mut t2, mut t3, mut t4, mut t5, mut t6, mut t7): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
 
         debug_assert_bits!(a.n[0], 30);
         debug_assert_bits!(a.n[1], 30);
