@@ -71,4 +71,52 @@ impl Scalar {
         yes = yes || ((self.0[0] >= SECP256K1_N_0) && !no);
         return yes;
     }
+
+    fn reduce(&mut self, overflow: bool) -> bool {
+        let o: u64 = if overflow { 1 } else { 0 };
+        let mut t: u64;
+        t = (self.0[0] as u64) + o * (SECP256K1_N_C_0 as u64);
+        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[1] as u64) + o * (SECP256K1_N_C_1 as u64);
+        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[2] as u64) + o * (SECP256K1_N_C_2 as u64);
+        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[3] as u64) + o * (SECP256K1_N_C_3 as u64);
+        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[4] as u64) + o * (SECP256K1_N_C_4 as u64);
+        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[5] as u64);
+        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[6] as u64);
+        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[7] as u64);
+        self.0[7] = (t & 0xFFFFFFFF) as u32;
+        overflow
+    }
+
+    /// Add two scalars together (modulo the group order). Returns
+    /// whether it overflowed.
+    pub fn add_in_place(&mut self, a: &Scalar, b: &Scalar) -> bool {
+        let overflow: u64;
+        let mut t: u64 = (a.0[0] as u64) + (b.0[0] as u64);
+        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[1] as u64) + (b.0[1] as u64);
+        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[2] as u64) + (b.0[2] as u64);
+        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[3] as u64) + (b.0[3] as u64);
+        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[4] as u64) + (b.0[4] as u64);
+        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[5] as u64) + (b.0[5] as u64);
+        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[6] as u64) + (b.0[6] as u64);
+        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (a.0[7] as u64) + (b.0[7] as u64);
+        self.0[7] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        overflow = t + if self.check_overflow() { 1 } else { 0 };
+        debug_assert!(overflow == 0 || overflow == 1);
+        self.reduce(overflow == 1);
+        return overflow == 1;
+    }
 }
