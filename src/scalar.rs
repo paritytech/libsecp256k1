@@ -299,7 +299,7 @@ macro_rules! define_ops {
                 $c0 = $c0.wrapping_add(tl2);
                 th2 = th2.wrapping_add(if $c0 < tl2 { 1 } else { 0 });
                 $c2 = $c2.wrapping_add(if $c0 < tl2 && th2 == 0 { 1 } else { 0 });
-                debug_assert!($c0 >= tl2 || th2 != 0 || c2 != 0);
+                debug_assert!($c0 >= tl2 || th2 != 0 || $c2 != 0);
                 $c1 = $c1.wrapping_add(th2);
                 $c2 = $c2.wrapping_add(if $c1 < th2 { 1 } else { 0 });
                 debug_assert!($c1 >= th2 || $c2 != 0);
@@ -577,6 +577,66 @@ impl Scalar {
         muladd!(self.0[7], b.0[6]);
         l[13] = extract!();
         muladd_fast!(self.0[7], b.0[7]);
+        l[14] = extract_fast!();
+        debug_assert!(c1 == 0);
+        l[15] = c0;
+    }
+
+    fn sqr_512(&self, l: &mut [u32; 16]) {
+        let (mut c0, mut c1, mut c2): (u32, u32, u32) = (0, 0, 0);
+        define_ops!(c0, c1, c2);
+
+        /* l[0..15] = a[0..7]^2. */
+        muladd_fast!(self.0[0], self.0[0]);
+        l[0] = extract_fast!();
+        muladd2!(self.0[0], self.0[1]);
+        l[1] = extract!();
+        muladd2!(self.0[0], self.0[2]);
+        muladd!(self.0[1], self.0[1]);
+        l[2] = extract!();
+        muladd2!(self.0[0], self.0[3]);
+        muladd2!(self.0[1], self.0[2]);
+        l[3] = extract!();
+        muladd2!(self.0[0], self.0[4]);
+        muladd2!(self.0[1], self.0[3]);
+        muladd!(self.0[2], self.0[2]);
+        l[4] = extract!();
+        muladd2!(self.0[0], self.0[5]);
+        muladd2!(self.0[1], self.0[4]);
+        muladd2!(self.0[2], self.0[3]);
+        l[5] = extract!();
+        muladd2!(self.0[0], self.0[6]);
+        muladd2!(self.0[1], self.0[5]);
+        muladd2!(self.0[2], self.0[4]);
+        muladd!(self.0[3], self.0[3]);
+        l[6] = extract!();
+        muladd2!(self.0[0], self.0[7]);
+        muladd2!(self.0[1], self.0[6]);
+        muladd2!(self.0[2], self.0[5]);
+        muladd2!(self.0[3], self.0[4]);
+        l[7] = extract!();
+        muladd2!(self.0[1], self.0[7]);
+        muladd2!(self.0[2], self.0[6]);
+        muladd2!(self.0[3], self.0[5]);
+        muladd!(self.0[4], self.0[4]);
+        l[8] = extract!();
+        muladd2!(self.0[2], self.0[7]);
+        muladd2!(self.0[3], self.0[6]);
+        muladd2!(self.0[4], self.0[5]);
+        l[9] = extract!();
+        muladd2!(self.0[3], self.0[7]);
+        muladd2!(self.0[4], self.0[6]);
+        muladd!(self.0[5], self.0[5]);
+        l[10] = extract!();
+        muladd2!(self.0[4], self.0[7]);
+        muladd2!(self.0[5], self.0[6]);
+        l[11] = extract!();
+        muladd2!(self.0[5], self.0[7]);
+        muladd!(self.0[6], self.0[6]);
+        l[12] = extract!();
+        muladd2!(self.0[6], self.0[7]);
+        l[13] = extract!();
+        muladd_fast!(self.0[7], self.0[7]);
         l[14] = extract_fast!();
         debug_assert!(c1 == 0);
         l[15] = c0;
