@@ -183,7 +183,7 @@ impl Scalar {
     /// Compute the complement of a scalar (modulo the group order).
     pub fn neg_in_place(&mut self, a: &Scalar) {
         let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
-        let mut t: u64 = (!a.0[0]) as u64 + SECP256K1_N_0 as u64 + 1;
+        let mut t: u64 = (!a.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
         self.0[0] = (t & nonzero) as u32; t >>= 32;
         t += (!a.0[1]) as u64 + SECP256K1_N_1 as u64;
         self.0[1] = (t & nonzero) as u32; t >>= 32;
@@ -204,5 +204,54 @@ impl Scalar {
     /// Check whether a scalar equals one.
     pub fn is_one(&self) -> bool {
         ((self.0[0] ^ 1) |  self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
+    }
+
+    /// Check whether a scalar is higher than the group order divided
+    /// by 2.
+    pub fn is_high(&self) -> bool {
+        let mut yes: bool = false;
+        let mut no: bool = false;
+        no = no || (self.0[7] < SECP256K1_N_H_7);
+        yes = yes || ((self.0[7] > SECP256K1_N_H_7) & !no);
+        no = no || ((self.0[6] < SECP256K1_N_H_6) & !yes); /* No need for a > check. */
+        no = no || ((self.0[5] < SECP256K1_N_H_5) & !yes); /* No need for a > check. */
+        no = no || ((self.0[4] < SECP256K1_N_H_4) & !yes); /* No need for a > check. */
+        no = no || ((self.0[3] < SECP256K1_N_H_3) & !yes);
+        yes = yes || ((self.0[3] > SECP256K1_N_H_3) && !no);
+        no = no || ((self.0[2] < SECP256K1_N_H_2) && !yes);
+        yes = yes || ((self.0[2] > SECP256K1_N_H_2) && !no);
+        no = no || ((self.0[1] < SECP256K1_N_H_1) && !yes);
+        yes = yes || ((self.0[1] > SECP256K1_N_H_1) && !no);
+        yes = yes || ((self.0[0] >= SECP256K1_N_H_0) && !no);
+        return yes;
+    }
+
+    /// Conditionally negate a number, in constant time. Returns -1 if
+    /// the number was negated, 1 otherwise.
+    pub fn cond_neg(&mut self, flag: bool) -> isize {
+        let mask = if flag { u32::max_value() } else { 0 };
+        let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
+        let mut t: u64 = (self.0[0] ^ mask) as u64 + ((SECP256K1_N_0 + 1) & mask) as u64;
+        self.0[0] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[1] ^ mask) as u64 + (SECP256K1_N_1 & mask) as u64;
+        self.0[1] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[2] ^ mask) as u64 + (SECP256K1_N_2 & mask) as u64;
+        self.0[2] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[3] ^ mask) as u64 + (SECP256K1_N_3 & mask) as u64;
+        self.0[3] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[4] ^ mask) as u64 + (SECP256K1_N_4 & mask) as u64;
+        self.0[4] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[5] ^ mask) as u64 + (SECP256K1_N_5 & mask) as u64;
+        self.0[5] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[6] ^ mask) as u64 + (SECP256K1_N_6 & mask) as u64;
+        self.0[6] = (t & nonzero) as u32; t >>= 32;
+        t += (self.0[7] ^ mask) as u64 + (SECP256K1_N_7 & mask) as u64;
+        self.0[7] = (t & nonzero) as u32;
+
+        if mask == 0 {
+            return 1;
+        } else {
+            return -1;
+        }
     }
 }
