@@ -665,4 +665,10 @@ impl Scalar {
         self.0[7] = (self.0[7] >> n);
         return ret;
     }
+
+    pub fn sqr_in_place(&mut self, a: &Scalar) {
+        let mut l = [0u32; 16];
+        a.sqr_512(&mut l);
+        self.reduce_512(&l);
+    }
 }
