@@ -145,4 +145,33 @@ impl Scalar {
         debug_assert!((t >> 32) == 0);
         debug_assert!(!self.check_overflow());
     }
+
+    /// Set a scalar from a big endian byte array.
+    pub fn set_b32(&mut self, b32: [u8; 32]) -> bool {
+        self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8) | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
+        self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8) | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
+        self.0[2] = (b32[23] as u32) | ((b32[22] as u32) << 8) | ((b32[21] as u32) << 16) | ((b32[20] as u32) << 24);
+        self.0[3] = (b32[19] as u32) | ((b32[18] as u32) << 8) | ((b32[17] as u32) << 16) | ((b32[16] as u32) << 24);
+        self.0[4] = (b32[15] as u32) | ((b32[14] as u32) << 8) | ((b32[13] as u32) << 16) | ((b32[12] as u32) << 24);
+        self.0[5] = (b32[11] as u32) | ((b32[10] as u32) << 8) | ((b32[9] as u32) << 16) | ((b32[8] as u32) << 24);
+        self.0[6] = (b32[7] as u32) | ((b32[6] as u32) << 8) | ((b32[5] as u32) << 16) | ((b32[4] as u32) << 24);
+        self.0[7] = (b32[3] as u32) | ((b32[2] as u32) << 8) | ((b32[1] as u32) << 16) | ((b32[0] as u32) << 24);
+
+        let overflow = self.check_overflow();
+        self.reduce(overflow)
+    }
+
+    /// Convert a scalar to a byte array.
+    pub fn b32(&self) -> [u8; 32] {
+        let mut bin = [0u8; 32];
+        bin[0] = (self.0[7] >> 24) as u8; bin[1] = (self.0[7] >> 16) as u8; bin[2] = (self.0[7] >> 8) as u8; bin[3] = (self.0[7]) as u8;
+        bin[4] = (self.0[6] >> 24) as u8; bin[5] = (self.0[6] >> 16) as u8; bin[6] = (self.0[6] >> 8) as u8; bin[7] = (self.0[6]) as u8;
+        bin[8] = (self.0[5] >> 24) as u8; bin[9] = (self.0[5] >> 16) as u8; bin[10] = (self.0[5] >> 8) as u8; bin[11] = (self.0[5]) as u8;
+        bin[12] = (self.0[4] >> 24) as u8; bin[13] = (self.0[4] >> 16) as u8; bin[14] = (self.0[4] >> 8) as u8; bin[15] = (self.0[4]) as u8;
+        bin[16] = (self.0[3] >> 24) as u8; bin[17] = (self.0[3] >> 16) as u8; bin[18] = (self.0[3] >> 8) as u8; bin[19] = (self.0[3]) as u8;
+        bin[20] = (self.0[2] >> 24) as u8; bin[21] = (self.0[2] >> 16) as u8; bin[22] = (self.0[2] >> 8) as u8; bin[23] = (self.0[2]) as u8;
+        bin[24] = (self.0[1] >> 24) as u8; bin[25] = (self.0[1] >> 16) as u8; bin[26] = (self.0[1] >> 8) as u8; bin[27] = (self.0[1]) as u8;
+        bin[28] = (self.0[0] >> 24) as u8; bin[29] = (self.0[0] >> 16) as u8; bin[30] = (self.0[0] >> 8) as u8; bin[31] = (self.0[0]) as u8;
+        bin
+    }
 }
