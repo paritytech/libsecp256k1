@@ -413,7 +413,7 @@ impl Field {
     /// Set a field element equal to the additive inverse of
     /// another. Takes a maximum magnitude of the input as an
     /// argument. The magnitude of the output is one higher.
-    pub fn negate_in_place(&mut self, other: &Field, m: u32) {
+    pub fn neg_in_place(&mut self, other: &Field, m: u32) {
         debug_assert!(self.magnitude <= m);
         debug_assert!(self.verify());
 
@@ -433,7 +433,7 @@ impl Field {
         debug_assert!(self.verify());
     }
 
-    pub fn negate(&self, m: u32) -> Field {
+    pub fn neg(&self, m: u32) -> Field {
         let mut ret = Field::default();
         ret.negate_in_place(self, m);
         ret
@@ -479,7 +479,7 @@ impl Field {
     }
 
     pub fn eq_var(&self, other: &Field) -> bool {
-        let mut na = self.negate(1);
+        let mut na = self.neg(1);
         na += other;
         return na.normalizes_to_zero_var();
     }
@@ -1473,7 +1473,7 @@ impl MulAssign<Field> for Field {
 
 impl PartialEq for Field {
     fn eq(&self, other: &Field) -> bool {
-        let mut na = self.negate(1);
+        let mut na = self.neg(1);
         na += other;
         return na.normalizes_to_zero();
     }
