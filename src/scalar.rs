@@ -228,7 +228,7 @@ impl Scalar {
 
     /// Conditionally negate a number, in constant time. Returns -1 if
     /// the number was negated, 1 otherwise.
-    pub fn cond_neg(&mut self, flag: bool) -> isize {
+    pub fn cond_neg_mut(&mut self, flag: bool) -> isize {
         let mask = if flag { u32::max_value() } else { 0 };
         let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
         let mut t: u64 = (self.0[0] ^ mask) as u64 + ((SECP256K1_N_0 + 1) & mask) as u64;
