@@ -215,17 +215,26 @@ impl Jacobian {
     /// Set r equal to the double of a. If rzr is not-NULL, r->z =
     /// a->z * *rzr (where infinity means an implicit z = 0). a may
     /// not be zero. Constant time.
-    pub fn double_nonzero_in_place(&mut self, a: &Jacobian) {
+    pub fn double_nonzero_in_place(&mut self, a: &Jacobian, rzr: Option<&mut Field>) {
         debug_assert!(!self.is_infinity);
         self.double_var_in_place(a, rzr);
     }
 
     /// Set r equal to the double of a. If rzr is not-NULL, r->z =
     /// a->z * *rzr (where infinity means an implicit z = 0).
-    pub fn double_var_in_place(&mut self, a: &Jacobian) {
+    pub fn double_var_in_place(&mut self, a: &Jacobian, rzr: Option<&mut Field>) {
         self.infinity = a.infinity;
         if self.infinity {
+            if let Some(rzr) = rzr {
+                rzr.set_int(1);
+            }
             return;
+        }
+
+        if let Some(rzr) = rzr {
+            *rzr = a.y.clone();
+            rzr.normalize_weak();
+            rzr.mul_int(2);
         }
 
         self.z = &a.z * &a.y;
@@ -252,12 +261,16 @@ impl Jacobian {
 
     /// Set r equal to the sum of a and b. If rzr is non-NULL, r->z =
     /// a->z * *rzr (a cannot be infinity in that case).
-    pub fn add_var_in_place(&mut self, a: &Jacobian, b: &Jacobian) {
+    pub fn add_var_in_place(&mut self, a: &Jacobian, b: &Jacobian, rzr: Option<&mut Field>) {
         if a.is_infinity() {
+            debug_assert!(rzr.is_none());
             *self = b.clone();
             return;
         }
         if b.is_infinity() {
+            if Some(rzr) = rzr {
+                rzr.set_int(1);
+            }
             *self = a.clone();
             return;
         }
@@ -275,6 +288,9 @@ impl Jacobian {
             if i.normalizes_to_zero_var() {
                 r.double_var_in_place(a);
             } else {
+                if Some(rzr) = rzr {
+                    rzr.set_int(0);
+                }
                 r.infinity = true;
             }
             return;
@@ -283,6 +299,9 @@ impl Jacobian {
         let mut h2 = h.sqr();
         let mut h3 = &h * h2;
         h *= &b.z;
+        if Some(rzr) = rzr {
+            *rzr = h.clone();
+        }
         self.z = &a.z * &h;
         t = &u1 * h2;
         self.x = t; self.x.mul_int(2); self.x += &h3;
@@ -363,38 +382,139 @@ impl Jacobian {
     /// but without constant-time guarantee, and b is allowed to be
     /// infinity. If rzr is non-NULL, r->z = a->z * *rzr (a cannot be
     /// infinity in that case).
-    pub fn add_ge_var_in_place(&mut self, a: &Jacobian, b: &Affine, rzr: Option<&Field>) {
+    pub fn add_ge_var_in_place(&mut self, a: &Jacobian, b: &Affine, rzr: Option<&mut Field>) {
+        if a.is_infinity() {
+            debug_assert!(rzr.is_none());
+            self.set_ge(b);
+            return;
+        }
+        if b.is_infinity() {
+            if Some(rzr) = rzr {
+                rzr.set_int(1);
+            }
+            *self = a.clone();
+            return;
+        }
+        self.infinity = false;
 
+        let mut z12 = a.z.sqr();
+        let mut u1 = a.x.clone(); u1.normalize_weak();
+        let mut u2 = &b.x * &z12;
+        let mut s1 = a.y.clone(); s1.normalize_weak();
+        let mut s2 = &b.y * &z12; s2 *= &a.z;
+        let mut h = u1.neg(1); h += &u2;
+        let mut i = s1.neg(1); i += &s2;
+        if h.normalizes_to_zero_var() {
+            if i.normalizes_to_zero_var() {
+                self.double_var_in_place(a, rzr);
+            } else {
+                if Some(rzr) = rzr {
+                    rzr.set_int(0);
+                }
+                self.infinity = true;
+            }
+            return;
+        }
+        let mut i2 = i.sqr();
+        let mut h2 = h.sqr();
+        let mut h3 = &h * &h2;
+        if Some(rzr) = rzr {
+            *rzr = h;
+        }
+        self.z = &a.z * &h;
+        let mut t = &u1 * &h2;
+        self.x = t; self.x.mul_int(2); self.x += &h3;
+        self.x = self.x.neg(3); self.x += &i2;
+        self.y = self.x.neg(5); self.y += &t; self.y *= &i;
+        h3 *= &s1; h3 = h3.neg(1);
+        self.y += &h3;
     }
 
     /// Set r equal to the sum of a and b (with the inverse of b's Z
     /// coordinate passed as bzinv).
-    pub fn add_zinv_var_in_place(&mut self, a: Jacobian, b: &Affine, bzinv: &Field) {
+    pub fn add_zinv_var_in_place(&mut self, a: &Jacobian, b: &Affine, bzinv: &Field) {
+        if b.is_infinity() {
+            *self = a.clone();
+            return;
+        }
+        if a.is_infinity() {
+            self.infinity = b.infinity;
+            let mut bzinv2 = bzinv.sqr();
+            let mut bzinv3 = &bzinv2 * bzinv;
+            self.x = &b.x * &bzinv2;
+            self.y = &b.y * &bzinv3;
+            self.z.set_int(1);
+            return;
+        }
+        self.infinity = false;
 
+        let mut az = &a.z & bzinv;
+        let mut z12 = az.sqr();
+        let mut u1 = a.x.clone(); u1.normalize_weak();
+        let mut u2 = &b.x * &z12;
+        let mut s1 = a.y.clone(); s1.normalize_weak();
+        let mut s2 = &b.y * &z12; s2 *= &az;
+        let mut h = u1.neg(1); h += &u2;
+        let mut i = s1.neg(1); i += &s2;
+        if h.normalizes_to_zero_var() {
+            if i.normalizes_to_zero_var() {
+                self.double_var(a, None);
+            } else {
+                self.infinity = true;
+            }
+            return;
+        }
+        let mut i2 = i.sqr();
+        let mut h2 = h.sqr();
+        let mut h3 = &h * &h2;
+        self.z = a.z.clone(); self.z *= &h;
+        let mut t = &u1 * &h2;
+        self.x = t; self.x.mul_int(2); self.x += &h3;
+        self.x = self.x.neg(3); self.x += &i2;
+        self.y = self.x.neg(5); self.y += &t; self.y *= &i;
+        h3 *= &s1; h3 = h3.neg(1);
+        self.y += &h3;
     }
 
     /// Clear a secp256k1_gej to prevent leaking sensitive
     /// information.
     pub fn clear(&mut self) {
-
+        self.infinity = false;
+        self.x.clear();
+        self.y.clear();
+        self.z.clear();
     }
 
     /// Rescale a jacobian point by b which must be
     /// non-zero. Constant-time.
-    pub fn rescale(&mut self, b: &Field) {
-
+    pub fn rescale(&mut self, s: &Field) {
+        debug_assert!(!b.is_zero());
+        let mut zz = s.sqr();
+        self.x *= &zz;
+        self.y *= &zz;
+        self.y *= s;
+        self.z *= s;
     }
 }
 
 impl From<AffineStorage> for Affine {
     fn from(a: AffineStorage) -> Affine {
-
+        affine_const!(
+            a.x.into(),
+            a.y.into()
+        )
     }
 }
 
 impl Into<AffineStorage> for Affine {
-    fn into(self) -> AffineStorage {
-
+    fn into(mut self) -> AffineStorage {
+        debug_assert!(!self.is_infinity());
+        self.x.normalize();
+        self.y.normalize();
+        affine_storage_const!(
+            FieldStorage::from(self.x),
+            FieldStorage::from(self.y)
+        );
     }
 }
 
@@ -402,6 +522,7 @@ impl AffineStorage {
     /// If flag is true, set *r equal to *a; otherwise leave
     /// it. Constant-time.
     pub fn cmov(&mut self, a: &AffineStorage, flag: bool) {
-
+        self.x.cmov(&a.x, flag);
+        self.y.cmov(&a.y, flag);
     }
 }
