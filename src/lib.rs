@@ -2,6 +2,7 @@
 mod field;
 #[macro_use]
 mod group;
+mod scalar;
 
 #[cfg(test)]
 mod tests {
