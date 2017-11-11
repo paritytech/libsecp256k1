@@ -435,7 +435,7 @@ impl Field {
 
     pub fn neg(&self, m: u32) -> Field {
         let mut ret = Field::default();
-        ret.negate_in_place(self, m);
+        ret.neg_in_place(self, m);
         ret
     }
 

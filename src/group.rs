@@ -1,4 +1,4 @@
-use field::Field;
+use field::{Field, FieldStorage};
 
 macro_rules! affine_const {
     ($x: expr, $y: expr) => {
@@ -25,12 +25,14 @@ macro_rules! affine_storage_const {
     }
 }
 
+#[derive(Clone)]
 pub struct Affine {
     pub(crate) x: Field,
     pub(crate) y: Field,
     pub(crate) infinity: bool,
 }
 
+#[derive(Clone)]
 pub struct Jacobian {
     pub(crate) x: Field,
     pub(crate) y: Field,
@@ -38,6 +40,7 @@ pub struct Jacobian {
     pub(crate) infinity: bool,
 }
 
+#[derive(Clone)]
 pub struct AffineStorage {
     pub(crate) x: Field,
     pub(crate) y: Field,
@@ -119,17 +122,17 @@ impl Affine {
         if self.is_infinity() {
             return false;
         }
-        let y2 = a.y.sqr();
-        let mut x3 = a.x.sqr();
-        x3 *= &a.x;
+        let y2 = self.y.sqr();
+        let mut x3 = self.x.sqr();
+        x3 *= &self.x;
         let mut c = Field::default();
         c.set_int(CURVE_B);
         x3 += &c;
         x3.normalize_weak();
-        y2.equal_var(&x3)
+        y2.eq_var(&x3)
     }
 
-    pub fn neg_in_place(&self, other: &Affine) {
+    pub fn neg_in_place(&mut self, other: &Affine) {
         *self = other.clone();
         self.y.normalize_weak();
         self.y = self.y.neg(1);
@@ -142,12 +145,12 @@ impl Affine {
         let mut a = a.clone();
         a.z.inv();
         let z2 = a.z.sqr();
-        let z3 = &a.z & &z2;
+        let z3 = &a.z * &z2;
         a.x *= &z2;
         a.y *= &z3;
         a.z.set_int(1);
-        r.x = a.x;
-        r.y = a.y;
+        self.x = a.x;
+        self.y = a.y;
     }
 
     /// Clear a secp256k1_ge to prevent leaking sensitive information.
@@ -177,22 +180,22 @@ impl Jacobian {
     }
 
     /// Compare the X coordinate of a group element (jacobian).
-    pub fn eq_x_var(&self, a: &Jacobian) -> bool {
-        debug_assert!(!a.infinity);
-        let mut r = a.z.sqr();
+    pub fn eq_x_var(&self, x: &Field) -> bool {
+        debug_assert!(!self.is_infinity());
+        let mut r = self.z.sqr();
         r *= x;
-        let mut r2 = a.x;
+        let mut r2 = self.x.clone();
         r2.normalize_weak();
-        return r.equal_var(r2);
+        return r.eq_var(&r2);
     }
 
     /// Set r equal to the inverse of a (i.e., mirrored around the X
     /// axis).
     pub fn neg_in_place(&mut self, a: &Jacobian) {
         self.infinity = a.infinity;
-        self.x = a.x;
-        self.y = a.y;
-        self.z = a.z;
+        self.x = a.x.clone();
+        self.y = a.y.clone();
+        self.z = a.z.clone();
         self.y.normalize_weak();
         self.y = self.y.neg(1);
     }
@@ -216,7 +219,7 @@ impl Jacobian {
     /// a->z * *rzr (where infinity means an implicit z = 0). a may
     /// not be zero. Constant time.
     pub fn double_nonzero_in_place(&mut self, a: &Jacobian, rzr: Option<&mut Field>) {
-        debug_assert!(!self.is_infinity);
+        debug_assert!(!self.is_infinity());
         self.double_var_in_place(a, rzr);
     }
 
@@ -249,7 +252,7 @@ impl Jacobian {
         t3 *= &a.x;
         self.x = t3.clone();
         self.x.mul_int(4);
-        self.x = r.x.neg(4);
+        self.x = self.x.neg(4);
         self.x += &t2;
         t2 = t2.neg(1);
         t3.mul_int(6);
@@ -268,7 +271,7 @@ impl Jacobian {
             return;
         }
         if b.is_infinity() {
-            if Some(rzr) = rzr {
+            if let Some(rzr) = rzr {
                 rzr.set_int(1);
             }
             *self = a.clone();
@@ -286,25 +289,25 @@ impl Jacobian {
         let mut i = s1.neg(1); i += &s2;
         if h.normalizes_to_zero_var() {
             if i.normalizes_to_zero_var() {
-                r.double_var_in_place(a);
+                self.double_var_in_place(a, rzr);
             } else {
-                if Some(rzr) = rzr {
+                if let Some(rzr) = rzr {
                     rzr.set_int(0);
                 }
-                r.infinity = true;
+                self.infinity = true;
             }
             return;
         }
         let mut i2 = i.sqr();
         let mut h2 = h.sqr();
-        let mut h3 = &h * h2;
+        let mut h3 = &h * &h2;
         h *= &b.z;
-        if Some(rzr) = rzr {
+        if let Some(rzr) = rzr {
             *rzr = h.clone();
         }
         self.z = &a.z * &h;
-        t = &u1 * h2;
-        self.x = t; self.x.mul_int(2); self.x += &h3;
+        let mut t = &u1 * &h2;
+        self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
@@ -319,10 +322,10 @@ impl Jacobian {
         debug_assert!(!b.infinity);
 
         let mut zz = a.z.sqr();
-        let mut u1 = a.x; u1.normalize_weak();
+        let mut u1 = a.x.clone(); u1.normalize_weak();
         let mut u2 = &b.x * &zz;
-        let mut s1 = a.y; s1.normalize_weak();
-        s2 = &b.y * &zz;
+        let mut s1 = a.y.clone(); s1.normalize_weak();
+        let mut s2 = &b.y * &zz;
         s2 *= &a.z;
         let mut t = u1.clone(); t += &u2;
         let mut m = s1.clone(); m += &s2;
@@ -344,7 +347,7 @@ impl Jacobian {
         n = n.sqr();
         n.cmov(&m, degenerate);
         t = rr_alt.sqr();
-        self.z = &a.z * m_alt;
+        self.z = &a.z * &m_alt;
         let mut infinity = {
             let p = self.z.normalizes_to_zero();
             let q = a.infinity;
@@ -356,24 +359,24 @@ impl Jacobian {
                 (false, false) => false,
             }
         };
-        r.z.mul_int(2);
+        self.z.mul_int(2);
         q = q.neg(1);
         t += &q;
         t.normalize_weak();
-        r.x = t.clone();
+        self.x = t.clone();
         t.mul_int(2);
         t += &q;
         t *= &rr_alt;
         t += &n;
-        r.y = t.neg(3);
-        r.y.normalize_weak();
-        r.x.mul(4);
-        r.y.mul(4);
+        self.y = t.neg(3);
+        self.y.normalize_weak();
+        self.x.mul_int(4);
+        self.y.mul_int(4);
 
-        r.x.cmov(&b.x, a.infinity);
-        r.y.cmov(&b.y, a.infinity);
-        r.z.cmov(&FE1, a.infinity);
-        r.infinity = infinity;
+        self.x.cmov(&b.x, a.infinity);
+        self.y.cmov(&b.y, a.infinity);
+        self.z.cmov(&FE1, a.infinity);
+        self.infinity = infinity;
     }
 
     /// Set r equal to the sum of a and b (with b given in affine
@@ -389,7 +392,7 @@ impl Jacobian {
             return;
         }
         if b.is_infinity() {
-            if Some(rzr) = rzr {
+            if let Some(rzr) = rzr {
                 rzr.set_int(1);
             }
             *self = a.clone();
@@ -408,7 +411,7 @@ impl Jacobian {
             if i.normalizes_to_zero_var() {
                 self.double_var_in_place(a, rzr);
             } else {
-                if Some(rzr) = rzr {
+                if let Some(rzr) = rzr {
                     rzr.set_int(0);
                 }
                 self.infinity = true;
@@ -418,12 +421,12 @@ impl Jacobian {
         let mut i2 = i.sqr();
         let mut h2 = h.sqr();
         let mut h3 = &h * &h2;
-        if Some(rzr) = rzr {
-            *rzr = h;
+        if let Some(rzr) = rzr {
+            *rzr = h.clone();
         }
         self.z = &a.z * &h;
         let mut t = &u1 * &h2;
-        self.x = t; self.x.mul_int(2); self.x += &h3;
+        self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
@@ -448,7 +451,7 @@ impl Jacobian {
         }
         self.infinity = false;
 
-        let mut az = &a.z & bzinv;
+        let mut az = &a.z * &bzinv;
         let mut z12 = az.sqr();
         let mut u1 = a.x.clone(); u1.normalize_weak();
         let mut u2 = &b.x * &z12;
@@ -458,7 +461,7 @@ impl Jacobian {
         let mut i = s1.neg(1); i += &s2;
         if h.normalizes_to_zero_var() {
             if i.normalizes_to_zero_var() {
-                self.double_var(a, None);
+                self.double_var_in_place(a, None);
             } else {
                 self.infinity = true;
             }
@@ -469,7 +472,7 @@ impl Jacobian {
         let mut h3 = &h * &h2;
         self.z = a.z.clone(); self.z *= &h;
         let mut t = &u1 * &h2;
-        self.x = t; self.x.mul_int(2); self.x += &h3;
+        self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
@@ -488,7 +491,7 @@ impl Jacobian {
     /// Rescale a jacobian point by b which must be
     /// non-zero. Constant-time.
     pub fn rescale(&mut self, s: &Field) {
-        debug_assert!(!b.is_zero());
+        debug_assert!(!s.is_zero());
         let mut zz = s.sqr();
         self.x *= &zz;
         self.y *= &zz;
@@ -512,9 +515,9 @@ impl Into<AffineStorage> for Affine {
         self.x.normalize();
         self.y.normalize();
         affine_storage_const!(
-            FieldStorage::from(self.x),
-            FieldStorage::from(self.y)
-        );
+            self.x.into(),
+            self.y.into()
+        )
     }
 }
 
