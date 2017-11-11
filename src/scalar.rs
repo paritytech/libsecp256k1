@@ -147,7 +147,7 @@ impl Scalar {
     }
 
     /// Set a scalar from a big endian byte array.
-    pub fn set_b32(&mut self, b32: [u8; 32]) -> bool {
+    pub fn set_b32(&mut self, b32: &[u8; 32]) -> bool {
         self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8) | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
         self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8) | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
         self.0[2] = (b32[23] as u32) | ((b32[22] as u32) << 8) | ((b32[21] as u32) << 16) | ((b32[20] as u32) << 24);
@@ -328,22 +328,169 @@ macro_rules! define_ops {
 
         macro_rules! extract {
             () => {
-                let n = $c0;
-                $c0 = $c1;
-                $c1 = $c2;
-                $c2 = 0;
-                n
+                {
+                    let n = $c0;
+                    $c0 = $c1;
+                    $c1 = $c2;
+                    $c2 = 0;
+                    n
+                }
             }
         }
 
         macro_rules! extract_fast {
             () => {
-                let n = $c0;
-                let $c0 = $c1;
-                let $c1 = 0;
-                debug_assert!($c2 == 0);
-                n
+                {
+                    let n = $c0;
+                    let $c0 = $c1;
+                    let $c1 = 0;
+                    debug_assert!($c2 == 0);
+                    n
+                }
             }
         }
+    }
+}
+
+impl Scalar {
+    fn reduce_512(&mut self, l: &[u32; 16]) {
+        let (mut c0, mut c1, mut c2): (u32, u32, u32);
+        define_ops!(c0, c1, c2);
+
+        let mut c: u64;
+        let (mut n0, mut n1, mut n2, mut n3, mut n4, mut n5, mut n6, mut n7) = (l[8], l[9], l[10], l[11], l[12], l[13], l[14], l[15]);
+        let (mut m0, mut m1, mut m2, mut m3, mut m4, mut m5, mut m6, mut m7, mut m8, mut m9, mut m10, mut m11, mut m12): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7, mut p8): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
+
+        c0 = l[0]; c1 = 0; c2 = 0;
+        muladd_fast!(n0, SECP256K1_N_C_0);
+        m0 = extract_fast!();
+        sumadd_fast!(l[1]);
+        muladd!(n1, SECP256K1_N_C_0);
+        muladd!(n0, SECP256K1_N_C_1);
+        m1 = extract!();
+        sumadd!(l[2]);
+        muladd!(n2, SECP256K1_N_C_0);
+        muladd!(n1, SECP256K1_N_C_1);
+        muladd!(n0, SECP256K1_N_C_2);
+        m2 = extract!();
+        sumadd!(l[3]);
+        muladd!(n3, SECP256K1_N_C_0);
+        muladd!(n2, SECP256K1_N_C_1);
+        muladd!(n1, SECP256K1_N_C_2);
+        muladd!(n0, SECP256K1_N_C_3);
+        m3 = extract!();
+        sumadd!(l[4]);
+        muladd!(n4, SECP256K1_N_C_0);
+        muladd!(n3, SECP256K1_N_C_1);
+        muladd!(n2, SECP256K1_N_C_2);
+        muladd!(n1, SECP256K1_N_C_3);
+        sumadd!(n0);
+        m4 = extract!();
+        sumadd!(l[5]);
+        muladd!(n5, SECP256K1_N_C_0);
+        muladd!(n4, SECP256K1_N_C_1);
+        muladd!(n3, SECP256K1_N_C_2);
+        muladd!(n2, SECP256K1_N_C_3);
+        sumadd!(n1);
+        m5 = extract!();
+        sumadd!(l[6]);
+        muladd!(n6, SECP256K1_N_C_0);
+        muladd!(n5, SECP256K1_N_C_1);
+        muladd!(n4, SECP256K1_N_C_2);
+        muladd!(n3, SECP256K1_N_C_3);
+        sumadd!(n2);
+        m6 = extract!();
+        sumadd!(l[7]);
+        muladd!(n7, SECP256K1_N_C_0);
+        muladd!(n6, SECP256K1_N_C_1);
+        muladd!(n5, SECP256K1_N_C_2);
+        muladd!(n4, SECP256K1_N_C_3);
+        sumadd!(n3);
+        m7 = extract!();
+        muladd!(n7, SECP256K1_N_C_1);
+        muladd!(n6, SECP256K1_N_C_2);
+        muladd!(n5, SECP256K1_N_C_3);
+        sumadd!(n4);
+        m8 = extract!();
+        muladd!(n7, SECP256K1_N_C_2);
+        muladd!(n6, SECP256K1_N_C_3);
+        sumadd!(n5);
+        m9 = extract!();
+        muladd!(n7, SECP256K1_N_C_3);
+        sumadd!(n6);
+        m10 = extract!();
+        sumadd_fast!(n7);
+        m11 = extract_fast!();
+        debug_assert!(c0 <= 1);
+        m12 = c0;
+
+        /* Reduce 385 bits into 258. */
+        /* p[0..8] = m[0..7] + m[8..12] * SECP256K1_N_C. */
+        c0 = m0; c1 = 0; c2 = 0;
+        muladd_fast!(m8, SECP256K1_N_C_0);
+        p0 = extract_fast!();
+        sumadd_fast!(m1);
+        muladd!(m9, SECP256K1_N_C_0);
+        muladd!(m8, SECP256K1_N_C_1);
+        p1 = extract!();
+        sumadd!(m2);
+        muladd!(m10, SECP256K1_N_C_0);
+        muladd!(m9, SECP256K1_N_C_1);
+        muladd!(m8, SECP256K1_N_C_2);
+        p2 = extract!();
+        sumadd!(m3);
+        muladd!(m11, SECP256K1_N_C_0);
+        muladd!(m10, SECP256K1_N_C_1);
+        muladd!(m9, SECP256K1_N_C_2);
+        muladd!(m8, SECP256K1_N_C_3);
+        p3 = extract!();
+        sumadd!(m4);
+        muladd!(m12, SECP256K1_N_C_0);
+        muladd!(m11, SECP256K1_N_C_1);
+        muladd!(m10, SECP256K1_N_C_2);
+        muladd!(m9, SECP256K1_N_C_3);
+        sumadd!(m8);
+        p4 = extract!();
+        sumadd!(m5);
+        muladd!(m12, SECP256K1_N_C_1);
+        muladd!(m11, SECP256K1_N_C_2);
+        muladd!(m10, SECP256K1_N_C_3);
+        sumadd!(m9);
+        p5 = extract!();
+        sumadd!(m6);
+        muladd!(m12, SECP256K1_N_C_2);
+        muladd!(m11, SECP256K1_N_C_3);
+        sumadd!(m10);
+        p6 = extract!();
+        sumadd_fast!(m7);
+        muladd_fast!(m12, SECP256K1_N_C_3);
+        sumadd_fast!(m11);
+        p7 = extract_fast!();
+        p8 = c0 + m12;
+        debug_assert!(p8 <= 2);
+
+        /* Reduce 258 bits into 256. */
+        /* r[0..7] = p[0..7] + p[8] * SECP256K1_N_C. */
+        c = p0 as u64 + SECP256K1_N_C_0 as u64 * p8 as u64;
+        self.0[0] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p1 as u64 + SECP256K1_N_C_1 as u64 * p8 as u64;
+        self.0[1] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p2 as u64 + SECP256K1_N_C_2 as u64 * p8 as u64;
+        self.0[2] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p3 as u64 + SECP256K1_N_C_3 as u64 * p8 as u64;
+        self.0[3] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p4 as u64 + p8 as u64;
+        self.0[4] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p5 as u64;
+        self.0[5] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p6 as u64;
+        self.0[6] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        c += p7 as u64;
+        self.0[7] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+
+        let overflow = self.check_overflow();
+        debug_assert!(c + if overflow { 1 } else { 0 } <= 1);
+        self.reduce(c + if overflow { 1 } else { 0 } == 1);
     }
 }
