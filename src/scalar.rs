@@ -119,4 +119,30 @@ impl Scalar {
         self.reduce(overflow == 1);
         return overflow == 1;
     }
+
+    /// Conditionally add a power of two to a scalar. The result is
+    /// not allowed to overflow.
+    pub fn cadd_bit(&mut self, mut bit: usize, flag: bool) {
+        let mut t: u64;
+        debug_assert!(bit < 256);
+        bit += if flag { 0 } else { usize::max_value() } & 0x100;
+        t = (self.0[0] as u64) + ((if ((bit >> 5) == 0) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[1] as u64) + ((if ((bit >> 5) == 1) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[2] as u64) + ((if ((bit >> 5) == 2) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[3] as u64) + ((if ((bit >> 5) == 3) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[4] as u64) + ((if ((bit >> 5) == 4) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[5] as u64) + ((if ((bit >> 5) == 5) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[6] as u64) + ((if ((bit >> 5) == 6) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        t += (self.0[7] as u64) + ((if ((bit >> 5) == 7) { 1 } else { 0 }) << (bit & 0x1F));
+        self.0[7] = (t & 0xFFFFFFFF) as u32;
+        debug_assert!((t >> 32) == 0);
+        debug_assert!(!self.check_overflow());
+    }
 }
