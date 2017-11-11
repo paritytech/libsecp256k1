@@ -641,4 +641,10 @@ impl Scalar {
         debug_assert!(c1 == 0);
         l[15] = c0;
     }
+
+    pub fn mul_in_place(&mut self, a: &Scalar, b: &Scalar) {
+        let mut l = [0u32; 16];
+        a.mul_512(b, &mut l);
+        self.reduce_512(&l);
+    }
 }
