@@ -1,3 +1,5 @@
+use std::ops::{Add, AddAssign, Mul, MulAssign};
+
 const SECP256K1_N_0: u32 = 0xD0364141;
 const SECP256K1_N_1: u32 = 0xBFD25E8C;
 const SECP256K1_N_2: u32 = 0xAF48A03B;
@@ -22,6 +24,7 @@ const SECP256K1_N_H_5: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_6: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_7: u32 = 0x7FFFFFFF;
 
+#[derive(Clone, Eq, PartialEq)]
 pub struct Scalar(pub [u32; 8]);
 
 impl Scalar {
@@ -670,5 +673,241 @@ impl Scalar {
         let mut l = [0u32; 16];
         a.sqr_512(&mut l);
         self.reduce_512(&l);
+    }
+
+    pub fn sqr(&self) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.sqr_in_place(self);
+        ret
+    }
+
+    pub fn inv_in_place(&mut self, x: &Scalar) {
+        let mut u2 = x.sqr();
+        let mut x2 = &u2 * x;
+        let mut u5 = &u2 * &x2;
+        let mut x3 = &u5 * &u2;
+        let mut u9 = &x3 * &u2;
+        let mut u11 = &u9 * &u2;
+        let mut u13 = &u11 * &u2;
+
+        let mut x6 = u13.sqr();
+        x6 = x6.sqr();
+        x6 *= &u11;
+
+        let mut x8 = x6.sqr();
+        x8 = x8.sqr();
+        x8 *= &x2;
+
+        let mut x14 = x8.sqr();
+        for i in 0..5 {
+            x14 = x14.sqr();
+        }
+        x14 *= &x6;
+
+        let mut x28 = x14.sqr();
+        for i in 0..13 {
+            x28 = x28.sqr();
+        }
+        x28 *= &x14;
+
+        let mut x56 = x28.sqr();
+        for i in 0..27 {
+            x56 = x56.sqr();
+        }
+        x56 *= &x28;
+
+        let mut x112 = x56.sqr();
+        for i in 0..55 {
+            x112 = x112.sqr();
+        }
+        x112 *= &x56;
+
+        let mut x126 = x112.sqr();
+        for i in 0..13 {
+            x126 = x126.sqr();
+        }
+        x126 *= &x14;
+
+        let mut t = x126;
+        for i in 0..3 {
+            t = t.sqr();
+        }
+        t *= &u5;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &u5;
+        for i in 0..5 {
+            t = t.sqr();
+        }
+        t *= &u11;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &u11;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..5 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..6 {
+            t = t.sqr();
+        }
+        t *= &u13;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &u5;
+        for i in 0..3 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..5 {
+            t = t.sqr();
+        }
+        t *= &u9;
+        for i in 0..6 {
+            t = t.sqr();
+        }
+        t *= &u5;
+        for i in 0..10 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &x3;
+        for i in 0..9 {
+            t = t.sqr();
+        }
+        t *= &x8;
+        for i in 0..5 {
+            t = t.sqr();
+        }
+        t *= &u9;
+        for i in 0..6 {
+            t = t.sqr();
+        }
+        t *= &u11;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &u13;
+        for i in 0..5 {
+            t = t.sqr();
+        }
+        t *= &x2;
+        for i in 0..6 {
+            t = t.sqr();
+        }
+        t *= &u13;
+        for i in 0..10 {
+            t = t.sqr();
+        }
+        t *= &u13;
+        for i in 0..4 {
+            t = t.sqr();
+        }
+        t *= &u9;
+        for i in 0..6 {
+            t = t.sqr();
+        }
+        t *= x;
+        for i in 0..8 {
+            t = t.sqr();
+        }
+        *self = &t * &x6;
+    }
+
+    pub fn inv(&self) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.inv_in_place(self);
+        ret
+    }
+
+    pub fn inv_var(&self) -> Scalar {
+        self.inv()
+    }
+
+    pub fn is_even(&self) -> bool {
+        return self.0[0] & 1 == 0;
+    }
+}
+
+impl Default for Scalar {
+    fn default() -> Scalar {
+        Scalar([0u32; 8])
+    }
+}
+
+impl Add<Scalar> for Scalar {
+    type Output = Scalar;
+    fn add(self, other: Scalar) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.add_in_place(&self, &other);
+        ret
+    }
+}
+
+impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
+    type Output = Scalar;
+    fn add(self, other: &'a Scalar) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.add_in_place(self, other);
+        ret
+    }
+}
+
+impl<'a> AddAssign<&'a Scalar> for Scalar {
+    fn add_assign(&mut self, other: &'a Scalar) {
+        let mut ret = Scalar::default();
+        ret.add_in_place(self, other);
+        *self = ret;
+    }
+}
+
+impl AddAssign<Scalar> for Scalar {
+    fn add_assign(&mut self, other: Scalar) {
+        self.add_assign(&other)
+    }
+}
+
+impl Mul<Scalar> for Scalar {
+    type Output = Scalar;
+    fn mul(self, other: Scalar) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.mul_in_place(&self, &other);
+        ret
+    }
+}
+
+impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
+    type Output = Scalar;
+    fn mul(self, other: &'a Scalar) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.mul_in_place(self, other);
+        ret
+    }
+}
+
+impl<'a> MulAssign<&'a Scalar> for Scalar {
+    fn mul_assign(&mut self, other: &'a Scalar) {
+        let mut ret = Scalar::default();
+        ret.mul_in_place(self, other);
+        *self = ret;
+    }
+}
+
+impl MulAssign<Scalar> for Scalar {
+    fn mul_assign(&mut self, other: Scalar) {
+        self.mul_assign(&other)
     }
 }
