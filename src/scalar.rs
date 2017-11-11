@@ -174,4 +174,35 @@ impl Scalar {
         bin[28] = (self.0[0] >> 24) as u8; bin[29] = (self.0[0] >> 16) as u8; bin[30] = (self.0[0] >> 8) as u8; bin[31] = (self.0[0]) as u8;
         bin
     }
+
+    /// Check whether a scalar equals zero.
+    pub fn is_zero(&self) -> bool {
+        (self.0[0] | self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
+    }
+
+    /// Compute the complement of a scalar (modulo the group order).
+    pub fn neg_in_place(&mut self, a: &Scalar) {
+        let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
+        let mut t: u64 = (!a.0[0]) as u64 + SECP256K1_N_0 as u64 + 1;
+        self.0[0] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[1]) as u64 + SECP256K1_N_1 as u64;
+        self.0[1] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[2]) as u64 + SECP256K1_N_2 as u64;
+        self.0[2] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[3]) as u64 + SECP256K1_N_3 as u64;
+        self.0[3] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[4]) as u64 + SECP256K1_N_4 as u64;
+        self.0[4] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[5]) as u64 + SECP256K1_N_5 as u64;
+        self.0[5] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[6]) as u64 + SECP256K1_N_6 as u64;
+        self.0[6] = (t & nonzero) as u32; t >>= 32;
+        t += (!a.0[7]) as u64 + SECP256K1_N_7 as u64;
+        self.0[7] = (t & nonzero) as u32;
+    }
+
+    /// Check whether a scalar equals one.
+    pub fn is_one(&self) -> bool {
+        ((self.0[0] ^ 1) |  self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
+    }
 }
