@@ -255,3 +255,95 @@ impl Scalar {
         }
     }
 }
+
+macro_rules! define_ops {
+    ($c0: ident, $c1: ident, $c2: ident) => {
+        macro_rules! muladd {
+            ($a: expr, $b: expr) => {
+                let a = $a; let b = $b;
+                let t = (a as u64) * (b as u64);
+                let mut th = (t >> 32) as u32;
+                let mut tl = t as u32;
+                $c0 = $c0.wrapping_add(tl);
+                th = th.wrapping_add(if $c0 < tl { 1 } else { 0 });
+                $c1 = $c1.wrapping_add(th);
+                $c2 = $c2.wrapping_add(if $c1 < th { 1 } else { 0 });
+                debug_assert!($c1 >= th || $c2 != 0);
+            }
+        }
+
+        macro_rules! muladd_fast {
+            ($a: expr, $b: expr) => {
+                let a = $a; let b = $b;
+                let t = (a as u64) * (b as u64);
+                let mut th = (t >> 32) as u32;
+                let mut tl = t as u32;
+                $c0 = $c0.wrapping_add(tl);
+                th = th.wrapping_add(if $c0 < tl { 1 } else { 0 });
+                $c1 = $c1.wrapping_add(th);
+                debug_assert!($c1 >= th);
+            }
+        }
+
+        macro_rules! muladd2 {
+            ($a: expr, $b: expr) => {
+                let a = $a; let b = $b;
+                let t = (a as u64) * (b as u64);
+                let mut th = (t >> 32) as u32;
+                let mut tl = t as u32;
+                let mut th2 = th.wrapping_add(th);
+                $c2 = $c2.wrapping_add(if th2 < th { 1 } else { 0 });
+                debug_assert!(th2 >= th || $c2 != 0);
+                let mut tl2 = tl.wrapping_add(tl);
+                th2 = th2.wrapping_add(if tl2 < tl { 1 } else { 0 });
+                $c0 = $c0.wrapping_add(tl2);
+                th2 = th2.wrapping_add(if $c0 < tl2 { 1 } else { 0 });
+                $c2 = $c2.wrapping_add(if $c0 < tl2 && th2 == 0 { 1 } else { 0 });
+                debug_assert!($c0 >= tl2 || th2 != 0 || c2 != 0);
+                $c1 = $c1.wrapping_add(th2);
+                $c2 = $c2.wrapping_add(if $c1 < th2 { 1 } else { 0 });
+                debug_assert!($c1 >= th2 || $c2 != 0);
+            }
+        }
+
+        macro_rules! sumadd {
+            ($a: expr) => {
+                let a = $a;
+                $c0 = $c0.wrapping_add(a);
+                let over = if $c0 < a { 1 } else { 0 };
+                $c1 = $c1.wrapping_add(over);
+                $c2 = $c2.wrapping_add(if $c1 < over { 1 } else { 0 });
+            }
+        }
+
+        macro_rules! sumadd_fast {
+            ($a: expr) => {
+                let a = $a;
+                $c0 = $c0.wrapping_add(a);
+                $c1 = $c1.wrapping_add(if $c0 < a { 1 } else { 0 });
+                debug_assert!($c1 != 0 || $c0 >= a);
+                debug_assert!($c2 == 0);
+            }
+        }
+
+        macro_rules! extract {
+            () => {
+                let n = $c0;
+                $c0 = $c1;
+                $c1 = $c2;
+                $c2 = 0;
+                n
+            }
+        }
+
+        macro_rules! extract_fast {
+            () => {
+                let n = $c0;
+                let $c0 = $c1;
+                let $c1 = 0;
+                debug_assert!($c2 == 0);
+                n
+            }
+        }
+    }
+}
