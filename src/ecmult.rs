@@ -50,6 +50,16 @@ fn odd_multiples_table_storage_var(pre: &mut [AffineStorage; ECMULT_TABLE_SIZE],
     }
 }
 
+fn odd_multiples_table_globalz_windowa(pre: &mut [Affine; ECMULT_TABLE_SIZE],
+                                       globalz: &mut Field,
+                                       a: &Jacobian) {
+    let prej: [Jacobian; ECMULT_TABLE_SIZE] = Default::default();
+    let zr: [Field; ECMULT_TABLE_SIZE] = Default::default();
+
+    odd_multiples_table(&mut prej, &mut zr, a);
+    globalz_set_table_gej(pre, globalz, &prej, &zr);
+}
+
 impl ECMultContext {
     pub fn new() -> ECMultContext {
         let mut gj = Jacobian::default();

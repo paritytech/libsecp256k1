@@ -217,6 +217,31 @@ pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &[Field]) {
     }
 }
 
+pub fn globalz_set_table_gej(
+    r: &mut [Affine], globalz: &mut Field, a: &[Jacobian], zr: &[Field]
+) {
+    debug_assert!(r.len() == a.len() == zr.len());
+
+    let mut i = r.len() - 1;
+    let mut zs: Field;
+
+    if r.len() > 0 {
+        r[i].x = a[i].x;
+        r[i].y = a[i].y;
+        *globalz = a[i].z;
+        r[i].infinity = false;
+        zs = zr[i];
+
+        while i > 0 {
+            if i != r.len() - 1 {
+                zs *= &zr[i];
+            }
+            i -= 1;
+            r[i].set_gej_zinv(&a[i], &z);
+        }
+    }
+}
+
 impl Jacobian {
     /// Set a group element (jacobian) equal to the point at infinity.
     pub fn set_infinity(&mut self) {
@@ -545,6 +570,12 @@ impl Jacobian {
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
         self.y += &h3;
+    }
+
+    pub fn add_zinv_var_in_place(&mut self, b: &Affine, bzinv: &Field) {
+        let mut ret = Jacobian::default();
+        ret.add_zinv_var_in_place(&self, b, bzinv);
+        ret
     }
 
     /// Clear a secp256k1_gej to prevent leaking sensitive
