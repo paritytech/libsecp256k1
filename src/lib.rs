@@ -3,6 +3,7 @@ mod field;
 #[macro_use]
 mod group;
 mod scalar;
+mod ecmult;
 
 #[cfg(test)]
 mod tests {
