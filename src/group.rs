@@ -199,20 +199,20 @@ impl Affine {
     }
 }
 
-pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &Field) {
+pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &[Field]) {
     debug_assert!(r.len() == a.len());
 
     let mut i = r.len() - 1;
-    let mut zi;
+    let mut zi: Field;
 
     if r.len() > 0 {
-        zi = &a[i].z.inv();
+        zi = a[i].z.inv();
         r[i].set_gej_zinv(&a[i], &zi);
 
         while i > 0 {
             zi *= &zr[i];
             i -= 1;
-            r[i] = &a[i] * &zi;
+            r[i].set_gej_zinv(&a[i], &zi);
         }
     }
 }
@@ -497,7 +497,7 @@ impl Jacobian {
 
     pub fn add_ge_var(&self, b: &Affine, rzr: Option<&mut Field>) -> Jacobian {
         let mut ret = Jacobian::default();
-        ret.add_ge_var(&self, b, rzr);
+        ret.add_ge_var_in_place(&self, b, rzr);
         ret
     }
 
