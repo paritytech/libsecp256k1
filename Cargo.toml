@@ -9,3 +9,7 @@ authors = ["Wei Tang <hi@that.world>"]
 name = "secp256k1"
 
 [dependencies]
+
+[dev-dependencies]
+secp256k1-test = "0.7"
+rand = "0.3"
