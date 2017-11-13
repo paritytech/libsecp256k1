@@ -6,9 +6,11 @@ mod scalar;
 mod ecmult;
 mod ecdsa;
 
-use field::Field;
-use group::Affine;
-use scalar::Scalar;
+pub use field::Field;
+pub use group::Affine;
+pub use scalar::Scalar;
+
+pub use ecmult::ECMultContext;
 
 pub struct PublicKey(pub [u8; 64]);
 pub struct Signature(pub [u8; 64]);
