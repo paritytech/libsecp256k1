@@ -46,6 +46,36 @@ pub struct AffineStorage {
     pub(crate) y: Field,
 }
 
+impl Default for Affine {
+    fn default() -> Affine {
+        Affine {
+            x: Field::default(),
+            y: Field::default(),
+            infinity: false,
+        }
+    }
+}
+
+impl Default for Jacobian {
+    fn default() -> Jacobian {
+        Jacobian {
+            x: Field::default(),
+            y: Field::default(),
+            z: Field::default(),
+            infinity: false,
+        }
+    }
+}
+
+impl Default for AffineStorage {
+    fn default() -> AffineStorage {
+        AffineStorage {
+            x: Field::default(),
+            y: Field::default(),
+        }
+    }
+}
+
 pub(crate) static AFFINE_INFINITY: Affine = Affine {
     x: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     y: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
@@ -153,11 +183,37 @@ impl Affine {
         self.y = a.y;
     }
 
+    pub fn set_gej_zinv(&mut self, a: &Jacobian, zi: &Field) {
+        let zi2 = zi.sqr();
+        let zi3 = &zi2 * &zi;
+        self.x = &a.x * &zi2;
+        self.y = &a.y * &zi3;
+        self.infinity = a.infinity;
+    }
+
     /// Clear a secp256k1_ge to prevent leaking sensitive information.
     pub fn clear(&mut self) {
         self.infinity = false;
         self.x.clear();
         self.y.clear();
+    }
+}
+
+pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &Field) {
+    debug_assert!(r.len() == a.len());
+
+    let mut i = r.len() - 1;
+    let mut zi;
+
+    if r.len() > 0 {
+        zi = &a[i].z.inv();
+        r[i].set_gej_zinv(&a[i], &zi);
+
+        while i > 0 {
+            zi *= &zr[i];
+            i -= 1;
+            r[i] = &a[i] * &zi;
+        }
     }
 }
 
@@ -260,6 +316,12 @@ impl Jacobian {
         self.y = &t1 * &t3;
         t2 = t4.neg(2);
         self.y += &t2;
+    }
+
+    pub fn double_var(&self, rzr: Option<&mut Field>) -> Jacobian {
+        let mut ret = Jacobian::default();
+        ret.double_var_in_place(&self, rzr);
+        ret
     }
 
     /// Set r equal to the sum of a and b. If rzr is non-NULL, r->z =
@@ -431,6 +493,12 @@ impl Jacobian {
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
         self.y += &h3;
+    }
+
+    pub fn add_ge_var(&self, b: &Affine, rzr: Option<&mut Field>) -> Jacobian {
+        let mut ret = Jacobian::default();
+        ret.add_ge_var(&self, b, rzr);
+        ret
     }
 
     /// Set r equal to the sum of a and b (with the inverse of b's Z
