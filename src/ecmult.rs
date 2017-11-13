@@ -1,8 +1,24 @@
-use group::{Affine, Jacobian, AffineStorage, set_table_gej_var, AFFINE_G};
+use group::{Affine, Jacobian, AffineStorage, set_table_gej_var, globalz_set_table_gej, AFFINE_G};
 use field::Field;
 
-const WINDOW_G: usize = 5;
-const ECMULT_TABLE_SIZE: usize = 1 << (WINDOW_G - 2);
+pub const WINDOW_A: usize = 5;
+pub const WINDOW_G: usize = 16;
+pub const ECMULT_TABLE_SIZE: usize = 1 << (WINDOW_G - 2);
+
+pub fn initialize_ecmult_table_size_array<T: Default>() -> [T; ECMULT_TABLE_SIZE] {
+    use std::{mem, ptr};
+
+    unsafe {
+        let mut array: [T; ECMULT_TABLE_SIZE] = mem::uninitialized();
+
+        for (i, element) in array.iter_mut().enumerate() {
+            let foo = T::default();
+            ptr::write(element, foo)
+        }
+
+        array
+    }
+}
 
 pub struct ECMultContext {
     pre_g: [AffineStorage; ECMULT_TABLE_SIZE],
@@ -38,9 +54,9 @@ fn odd_multiples_table(prej: &mut [Jacobian; ECMULT_TABLE_SIZE],
 
 fn odd_multiples_table_storage_var(pre: &mut [AffineStorage; ECMULT_TABLE_SIZE],
                                    a: &Jacobian) {
-    let mut prej: [Jacobian; ECMULT_TABLE_SIZE] = Default::default();
-    let mut prea: [Affine; ECMULT_TABLE_SIZE] = Default::default();
-    let mut zr: [Field; ECMULT_TABLE_SIZE] = Default::default();
+    let mut prej: [Jacobian; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+    let mut prea: [Affine; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+    let mut zr: [Field; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
 
     odd_multiples_table(&mut prej, &mut zr, a);
     set_table_gej_var(&mut prea, &prej, &zr);
@@ -53,8 +69,8 @@ fn odd_multiples_table_storage_var(pre: &mut [AffineStorage; ECMULT_TABLE_SIZE],
 fn odd_multiples_table_globalz_windowa(pre: &mut [Affine; ECMULT_TABLE_SIZE],
                                        globalz: &mut Field,
                                        a: &Jacobian) {
-    let prej: [Jacobian; ECMULT_TABLE_SIZE] = Default::default();
-    let zr: [Field; ECMULT_TABLE_SIZE] = Default::default();
+    let mut prej: [Jacobian; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+    let mut zr: [Field; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
 
     odd_multiples_table(&mut prej, &mut zr, a);
     globalz_set_table_gej(pre, globalz, &prej, &zr);
@@ -66,7 +82,7 @@ impl ECMultContext {
         gj.set_ge(&AFFINE_G);
 
         let mut ret = ECMultContext {
-            pre_g: Default::default(),
+            pre_g: initialize_ecmult_table_size_array(),
         };
 
         /* precompute the tables with odd multiples */

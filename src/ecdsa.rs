@@ -1,6 +1,3 @@
-const WINDOW_A: usize = 5;
-const WINDOW_G: usize = 5;
-
 const P_MINUS_ORDER: Field = field_const!(
     0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE
 );

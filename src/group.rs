@@ -220,24 +220,24 @@ pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &[Field]) {
 pub fn globalz_set_table_gej(
     r: &mut [Affine], globalz: &mut Field, a: &[Jacobian], zr: &[Field]
 ) {
-    debug_assert!(r.len() == a.len() == zr.len());
+    debug_assert!(r.len() == a.len() && a.len() == zr.len());
 
     let mut i = r.len() - 1;
     let mut zs: Field;
 
     if r.len() > 0 {
-        r[i].x = a[i].x;
-        r[i].y = a[i].y;
-        *globalz = a[i].z;
+        r[i].x = a[i].x.clone();
+        r[i].y = a[i].y.clone();
+        *globalz = a[i].z.clone();
         r[i].infinity = false;
-        zs = zr[i];
+        zs = zr[i].clone();
 
         while i > 0 {
             if i != r.len() - 1 {
                 zs *= &zr[i];
             }
             i -= 1;
-            r[i].set_gej_zinv(&a[i], &z);
+            r[i].set_gej_zinv(&a[i], &zs);
         }
     }
 }
@@ -572,7 +572,7 @@ impl Jacobian {
         self.y += &h3;
     }
 
-    pub fn add_zinv_var_in_place(&mut self, b: &Affine, bzinv: &Field) {
+    pub fn add_zinv_var(&mut self, b: &Affine, bzinv: &Field) -> Jacobian {
         let mut ret = Jacobian::default();
         ret.add_zinv_var_in_place(&self, b, bzinv);
         ret
