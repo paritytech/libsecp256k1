@@ -8,26 +8,48 @@ mod ecdsa;
 
 use field::Field;
 use group::Affine;
+use scalar::Scalar;
 
-pub struct PublicKey([u8; 64]);
-pub struct Signature([u8; 64]);
+pub struct PublicKey(pub [u8; 64]);
+pub struct Signature(pub [u8; 64]);
 
-pub fn public_key_load(pubkey: &PublicKey) -> Affine {
-    let mut ge = Affine::default();
-    let (mut x, mut y) = (Field::default(), Field::default());
+impl PublicKey {
+    pub fn load(&self) -> Affine {
+        let mut ge = Affine::default();
+        let (mut x, mut y) = (Field::default(), Field::default());
 
-    let mut data = [0u8; 32];
-    for i in 0..32 {
-        data[i] = pubkey.0[i];
+        let mut data = [0u8; 32];
+        for i in 0..32 {
+            data[i] = self.0[i];
+        }
+        x.set_b32(&data);
+        for i in 0..32 {
+            data[i] = self.0[i+32];
+        }
+        x.set_b32(&data);
+
+        ge.set_xy(&x, &y);
+        assert!(!ge.x.is_zero());
+
+        ge
     }
-    x.set_b32(data.clone());
-    for i in 0..32 {
-        data[i] = pubkey.0[i+32];
+}
+
+impl Signature {
+    pub fn load(&self) -> (Scalar, Scalar) {
+        let mut r = Scalar::default();
+        let mut s = Scalar::default();
+
+        let mut data = [0u8; 32];
+        for i in 0..32 {
+            data[i] = self.0[i];
+        }
+        r.set_b32(&data);
+        for i in 0..32 {
+            data[i] = self.0[i+32];
+        }
+        s.set_b32(&data);
+
+        (r, s)
     }
-    x.set_b32(data.clone());
-
-    ge.set_xy(&x, &y);
-    assert!(!ge.x.is_zero());
-
-    ge
 }
