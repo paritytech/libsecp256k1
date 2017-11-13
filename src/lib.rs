@@ -12,6 +12,12 @@ pub use scalar::Scalar;
 
 pub use ecmult::ECMultContext;
 
+pub const TAG_PUBKEY_EVEN: u8 = 0x02;
+pub const TAG_PUBKEY_ODD: u8 = 0x03;
+pub const TAG_PUBKEY_UNCOMPRESSED: u8 = 0x04;
+pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
+pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
+
 pub struct PublicKey(pub [u8; 64]);
 pub struct Signature(pub [u8; 64]);
 
