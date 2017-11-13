@@ -204,6 +204,12 @@ impl Scalar {
         self.0[7] = (t & nonzero) as u32;
     }
 
+    pub fn neg(&self) -> Scalar {
+        let mut ret = Scalar::default();
+        ret.neg_in_place(self);
+        ret
+    }
+
     /// Check whether a scalar equals one.
     pub fn is_one(&self) -> bool {
         ((self.0[0] ^ 1) |  self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0

@@ -168,6 +168,12 @@ impl Affine {
         self.y = self.y.neg(1);
     }
 
+    pub fn neg(&self) -> Affine {
+        let mut ret = Affine::default();
+        ret.neg_in_place(self);
+        ret
+    }
+
     /// Set a group element equal to another which is given in
     /// jacobian coordinates.
     pub fn set_gej(&mut self, a: &Jacobian) {
