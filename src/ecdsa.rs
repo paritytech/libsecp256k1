@@ -18,8 +18,6 @@ impl ECMultContext {
     ) -> bool {
         let mut c = [0u8; 32];
         let (mut sn, mut u1, mut u2): (Scalar, Scalar, Scalar);
-        let pubkeyj: Jacobian;
-        let pr: Jacobian;
 
         if sigr.is_zero() || sigs.is_zero() {
             return false;
@@ -28,23 +26,26 @@ impl ECMultContext {
         sn = sigs.inv_var();
         u1 = &sn * message;
         u2 = &sn * sigr;
+        let mut pubkeyj: Jacobian = Jacobian::default();
         pubkeyj.set_ge(pubkey);
-        self.ecmult(&pr, &pubkeyj, &u2, &u1);
+        let mut pr: Jacobian = Jacobian::default();
+        self.ecmult(&mut pr, &pubkeyj, &u2, &u1);
         if pr.is_infinity() {
             return false;
         }
 
         let c = sigr.b32();
+        let mut xr: Field = Default::default();
         xr.set_b32(c);
 
-        if xr.eq_x_var(pr) {
+        if pr.eq_x_var(&xr) {
             return true;
         }
         if xr >= P_MINUS_ORDER {
             return false;
         }
         xr += ORDER_AS_FE;
-        if xr.eq_x_var(pr) {
+        if pr.eq_x_var(&xr) {
             return true;
         }
         return false;

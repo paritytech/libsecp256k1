@@ -170,7 +170,7 @@ impl ECMultContext {
     }
 
     pub fn ecmult(
-        &self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: Scalar
+        &self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: &Scalar
     ) {
         let mut tmpa = Affine::default();
         let mut pre_a: [Affine; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();

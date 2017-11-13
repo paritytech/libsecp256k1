@@ -4,6 +4,7 @@ mod field;
 mod group;
 mod scalar;
 mod ecmult;
+mod ecdsa;
 
 #[cfg(test)]
 mod tests {
