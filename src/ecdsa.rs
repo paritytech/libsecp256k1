@@ -41,7 +41,7 @@ impl ECMultContext {
         if pr.eq_x_var(&xr) {
             return true;
         }
-        if xr >= P_MINUS_ORDER {
+        if xr <= P_MINUS_ORDER {
             return false;
         }
         xr += ORDER_AS_FE;
