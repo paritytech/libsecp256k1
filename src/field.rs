@@ -552,12 +552,12 @@ impl Field {
             (a.n[9] as u64) * (b.n[1] as u64));
         debug_assert_bits!(d, 63);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        v0 = d & M; d >>= 26; c+= v0 * R0;
+        v0 = d & M; d >>= 26; c += v0 * R0;
         debug_assert_bits!(v0, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 61);
         /* [d u0 t9 0 0 0 0 0 0 0 0 c-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        t0 = (c & M) as u32; c >> 26; c += v0 * R1;
+        t0 = (c & M) as u32; c >>= 26; c += v0 * R1;
 
         debug_assert_bits!(t0, 26);
         debug_assert_bits!(c, 37);
