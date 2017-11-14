@@ -167,7 +167,7 @@ impl ECMultContext {
         };
 
         for i in 0..ECMULT_TABLE_SIZE_G {
-            ret.pre_g[i] = AffineStorage::default();
+            ret.pre_g.push(AffineStorage::default());
         }
 
         /* precompute the tables with odd multiples */
