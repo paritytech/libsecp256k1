@@ -4,30 +4,18 @@ use scalar::Scalar;
 
 pub const WINDOW_A: usize = 5;
 pub const WINDOW_G: usize = 16;
-pub const ECMULT_TABLE_SIZE: usize = 1 << (WINDOW_G - 2);
-
-pub fn initialize_ecmult_table_size_array<T: Default>() -> [T; ECMULT_TABLE_SIZE] {
-    use std::{mem, ptr};
-
-    unsafe {
-        let mut array: [T; ECMULT_TABLE_SIZE] = mem::uninitialized();
-
-        for (i, element) in array.iter_mut().enumerate() {
-            let foo = T::default();
-            ptr::write(element, foo)
-        }
-
-        array
-    }
-}
+pub const ECMULT_TABLE_SIZE_A: usize = 1 << (WINDOW_A - 2);
+pub const ECMULT_TABLE_SIZE_G: usize = 1 << (WINDOW_G - 2);
 
 pub struct ECMultContext {
-    pre_g: [AffineStorage; ECMULT_TABLE_SIZE],
+    pre_g: Vec<AffineStorage>, // ECMULT_TABLE_SIZE_G
 }
 
-fn odd_multiples_table(prej: &mut [Jacobian; ECMULT_TABLE_SIZE],
-                       zr: &mut [Field; ECMULT_TABLE_SIZE],
+fn odd_multiples_table(prej: &mut [Jacobian],
+                       zr: &mut [Field],
                        a: &Jacobian) {
+    debug_assert!(prej.len() == zr.len());
+    debug_assert!(prej.len() > 0);
     debug_assert!(!a.is_infinity());
 
     let d = a.double_var(None);
@@ -45,7 +33,7 @@ fn odd_multiples_table(prej: &mut [Jacobian; ECMULT_TABLE_SIZE],
     prej[0].infinity = false;
 
     zr[0] = d.z.clone();
-    for i in 1..ECMULT_TABLE_SIZE {
+    for i in 1..prej.len() {
         prej[i] = prej[i-1].add_ge_var(&d_ge, Some(&mut zr[i]));
     }
 
@@ -53,25 +41,40 @@ fn odd_multiples_table(prej: &mut [Jacobian; ECMULT_TABLE_SIZE],
     prej.last_mut().unwrap().z = l;
 }
 
-fn odd_multiples_table_storage_var(pre: &mut [AffineStorage; ECMULT_TABLE_SIZE],
+fn odd_multiples_table_storage_var(pre: &mut [AffineStorage],
                                    a: &Jacobian) {
-    let mut prej: [Jacobian; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
-    let mut prea: [Affine; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
-    let mut zr: [Field; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+    let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
+    for i in 0..pre.len() {
+        prej.push(Jacobian::default());
+    }
+    let mut prea: Vec<Affine> = Vec::with_capacity(pre.len());
+    for i in 0..pre.len() {
+        prea.push(Affine::default());
+    }
+    let mut zr: Vec<Field> = Vec::with_capacity(pre.len());
+    for i in 0..pre.len() {
+        zr.push(Field::default());
+    }
 
     odd_multiples_table(&mut prej, &mut zr, a);
     set_table_gej_var(&mut prea, &prej, &zr);
 
-    for i in 0..ECMULT_TABLE_SIZE {
+    for i in 0..pre.len() {
         pre[i] = prea[i].clone().into();
     }
 }
 
-fn odd_multiples_table_globalz_windowa(pre: &mut [Affine; ECMULT_TABLE_SIZE],
+fn odd_multiples_table_globalz_windowa(pre: &mut [Affine],
                                        globalz: &mut Field,
                                        a: &Jacobian) {
-    let mut prej: [Jacobian; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
-    let mut zr: [Field; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+    let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
+    for i in 0..pre.len() {
+        prej.push(Jacobian::default());
+    }
+    let mut zr: Vec<Field> = Vec::with_capacity(pre.len());
+    for i in 0..pre.len() {
+        zr.push(Field::default());
+    }
 
     odd_multiples_table(&mut prej, &mut zr, a);
     globalz_set_table_gej(pre, globalz, &prej, &zr);
@@ -160,8 +163,12 @@ impl ECMultContext {
         gj.set_ge(&AFFINE_G);
 
         let mut ret = ECMultContext {
-            pre_g: initialize_ecmult_table_size_array(),
+            pre_g: Vec::with_capacity(ECMULT_TABLE_SIZE_G),
         };
+
+        for i in 0..ECMULT_TABLE_SIZE_G {
+            ret.pre_g[i] = AffineStorage::default();
+        }
 
         /* precompute the tables with odd multiples */
         odd_multiples_table_storage_var(&mut ret.pre_g, &gj);
@@ -173,7 +180,10 @@ impl ECMultContext {
         &self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: &Scalar
     ) {
         let mut tmpa = Affine::default();
-        let mut pre_a: [Affine; ECMULT_TABLE_SIZE] = initialize_ecmult_table_size_array();
+        let mut pre_a: Vec<Affine> = Vec::with_capacity(ECMULT_TABLE_SIZE_A);
+        for i in 0..ECMULT_TABLE_SIZE_A {
+            pre_a.push(Affine::default());
+        }
         let mut z = Field::default();
         let mut wnaf_na = [0i32; 256];
         let mut wnaf_ng = [0i32; 256];

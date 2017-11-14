@@ -36,7 +36,7 @@ macro_rules! field_storage_const {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) n: [u32; 10],
     pub(crate) magnitude: u32,
