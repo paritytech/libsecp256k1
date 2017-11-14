@@ -351,8 +351,8 @@ macro_rules! define_ops {
             () => {
                 {
                     let n = $c0;
-                    let $c0 = $c1;
-                    let $c1 = 0;
+                    $c0 = $c1;
+                    $c1 = 0;
                     debug_assert!($c2 == 0);
                     n
                 }
