@@ -324,7 +324,6 @@ impl Field {
         self.n = [a, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         self.magnitude = 1;
         self.normalized = true;
-        println!("{:?}", self);
         debug_assert!(self.verify());
     }
 
