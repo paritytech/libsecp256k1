@@ -275,7 +275,7 @@ impl Field {
         t0 += x * 0x3d1;
 
         z0 = t0 & 0x3ffffff;
-        z1 = z0 & 0x3d0;
+        z1 = z0 ^ 0x3d0;
 
         if z0 != 0 && z1 != 0x3ffffff {
             return false;
