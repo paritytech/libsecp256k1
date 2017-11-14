@@ -36,6 +36,9 @@ macro_rules! field_storage_const {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) n: [u32; 10],
@@ -48,6 +51,12 @@ impl Field {
         d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
     ) -> Self {
         field_const!(d7, d6, d5, d4, d3, d2, d1, d0)
+    }
+
+    pub fn from_int(a: u32) -> Field {
+        let mut f = Field::default();
+        f.set_int(a);
+        f
     }
 
     fn verify(&self) -> bool {
@@ -315,6 +324,7 @@ impl Field {
         self.n = [a, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         self.magnitude = 1;
         self.normalized = true;
+        println!("{:?}", self);
         debug_assert!(self.verify());
     }
 
