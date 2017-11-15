@@ -214,7 +214,23 @@ impl Affine {
     pub fn set_gej(&mut self, a: &Jacobian) {
         self.infinity = a.infinity;
         let mut a = a.clone();
-        a.z.inv();
+        a.z = a.z.inv();
+        let z2 = a.z.sqr();
+        let z3 = &a.z * &z2;
+        a.x *= &z2;
+        a.y *= &z3;
+        a.z.set_int(1);
+        self.x = a.x;
+        self.y = a.y;
+    }
+
+    pub fn set_gej_var(&mut self, a: &Jacobian) {
+        let mut a = a.clone();
+        self.infinity = a.infinity;
+        if a.is_infinity() {
+            return;
+        }
+        a.z = a.z.inv_var();
         let z2 = a.z.sqr();
         let z3 = &a.z * &z2;
         a.x *= &z2;

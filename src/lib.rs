@@ -20,6 +20,7 @@ pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
 
 pub struct PublicKey(pub [u8; 64]);
 pub struct Signature(pub [u8; 64]);
+pub struct RecoverableSignature(pub Signature, pub u8);
 
 impl PublicKey {
     pub fn load(&self) -> Affine {
