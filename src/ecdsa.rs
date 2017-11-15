@@ -16,8 +16,8 @@ impl ECMultContext {
     pub fn sig_verify(
         &self, sigr: &Scalar, sigs: &Scalar, pubkey: &Affine, message: &Scalar
     ) -> bool {
-        let mut c = [0u8; 32];
-        let (mut sn, mut u1, mut u2): (Scalar, Scalar, Scalar);
+        let c;
+        let (sn, u1, u2): (Scalar, Scalar, Scalar);
 
         if sigr.is_zero() || sigs.is_zero() {
             return false;
@@ -34,7 +34,7 @@ impl ECMultContext {
             return false;
         }
 
-        let c = sigr.b32();
+        c = sigr.b32();
         let mut xr: Field = Default::default();
         xr.set_b32(&c);
 

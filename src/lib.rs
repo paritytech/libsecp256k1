@@ -37,7 +37,7 @@ impl PublicKey {
         for i in 0..32 {
             data[i] = self.0[i+32];
         }
-        x.set_b32(&data);
+        y.set_b32(&data);
 
         ge.set_xy(&x, &y);
         assert!(!ge.x.is_zero());

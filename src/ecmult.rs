@@ -44,15 +44,15 @@ fn odd_multiples_table(prej: &mut [Jacobian],
 fn odd_multiples_table_storage_var(pre: &mut [AffineStorage],
                                    a: &Jacobian) {
     let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
-    for i in 0..pre.len() {
+    for _ in 0..pre.len() {
         prej.push(Jacobian::default());
     }
     let mut prea: Vec<Affine> = Vec::with_capacity(pre.len());
-    for i in 0..pre.len() {
+    for _ in 0..pre.len() {
         prea.push(Affine::default());
     }
     let mut zr: Vec<Field> = Vec::with_capacity(pre.len());
-    for i in 0..pre.len() {
+    for _ in 0..pre.len() {
         zr.push(Field::default());
     }
 
@@ -68,11 +68,11 @@ fn odd_multiples_table_globalz_windowa(pre: &mut [Affine],
                                        globalz: &mut Field,
                                        a: &Jacobian) {
     let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
-    for i in 0..pre.len() {
+    for _ in 0..pre.len() {
         prej.push(Jacobian::default());
     }
     let mut zr: Vec<Field> = Vec::with_capacity(pre.len());
-    for i in 0..pre.len() {
+    for _ in 0..pre.len() {
         zr.push(Field::default());
     }
 
@@ -166,7 +166,7 @@ impl ECMultContext {
             pre_g: Vec::with_capacity(ECMULT_TABLE_SIZE_G),
         };
 
-        for i in 0..ECMULT_TABLE_SIZE_G {
+        for _ in 0..ECMULT_TABLE_SIZE_G {
             ret.pre_g.push(AffineStorage::default());
         }
 
@@ -181,13 +181,13 @@ impl ECMultContext {
     ) {
         let mut tmpa = Affine::default();
         let mut pre_a: Vec<Affine> = Vec::with_capacity(ECMULT_TABLE_SIZE_A);
-        for i in 0..ECMULT_TABLE_SIZE_A {
+        for _ in 0..ECMULT_TABLE_SIZE_A {
             pre_a.push(Affine::default());
         }
         let mut z = Field::default();
         let mut wnaf_na = [0i32; 256];
         let mut wnaf_ng = [0i32; 256];
-        let mut bits_na = ecmult_wnaf(&mut wnaf_na, na, WINDOW_A);
+        let bits_na = ecmult_wnaf(&mut wnaf_na, na, WINDOW_A);
         let mut bits = bits_na;
         odd_multiples_table_globalz_windowa(&mut pre_a, &mut z, a);
 

@@ -1182,70 +1182,70 @@ impl Field {
         x3 *= self;
 
         let mut x6 = x3.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x6 = x6.sqr();
         }
         x6 *= &x3;
 
         let mut x9 = x6.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x9 = x9.sqr();
         }
         x9 *= &x3;
 
         let mut x11 = x9.clone();
-        for i in 0..2 {
+        for _ in 0..2 {
             x11 = x11.sqr();
         }
         x11 *= &x2;
 
         let mut x22 = x11.clone();
-        for i in 0..11 {
+        for _ in 0..11 {
             x22 = x22.sqr();
         }
         x22 *= &x11;
 
         let mut x44 = x22.clone();
-        for i in 0..22 {
+        for _ in 0..22 {
             x44 = x44.sqr();
         }
         x44 *= &x22;
 
         let mut x88 = x44.clone();
-        for i in 0..44 {
+        for _ in 0..44 {
             x88 = x88.sqr();
         }
         x88 *= &x44;
 
         let mut x176 = x88.clone();
-        for i in 0..88 {
+        for _ in 0..88 {
             x176 = x176.sqr();
         }
         x176 *= &x88;
 
         let mut x220 = x176.clone();
-        for i in 0..44 {
+        for _ in 0..44 {
             x220 = x220.sqr();
         }
         x220 *= &x44;
 
         let mut x223 = x220.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x223 = x223.sqr();
         }
         x223 *= &x3;
 
         let mut t1 = x223;
-        for i in 0..23 {
+        for _ in 0..23 {
             t1 = t1.sqr();
         }
         t1 *= &x22;
-        for i in 0..6 {
+        for _ in 0..6 {
             t1 = t1.sqr();
         }
         t1 *= &x2;
         t1 = t1.sqr();
-        let mut r = t1.sqr();
+        let r = t1.sqr();
 
         t1 = r.sqr();
         (r, &t1 == self)
@@ -1262,73 +1262,73 @@ impl Field {
         x3 *= self;
 
         let mut x6 = x3.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x6 = x6.sqr();
         }
         x6 *= &x3;
 
         let mut x9 = x6.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x9 = x9.sqr();
         }
         x9 *= &x3;
 
         let mut x11 = x9.clone();
-        for i in 0..2 {
+        for _ in 0..2 {
             x11 = x11.sqr();
         }
         x11 *= &x2;
 
         let mut x22 = x11.clone();
-        for i in 0..11 {
+        for _ in 0..11 {
             x22 = x22.sqr();
         }
         x22 *= &x11;
 
         let mut x44 = x22.clone();
-        for i in 0..22 {
+        for _ in 0..22 {
             x44 = x44.sqr();
         }
         x44 *= &x22;
 
         let mut x88 = x44.clone();
-        for i in 0..44 {
+        for _ in 0..44 {
             x88 = x88.sqr();
         }
         x88 *= &x44;
 
         let mut x176 = x88.clone();
-        for i in 0..88 {
+        for _ in 0..88 {
             x176 = x176.sqr();
         }
         x176 *= &x88;
 
         let mut x220 = x176.clone();
-        for i in 0..44 {
+        for _ in 0..44 {
             x220 = x220.sqr();
         }
         x220 *= &x44;
 
         let mut x223 = x220.clone();
-        for i in 0..3 {
+        for _ in 0..3 {
             x223 = x223.sqr();
         }
         x223 *= &x3;
 
         let mut t1 = x223.clone();
-        for i in 0..23 {
+        for _ in 0..23 {
             t1 = t1.sqr();
         }
         t1 *= &x22;
-        for i in 0..5 {
+        for _ in 0..5 {
             t1 = t1.sqr();
         }
         t1 *= self;
-        for i in 0..3 {
+        for _ in 0..3 {
             t1 = t1.sqr();
         }
         t1 *= &x2;
-        for i in 0..2 {
+        for _ in 0..2 {
             t1 = t1.sqr();
         }
         let r = self * &t1;

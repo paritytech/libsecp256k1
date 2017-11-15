@@ -272,7 +272,7 @@ macro_rules! define_ops {
                 let a = $a; let b = $b;
                 let t = (a as u64) * (b as u64);
                 let mut th = (t >> 32) as u32;
-                let mut tl = t as u32;
+                let tl = t as u32;
                 $c0 = $c0.wrapping_add(tl);
                 th = th.wrapping_add(if $c0 < tl { 1 } else { 0 });
                 $c1 = $c1.wrapping_add(th);
@@ -286,7 +286,7 @@ macro_rules! define_ops {
                 let a = $a; let b = $b;
                 let t = (a as u64) * (b as u64);
                 let mut th = (t >> 32) as u32;
-                let mut tl = t as u32;
+                let tl = t as u32;
                 $c0 = $c0.wrapping_add(tl);
                 th = th.wrapping_add(if $c0 < tl { 1 } else { 0 });
                 $c1 = $c1.wrapping_add(th);
@@ -298,12 +298,12 @@ macro_rules! define_ops {
             ($a: expr, $b: expr) => {
                 let a = $a; let b = $b;
                 let t = (a as u64) * (b as u64);
-                let mut th = (t >> 32) as u32;
-                let mut tl = t as u32;
+                let th = (t >> 32) as u32;
+                let tl = t as u32;
                 let mut th2 = th.wrapping_add(th);
                 $c2 = $c2.wrapping_add(if th2 < th { 1 } else { 0 });
                 debug_assert!(th2 >= th || $c2 != 0);
-                let mut tl2 = tl.wrapping_add(tl);
+                let tl2 = tl.wrapping_add(tl);
                 th2 = th2.wrapping_add(if tl2 < tl { 1 } else { 0 });
                 $c0 = $c0.wrapping_add(tl2);
                 th2 = th2.wrapping_add(if $c0 < tl2 { 1 } else { 0 });
@@ -367,9 +367,9 @@ impl Scalar {
         define_ops!(c0, c1, c2);
 
         let mut c: u64;
-        let (mut n0, mut n1, mut n2, mut n3, mut n4, mut n5, mut n6, mut n7) = (l[8], l[9], l[10], l[11], l[12], l[13], l[14], l[15]);
-        let (mut m0, mut m1, mut m2, mut m3, mut m4, mut m5, mut m6, mut m7, mut m8, mut m9, mut m10, mut m11, mut m12): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
-        let (mut p0, mut p1, mut p2, mut p3, mut p4, mut p5, mut p6, mut p7, mut p8): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (n0, n1, n2, n3, n4, n5, n6, n7) = (l[8], l[9], l[10], l[11], l[12], l[13], l[14], l[15]);
+        let (m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (p0, p1, p2, p3, p4, p5, p6, p7, p8): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
 
         c0 = l[0]; c1 = 0; c2 = 0;
         muladd_fast!(n0, SECP256K1_N_C_0);
@@ -688,13 +688,13 @@ impl Scalar {
     }
 
     pub fn inv_in_place(&mut self, x: &Scalar) {
-        let mut u2 = x.sqr();
-        let mut x2 = &u2 * x;
-        let mut u5 = &u2 * &x2;
-        let mut x3 = &u5 * &u2;
-        let mut u9 = &x3 * &u2;
-        let mut u11 = &u9 * &u2;
-        let mut u13 = &u11 * &u2;
+        let u2 = x.sqr();
+        let x2 = &u2 * x;
+        let u5 = &u2 * &x2;
+        let x3 = &u5 * &u2;
+        let u9 = &x3 * &u2;
+        let u11 = &u9 * &u2;
+        let u13 = &u11 * &u2;
 
         let mut x6 = u13.sqr();
         x6 = x6.sqr();
@@ -705,129 +705,129 @@ impl Scalar {
         x8 *= &x2;
 
         let mut x14 = x8.sqr();
-        for i in 0..5 {
+        for _ in 0..5 {
             x14 = x14.sqr();
         }
         x14 *= &x6;
 
         let mut x28 = x14.sqr();
-        for i in 0..13 {
+        for _ in 0..13 {
             x28 = x28.sqr();
         }
         x28 *= &x14;
 
         let mut x56 = x28.sqr();
-        for i in 0..27 {
+        for _ in 0..27 {
             x56 = x56.sqr();
         }
         x56 *= &x28;
 
         let mut x112 = x56.sqr();
-        for i in 0..55 {
+        for _ in 0..55 {
             x112 = x112.sqr();
         }
         x112 *= &x56;
 
         let mut x126 = x112.sqr();
-        for i in 0..13 {
+        for _ in 0..13 {
             x126 = x126.sqr();
         }
         x126 *= &x14;
 
         let mut t = x126;
-        for i in 0..3 {
+        for _ in 0..3 {
             t = t.sqr();
         }
         t *= &u5;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &u5;
-        for i in 0..5 {
+        for _ in 0..5 {
             t = t.sqr();
         }
         t *= &u11;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &u11;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..5 {
+        for _ in 0..5 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..6 {
+        for _ in 0..6 {
             t = t.sqr();
         }
         t *= &u13;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &u5;
-        for i in 0..3 {
+        for _ in 0..3 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..5 {
+        for _ in 0..5 {
             t = t.sqr();
         }
         t *= &u9;
-        for i in 0..6 {
+        for _ in 0..6 {
             t = t.sqr();
         }
         t *= &u5;
-        for i in 0..10 {
+        for _ in 0..10 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &x3;
-        for i in 0..9 {
+        for _ in 0..9 {
             t = t.sqr();
         }
         t *= &x8;
-        for i in 0..5 {
+        for _ in 0..5 {
             t = t.sqr();
         }
         t *= &u9;
-        for i in 0..6 {
+        for _ in 0..6 {
             t = t.sqr();
         }
         t *= &u11;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &u13;
-        for i in 0..5 {
+        for _ in 0..5 {
             t = t.sqr();
         }
         t *= &x2;
-        for i in 0..6 {
+        for _ in 0..6 {
             t = t.sqr();
         }
         t *= &u13;
-        for i in 0..10 {
+        for _ in 0..10 {
             t = t.sqr();
         }
         t *= &u13;
-        for i in 0..4 {
+        for _ in 0..4 {
             t = t.sqr();
         }
         t *= &u9;
-        for i in 0..6 {
+        for _ in 0..6 {
             t = t.sqr();
         }
         t *= x;
-        for i in 0..8 {
+        for _ in 0..8 {
             t = t.sqr();
         }
         *self = &t * &x6;

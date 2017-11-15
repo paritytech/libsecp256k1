@@ -407,10 +407,10 @@ impl Jacobian {
         }
 
         self.infinity = false;
-        let mut z22 = b.z.sqr();
-        let mut z12 = a.z.sqr();
-        let mut u1 = &a.x * &z22;
-        let mut u2 = &b.x * &z12;
+        let z22 = b.z.sqr();
+        let z12 = a.z.sqr();
+        let u1 = &a.x * &z22;
+        let u2 = &b.x * &z12;
         let mut s1 = &a.y * &z22; s1 *= &b.z;
         let mut s2 = &b.y * &z12; s2 *= &a.z;
         let mut h = u1.neg(1); h += &u2;
@@ -426,15 +426,15 @@ impl Jacobian {
             }
             return;
         }
-        let mut i2 = i.sqr();
-        let mut h2 = h.sqr();
+        let i2 = i.sqr();
+        let h2 = h.sqr();
         let mut h3 = &h * &h2;
         h *= &b.z;
         if let Some(rzr) = rzr {
             *rzr = h.clone();
         }
         self.z = &a.z * &h;
-        let mut t = &u1 * &h2;
+        let t = &u1 * &h2;
         self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
@@ -449,9 +449,9 @@ impl Jacobian {
 
         debug_assert!(!b.infinity);
 
-        let mut zz = a.z.sqr();
+        let zz = a.z.sqr();
         let mut u1 = a.x.clone(); u1.normalize_weak();
-        let mut u2 = &b.x * &zz;
+        let u2 = &b.x * &zz;
         let mut s1 = a.y.clone(); s1.normalize_weak();
         let mut s2 = &b.y * &zz;
         s2 *= &a.z;
@@ -459,9 +459,9 @@ impl Jacobian {
         let mut m = s1.clone(); m += &s2;
         let mut rr = t.sqr();
         let mut m_alt = u2.neg(1);
-        let mut tt = &u1 * &m_alt;
+        let tt = &u1 * &m_alt;
         rr += &tt;
-        let mut degenerate = m.normalizes_to_zero() && rr.normalizes_to_zero();
+        let degenerate = m.normalizes_to_zero() && rr.normalizes_to_zero();
         let mut rr_alt = s1.clone();
         rr_alt.mul_int(2);
         m_alt += &u1;
@@ -476,7 +476,7 @@ impl Jacobian {
         n.cmov(&m, degenerate);
         t = rr_alt.sqr();
         self.z = &a.z * &m_alt;
-        let mut infinity = {
+        let infinity = {
             let p = self.z.normalizes_to_zero();
             let q = a.infinity;
 
@@ -528,9 +528,9 @@ impl Jacobian {
         }
         self.infinity = false;
 
-        let mut z12 = a.z.sqr();
+        let z12 = a.z.sqr();
         let mut u1 = a.x.clone(); u1.normalize_weak();
-        let mut u2 = &b.x * &z12;
+        let u2 = &b.x * &z12;
         let mut s1 = a.y.clone(); s1.normalize_weak();
         let mut s2 = &b.y * &z12; s2 *= &a.z;
         let mut h = u1.neg(1); h += &u2;
@@ -546,14 +546,14 @@ impl Jacobian {
             }
             return;
         }
-        let mut i2 = i.sqr();
-        let mut h2 = h.sqr();
+        let i2 = i.sqr();
+        let h2 = h.sqr();
         let mut h3 = &h * &h2;
         if let Some(rzr) = rzr {
             *rzr = h.clone();
         }
         self.z = &a.z * &h;
-        let mut t = &u1 * &h2;
+        let t = &u1 * &h2;
         self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
@@ -576,8 +576,8 @@ impl Jacobian {
         }
         if a.is_infinity() {
             self.infinity = b.infinity;
-            let mut bzinv2 = bzinv.sqr();
-            let mut bzinv3 = &bzinv2 * bzinv;
+            let bzinv2 = bzinv.sqr();
+            let bzinv3 = &bzinv2 * bzinv;
             self.x = &b.x * &bzinv2;
             self.y = &b.y * &bzinv3;
             self.z.set_int(1);
@@ -585,10 +585,10 @@ impl Jacobian {
         }
         self.infinity = false;
 
-        let mut az = &a.z * &bzinv;
-        let mut z12 = az.sqr();
+        let az = &a.z * &bzinv;
+        let z12 = az.sqr();
         let mut u1 = a.x.clone(); u1.normalize_weak();
-        let mut u2 = &b.x * &z12;
+        let u2 = &b.x * &z12;
         let mut s1 = a.y.clone(); s1.normalize_weak();
         let mut s2 = &b.y * &z12; s2 *= &az;
         let mut h = u1.neg(1); h += &u2;
@@ -601,11 +601,11 @@ impl Jacobian {
             }
             return;
         }
-        let mut i2 = i.sqr();
-        let mut h2 = h.sqr();
+        let i2 = i.sqr();
+        let h2 = h.sqr();
         let mut h3 = &h * &h2;
         self.z = a.z.clone(); self.z *= &h;
-        let mut t = &u1 * &h2;
+        let t = &u1 * &h2;
         self.x = t.clone(); self.x.mul_int(2); self.x += &h3;
         self.x = self.x.neg(3); self.x += &i2;
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
@@ -632,7 +632,7 @@ impl Jacobian {
     /// non-zero. Constant-time.
     pub fn rescale(&mut self, s: &Field) {
         debug_assert!(!s.is_zero());
-        let mut zz = s.sqr();
+        let zz = s.sqr();
         self.x *= &zz;
         self.y *= &zz;
         self.y *= s;
