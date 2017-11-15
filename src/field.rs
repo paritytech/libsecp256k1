@@ -36,9 +36,6 @@ macro_rules! field_storage_const {
     }
 }
 
-#[cfg(test)]
-mod tests;
-
 #[derive(Debug, Clone)]
 pub struct Field {
     pub(crate) n: [u32; 10],
