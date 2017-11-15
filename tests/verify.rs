@@ -65,8 +65,8 @@ fn test_recover() {
     let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
 
     let ctx = ECMultContext::new();
+    secp256k1.recover(&message, &signature).unwrap();
     let ctx_pubkey = ctx.sig_recover(&ctx_sigr, &ctx_sigs, rec_id.to_i32() as u8, &ctx_message).unwrap();
-
     let sp = public_key_serialize(&ctx_pubkey).unwrap();
 
     let sps: &[u8] = &sp;

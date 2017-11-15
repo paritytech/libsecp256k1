@@ -86,7 +86,7 @@ impl ECMultContext {
         let mut pubkey = Affine::default();
         pubkey.set_gej_var(&qj);
 
-        if !pubkey.is_infinity() {
+        if pubkey.is_infinity() {
             return None;
         } else {
             return Some(pubkey);
