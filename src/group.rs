@@ -40,10 +40,10 @@ pub struct Jacobian {
     pub(crate) infinity: bool,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AffineStorage {
-    pub(crate) x: Field,
-    pub(crate) y: Field,
+    pub(crate) x: FieldStorage,
+    pub(crate) y: FieldStorage,
 }
 
 impl Default for Affine {
@@ -70,8 +70,8 @@ impl Default for Jacobian {
 impl Default for AffineStorage {
     fn default() -> AffineStorage {
         AffineStorage {
-            x: Field::default(),
-            y: Field::default(),
+            x: FieldStorage::default(),
+            y: FieldStorage::default(),
         }
     }
 }

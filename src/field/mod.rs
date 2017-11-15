@@ -1502,6 +1502,7 @@ impl PartialOrd for Field {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct FieldStorage {
     pub(crate) n: [u32; 8],
 }
@@ -1521,7 +1522,7 @@ impl FieldStorage {
         field_storage_const!(d7, d6, d5, d4, d3, d2, d1, d0)
     }
 
-    pub fn cmov(&mut self, other: &Field, flag: bool) {
+    pub fn cmov(&mut self, other: &FieldStorage, flag: bool) {
         self.n[0] = if flag { other.n[0] } else { self.n[0] };
         self.n[1] = if flag { other.n[1] } else { self.n[1] };
         self.n[2] = if flag { other.n[2] } else { self.n[2] };

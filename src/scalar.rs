@@ -24,7 +24,7 @@ const SECP256K1_N_H_5: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_6: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_7: u32 = 0x7FFFFFFF;
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Scalar(pub [u32; 8]);
 
 impl Scalar {
