@@ -10,7 +10,7 @@ use rand::thread_rng;
 fn test_verify() {
     let secp256k1 = Secp256k1::new();
 
-    let message_arr = [0u8; 32];
+    let message_arr = [5u8; 32];
     let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
     let message = Message::from_slice(&message_arr).unwrap();
     let signature = secp256k1.sign(&message, &privkey).unwrap();
@@ -34,5 +34,6 @@ fn test_verify() {
     let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
 
     let ctx = ECMultContext::new();
+    secp256k1.verify(&message, &signature, &pubkey).unwrap();
     assert!(ctx.sig_verify(&ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
 }

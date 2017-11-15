@@ -185,7 +185,7 @@ impl Scalar {
 
     /// Compute the complement of a scalar (modulo the group order).
     pub fn neg_in_place(&mut self, a: &Scalar) {
-        let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
+        let nonzero: u64 = 0xFFFFFFFF * if !a.is_zero() { 1 } else { 0 };
         let mut t: u64 = (!a.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
         self.0[0] = (t & nonzero) as u32; t >>= 32;
         t += (!a.0[1]) as u64 + SECP256K1_N_1 as u64;
