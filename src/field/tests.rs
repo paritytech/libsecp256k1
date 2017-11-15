@@ -1,4 +1,16 @@
 use super::*;
+use hexutil::*;
+
+fn from_hex(s: &str) -> Field {
+    let s = read_hex(s).unwrap();
+    let mut a = [0u8; 32];
+    for i in (0..s.len()).rev() {
+        a[(32-s.len())+i] = s[i];
+    }
+    let mut f = Field::default();
+    debug_assert!(f.set_b32(&a));
+    f
+}
 
 #[test]
 fn test_normalize() {
@@ -113,5 +125,20 @@ fn test_normalize() {
         };
         f1.normalize_var();
         assert_eq!(f1, f2);
+    }
+}
+
+#[test]
+fn test_is_odd() {
+    let tests = [
+        (from_hex("0"), false),
+        (from_hex("1"), true),
+        (from_hex("2"), false),
+        (from_hex("ffffffff"), true),
+        (from_hex("fffffffffffffffe"), false),
+    ];
+
+    for test in &tests {
+        assert_eq!(test.0.is_odd(), test.1);
     }
 }

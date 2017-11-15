@@ -1,3 +1,6 @@
+#[cfg(test)]
+extern crate hexutil;
+
 #[macro_use]
 mod field;
 #[macro_use]

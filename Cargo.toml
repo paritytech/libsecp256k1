@@ -13,3 +13,4 @@ name = "secp256k1"
 [dev-dependencies]
 secp256k1-test = "0.7"
 rand = "0.3"
+etcommon-hexutil = "0.2"
