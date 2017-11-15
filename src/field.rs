@@ -420,8 +420,8 @@ impl Field {
     /// another. Takes a maximum magnitude of the input as an
     /// argument. The magnitude of the output is one higher.
     pub fn neg_in_place(&mut self, other: &Field, m: u32) {
-        debug_assert!(self.magnitude <= m);
-        debug_assert!(self.verify());
+        debug_assert!(other.magnitude <= m);
+        debug_assert!(other.verify());
 
         self.n[0] = 0x3fffc2f * 2 * (m + 1) - other.n[0];
         self.n[1] = 0x3ffffbf * 2 * (m + 1) - other.n[1];
