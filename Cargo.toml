@@ -2,8 +2,10 @@
 name = "libsecp256k1"
 description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Wei Tang <hi@that.world>"]
+repository = "https://github.com/ethereumproject/libsecp256k1-rs"
+keywords = [ "crypto", "ECDSA", "secp256k1", "libsecp256k1", "bitcoin", "no_std" ]
 
 [lib]
 name = "secp256k1"
