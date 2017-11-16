@@ -500,6 +500,12 @@ impl Jacobian {
         self.infinity = infinity;
     }
 
+    pub fn add_ge(&self, b: &Affine) -> Jacobian {
+        let mut ret = Jacobian::default();
+        ret.add_ge_in_place(self, b);
+        ret
+    }
+
     /// Set r equal to the sum of a and b (with b given in affine
     /// coordinates). This is more efficient than
     /// secp256k1_gej_add_var. It is identical to secp256k1_gej_add_ge

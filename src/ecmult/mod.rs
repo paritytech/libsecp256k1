@@ -180,3 +180,32 @@ impl ECMultContext {
         }
     }
 }
+
+impl ECMultGenContext {
+    pub fn ecmult_gen(
+        &self, r: &mut Jacobian, gn: &Scalar
+    ) {
+        let mut adds = AffineStorage::default();
+        let mut initial = Jacobian::default();
+        initial.set_ge(&AFFINE_G);
+        initial = initial.neg();
+        *r = initial;
+        let mut blind = Scalar::default();
+
+        let mut gnb = gn + &blind;
+        let mut add = Affine::default();
+        add.infinity = false;
+
+        for j in 0..64 {
+            let mut bits = gnb.bits(j * 4, 4);
+            for i in 0..16 {
+                adds.cmov(&self.prec[j][i], i as u32 == bits);
+            }
+            add = adds.clone().into();
+            *r = r.add_ge(&add);
+            bits = 0;
+        }
+        add.clear();
+        gnb.clear();
+    }
+}
