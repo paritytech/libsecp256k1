@@ -30,7 +30,7 @@ macro_rules! field_const {
 
 macro_rules! field_storage_const {
     ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
-        $crate::field::FieldStorage([$d7, $d6, $d5, $d4, $d3, $d2, $d1, $d0])
+        $crate::field::FieldStorage([$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7])
     }
 }
 
