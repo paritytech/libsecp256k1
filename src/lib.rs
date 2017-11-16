@@ -30,6 +30,8 @@ pub struct Signature {
 }
 #[derive(Debug, Clone)]
 pub struct RecoveryId(pub u8);
+#[derive(Debug, Clone)]
+pub struct Message(pub Scalar);
 
 impl PublicKey {
     pub fn parse(p: &[u8; 65]) -> Option<PublicKey> {
@@ -107,5 +109,33 @@ impl Signature {
         s.set_b32(&data);
 
         Signature { r, s }
+    }
+
+    pub fn serialize(&self) -> [u8; 64] {
+        let mut ret = [0u8; 64];
+
+        let ra = self.r.b32();
+        for i in 0..32 {
+            ret[i] = ra[i];
+        }
+        let sa = self.s.b32();
+        for i in 0..32 {
+            ret[i+32] = sa[i];
+        }
+
+        ret
+    }
+}
+
+impl Message {
+    pub fn parse(p: &[u8; 32]) -> Message {
+        let mut m = Scalar::default();
+        m.set_b32(p);
+
+        Message(m)
+    }
+
+    pub fn serialize(&self) -> [u8; 32] {
+        self.0.b32()
     }
 }
