@@ -17,5 +17,6 @@ etcommon-hexutil = "0.2"
 
 [workspace]
 members = [
-  "./gen",
+  "./gen/ecmult",
+  "./gen/genmult",
 ]
