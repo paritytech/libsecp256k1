@@ -7,10 +7,13 @@ mod ecmult;
 mod ecdsa;
 
 pub use field::Field;
-pub use group::Affine;
+pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G,
+                AFFINE_INFINITY, JACOBIAN_INFINITY, CURVE_B,
+                set_table_gej_var, globalz_set_table_gej};
 pub use scalar::Scalar;
 
-pub use ecmult::ECMultContext;
+pub use ecmult::{ECMultContext, ECMULT_CONTEXT, odd_multiples_table,
+                 WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G};
 
 pub const TAG_PUBKEY_EVEN: u8 = 0x02;
 pub const TAG_PUBKEY_ODD: u8 = 0x03;

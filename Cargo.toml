@@ -14,3 +14,8 @@ name = "secp256k1"
 secp256k1-test = "0.7"
 rand = "0.3"
 etcommon-hexutil = "0.2"
+
+[workspace]
+members = [
+  "./gen",
+]

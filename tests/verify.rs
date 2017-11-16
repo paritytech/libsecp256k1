@@ -33,16 +33,15 @@ fn test_verify() {
     }
     let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
 
-    let ctx = ECMultContext::new();
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
-    assert!(ctx.sig_verify(&ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
+    assert!(ECMULT_CONTEXT.sig_verify(&ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
     let mut f_ctx_sigr = Scalar::default();
     if f_ctx_sigr != ctx_sigr {
-        assert!(!ctx.sig_verify(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
+        assert!(!ECMULT_CONTEXT.sig_verify(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
     }
     f_ctx_sigr.set_int(1);
     if f_ctx_sigr != ctx_sigr {
-        assert!(!ctx.sig_verify(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
+        assert!(!ECMULT_CONTEXT.sig_verify(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey, &ctx_message));
     }
 }
 
@@ -72,9 +71,8 @@ fn test_recover() {
     }
     let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
 
-    let ctx = ECMultContext::new();
     secp256k1.recover(&message, &signature).unwrap();
-    let ctx_pubkey = ctx.sig_recover(&ctx_sigr, &ctx_sigs, rec_id.to_i32() as u8, &ctx_message).unwrap();
+    let ctx_pubkey = ECMULT_CONTEXT.sig_recover(&ctx_sigr, &ctx_sigs, rec_id.to_i32() as u8, &ctx_message).unwrap();
     let sp = public_key_serialize(&ctx_pubkey).unwrap();
 
     let sps: &[u8] = &sp;

@@ -30,9 +30,7 @@ macro_rules! field_const {
 
 macro_rules! field_storage_const {
     ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
-        $crate::field::FieldStorage {
-            n: [$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7],
-        }
+        $crate::field::FieldStorage([$d7, $d6, $d5, $d4, $d3, $d2, $d1, $d0])
     }
 }
 
@@ -1500,15 +1498,11 @@ impl PartialOrd for Field {
 }
 
 #[derive(Debug, Clone)]
-pub struct FieldStorage {
-    pub(crate) n: [u32; 8],
-}
+pub struct FieldStorage(pub [u32; 8]);
 
 impl Default for FieldStorage {
     fn default() -> FieldStorage {
-        FieldStorage {
-            n: [0; 8],
-        }
+        FieldStorage([0; 8])
     }
 }
 
@@ -1520,14 +1514,14 @@ impl FieldStorage {
     }
 
     pub fn cmov(&mut self, other: &FieldStorage, flag: bool) {
-        self.n[0] = if flag { other.n[0] } else { self.n[0] };
-        self.n[1] = if flag { other.n[1] } else { self.n[1] };
-        self.n[2] = if flag { other.n[2] } else { self.n[2] };
-        self.n[3] = if flag { other.n[3] } else { self.n[3] };
-        self.n[4] = if flag { other.n[4] } else { self.n[4] };
-        self.n[5] = if flag { other.n[5] } else { self.n[5] };
-        self.n[6] = if flag { other.n[6] } else { self.n[6] };
-        self.n[7] = if flag { other.n[7] } else { self.n[7] };
+        self.0[0] = if flag { other.0[0] } else { self.0[0] };
+        self.0[1] = if flag { other.0[1] } else { self.0[1] };
+        self.0[2] = if flag { other.0[2] } else { self.0[2] };
+        self.0[3] = if flag { other.0[3] } else { self.0[3] };
+        self.0[4] = if flag { other.0[4] } else { self.0[4] };
+        self.0[5] = if flag { other.0[5] } else { self.0[5] };
+        self.0[6] = if flag { other.0[6] } else { self.0[6] };
+        self.0[7] = if flag { other.0[7] } else { self.0[7] };
     }
 }
 
@@ -1535,16 +1529,16 @@ impl From<FieldStorage> for Field {
     fn from(a: FieldStorage) -> Field {
         let mut r = Field::default();
 
-        r.n[0] = a.n[0] & 0x3FFFFFF;
-        r.n[1] = a.n[0] >> 26 | ((a.n[1] << 6) & 0x3FFFFFF);
-        r.n[2] = a.n[1] >> 20 | ((a.n[2] << 12) & 0x3FFFFFF);
-        r.n[3] = a.n[2] >> 14 | ((a.n[3] << 18) & 0x3FFFFFF);
-        r.n[4] = a.n[3] >> 8 | ((a.n[4] << 24) & 0x3FFFFFF);
-        r.n[5] = (a.n[4] >> 2) & 0x3FFFFFF;
-        r.n[6] = a.n[4] >> 28 | ((a.n[5] << 4) & 0x3FFFFFF);
-        r.n[7] = a.n[5] >> 22 | ((a.n[6] << 10) & 0x3FFFFFF);
-        r.n[8] = a.n[6] >> 16 | ((a.n[7] << 16) & 0x3FFFFFF);
-        r.n[9] = a.n[7] >> 10;
+        r.n[0] = a.0[0] & 0x3FFFFFF;
+        r.n[1] = a.0[0] >> 26 | ((a.0[1] << 6) & 0x3FFFFFF);
+        r.n[2] = a.0[1] >> 20 | ((a.0[2] << 12) & 0x3FFFFFF);
+        r.n[3] = a.0[2] >> 14 | ((a.0[3] << 18) & 0x3FFFFFF);
+        r.n[4] = a.0[3] >> 8 | ((a.0[4] << 24) & 0x3FFFFFF);
+        r.n[5] = (a.0[4] >> 2) & 0x3FFFFFF;
+        r.n[6] = a.0[4] >> 28 | ((a.0[5] << 4) & 0x3FFFFFF);
+        r.n[7] = a.0[5] >> 22 | ((a.0[6] << 10) & 0x3FFFFFF);
+        r.n[8] = a.0[6] >> 16 | ((a.0[7] << 16) & 0x3FFFFFF);
+        r.n[9] = a.0[7] >> 10;
 
         r.magnitude = 1;
         r.normalized = true;
@@ -1558,14 +1552,14 @@ impl Into<FieldStorage> for Field {
         debug_assert!(self.normalized);
         let mut r = FieldStorage::default();
 
-        r.n[0] = self.n[0] | self.n[1] << 26;
-        r.n[1] = self.n[1] >> 6 | self.n[2] << 20;
-        r.n[2] = self.n[2] >> 12 | self.n[3] << 14;
-        r.n[3] = self.n[3] >> 18 | self.n[4] << 8;
-        r.n[4] = self.n[4] >> 24 | self.n[5] << 2 | self.n[6] << 28;
-        r.n[5] = self.n[6] >> 4 | self.n[7] << 22;
-        r.n[6] = self.n[7] >> 10 | self.n[8] << 16;
-        r.n[7] = self.n[8] >> 16 | self.n[9] << 10;
+        r.0[0] = self.n[0] | self.n[1] << 26;
+        r.0[1] = self.n[1] >> 6 | self.n[2] << 20;
+        r.0[2] = self.n[2] >> 12 | self.n[3] << 14;
+        r.0[3] = self.n[3] >> 18 | self.n[4] << 8;
+        r.0[4] = self.n[4] >> 24 | self.n[5] << 2 | self.n[6] << 28;
+        r.0[5] = self.n[6] >> 4 | self.n[7] << 22;
+        r.0[6] = self.n[7] >> 10 | self.n[8] << 16;
+        r.0[7] = self.n[8] >> 16 | self.n[9] << 10;
 
         r
     }

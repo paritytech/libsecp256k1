@@ -42,8 +42,8 @@ pub struct Jacobian {
 
 #[derive(Debug, Clone)]
 pub struct AffineStorage {
-    pub(crate) x: FieldStorage,
-    pub(crate) y: FieldStorage,
+    pub x: FieldStorage,
+    pub y: FieldStorage,
 }
 
 impl Default for Affine {
@@ -76,20 +76,20 @@ impl Default for AffineStorage {
     }
 }
 
-pub(crate) static AFFINE_INFINITY: Affine = Affine {
+pub static AFFINE_INFINITY: Affine = Affine {
     x: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     y: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     infinity: true,
 };
 
-pub(crate) static JACOBIAN_INFINITY: Jacobian = Jacobian {
+pub static JACOBIAN_INFINITY: Jacobian = Jacobian {
     x: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     y: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     z: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
     infinity: true,
 };
 
-pub(crate) static AFFINE_G: Affine = affine_const!(
+pub static AFFINE_G: Affine = affine_const!(
     field_const!(
         0x79BE667E, 0xF9DCBBAC, 0x55A06295, 0xCE870B07,
         0x029BFCDB, 0x2DCE28D9, 0x59F2815B, 0x16F81798
@@ -100,7 +100,7 @@ pub(crate) static AFFINE_G: Affine = affine_const!(
     )
 );
 
-pub(crate) const CURVE_B: u32 = 7;
+pub const CURVE_B: u32 = 7;
 
 impl Affine {
     /// Set a group element equal to the point with given X and Y
