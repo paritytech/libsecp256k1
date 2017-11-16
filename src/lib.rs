@@ -26,6 +26,8 @@ pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
 #[derive(Debug, Clone)]
 pub struct PublicKey(pub Affine);
 #[derive(Debug, Clone)]
+pub struct SecretKey(pub Scalar);
+#[derive(Debug, Clone)]
 pub struct Signature {
     pub r: Scalar,
     pub s: Scalar
@@ -92,6 +94,18 @@ impl PublicKey {
         ret[0] = TAG_PUBKEY_UNCOMPRESSED;
 
         Some(ret)
+    }
+}
+
+impl SecretKey {
+    pub fn parse(p: &[u8; 32]) -> SecretKey {
+        let mut elem = Scalar::default();
+        elem.set_b32(p);
+        SecretKey(elem)
+    }
+
+    pub fn serialize(&self) -> [u8; 32] {
+        self.0.b32()
     }
 }
 
