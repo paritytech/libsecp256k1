@@ -98,10 +98,13 @@ impl PublicKey {
 }
 
 impl SecretKey {
-    pub fn parse(p: &[u8; 32]) -> SecretKey {
+    pub fn parse(p: &[u8; 32]) -> Option<SecretKey> {
         let mut elem = Scalar::default();
-        elem.set_b32(p);
-        SecretKey(elem)
+        if elem.set_b32(p) && !elem.is_zero() {
+            Some(SecretKey(elem))
+        } else {
+            None
+        }
     }
 
     pub fn serialize(&self) -> [u8; 32] {
