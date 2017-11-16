@@ -27,17 +27,17 @@ macro_rules! affine_storage_const {
 
 #[derive(Debug, Clone)]
 pub struct Affine {
-    pub(crate) x: Field,
-    pub(crate) y: Field,
-    pub(crate) infinity: bool,
+    pub x: Field,
+    pub y: Field,
+    pub infinity: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct Jacobian {
-    pub(crate) x: Field,
-    pub(crate) y: Field,
-    pub(crate) z: Field,
-    pub(crate) infinity: bool,
+    pub x: Field,
+    pub y: Field,
+    pub z: Field,
+    pub infinity: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -303,6 +303,12 @@ impl Jacobian {
         self.y = self.y.neg(1);
     }
 
+    pub fn neg(&self) -> Jacobian {
+        let mut ret = Jacobian::default();
+        ret.neg_in_place(self);
+        ret
+    }
+
     /// Check whether a group element is the point at infinity.
     pub fn is_infinity(&self) -> bool {
         self.infinity
@@ -421,6 +427,12 @@ impl Jacobian {
         self.y = self.x.neg(5); self.y += &t; self.y *= &i;
         h3 *= &s1; h3 = h3.neg(1);
         self.y += &h3;
+    }
+
+    pub fn add_var(&self, b: &Jacobian, rzr: Option<&mut Field>) -> Jacobian {
+        let mut ret = Jacobian::default();
+        ret.add_var_in_place(self, b, rzr);
+        ret
     }
 
     /// Set r equal to the sum of a and b (with b given in affine
