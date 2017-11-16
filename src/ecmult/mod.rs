@@ -141,24 +141,6 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
 }
 
 impl ECMultContext {
-    // pub fn new() -> ECMultContext {
-    //     let mut gj = Jacobian::default();
-    //     gj.set_ge(&AFFINE_G);
-
-    //     let mut ret = ECMultContext {
-    //         pre_g: Vec::with_capacity(ECMULT_TABLE_SIZE_G),
-    //     };
-
-    //     for _ in 0..ECMULT_TABLE_SIZE_G {
-    //         ret.pre_g.push(AffineStorage::default());
-    //     }
-
-    //     /* precompute the tables with odd multiples */
-    //     odd_multiples_table_storage_var(&mut ret.pre_g, &gj);
-
-    //     ret
-    // }
-
     pub fn ecmult(
         &self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: &Scalar
     ) {
