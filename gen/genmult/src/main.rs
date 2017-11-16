@@ -50,7 +50,8 @@ pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
     let mut u = ret[fields.len() - 1].inv_var();
 
     for i in (1..fields.len()).rev() {
-        let j = i - 1;
+        let j = i;
+        let i = i - 1;
         ret[j] = &ret[i] * &u;
         u = &u * &fields[j];
     }
