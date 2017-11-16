@@ -109,7 +109,7 @@ impl PublicKey {
 impl SecretKey {
     pub fn parse(p: &[u8; 32]) -> Option<SecretKey> {
         let mut elem = Scalar::default();
-        if elem.set_b32(p) && !elem.is_zero() {
+        if !elem.set_b32(p) && !elem.is_zero() {
             Some(SecretKey(elem))
         } else {
             None
