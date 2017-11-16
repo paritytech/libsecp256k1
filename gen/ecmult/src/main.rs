@@ -38,8 +38,8 @@ fn main() {
     println!("[");
     for pg in pre_g {
         println!("    affine_storage_const!(field_storage_const!({}, {}, {}, {}, {}, {}, {}, {}), field_storage_const!({}, {}, {}, {}, {}, {}, {}, {})),",
-               pg.x.0[0], pg.x.0[1], pg.x.0[2], pg.x.0[3], pg.x.0[4], pg.x.0[5], pg.x.0[6], pg.x.0[7],
-               pg.y.0[0], pg.y.0[1], pg.y.0[2], pg.y.0[3], pg.y.0[4], pg.y.0[5], pg.y.0[6], pg.y.0[7]);
+               pg.x.0[7], pg.x.0[6], pg.x.0[5], pg.x.0[4], pg.x.0[3], pg.x.0[2], pg.x.0[1], pg.x.0[0],
+               pg.y.0[7], pg.y.0[6], pg.y.0[5], pg.y.0[4], pg.y.0[3], pg.y.0[2], pg.y.0[1], pg.y.0[0]);
     }
     println!("]");
 }

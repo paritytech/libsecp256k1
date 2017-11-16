@@ -7,6 +7,17 @@ macro_rules! debug_assert_bits {
     }
 }
 
+macro_rules! field_const_raw {
+    ($d9: expr, $d8: expr, $d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr,
+     $d1: expr, $d0: expr) => {
+        $crate::field::Field {
+            n: [$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9],
+            magnitude: 1,
+            normalized: true
+        }
+    }
+}
+
 macro_rules! field_const {
     ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
         $crate::field::Field {
