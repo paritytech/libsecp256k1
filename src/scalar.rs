@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign};
 
 const SECP256K1_N_0: u32 = 0xD0364141;
 const SECP256K1_N_1: u32 = 0xBFD25E8C;

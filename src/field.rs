@@ -1,5 +1,5 @@
-use std::cmp::Ordering;
-use std::ops::{Add, AddAssign, Mul, MulAssign};
+use core::cmp::Ordering;
+use core::ops::{Add, AddAssign, Mul, MulAssign};
 
 macro_rules! debug_assert_bits {
     ($x: expr, $n: expr) => {
