@@ -139,3 +139,11 @@ impl Message {
         self.0.b32()
     }
 }
+
+pub fn verify(signature: &Signature, pubkey: &PublicKey, message: &Message) -> bool {
+    ECMULT_CONTEXT.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
+}
+
+pub fn recover(signature: &Signature, recovery_id: &RecoveryId, message: &Message) -> Option<PublicKey> {
+    ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
+}
