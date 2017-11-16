@@ -31,17 +31,18 @@ fn test_verify() {
     for i in 0..64 {
         signature_a[i] = signature_arr[i];
     }
-    let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
+    let ctx_sig = Signature::parse(&signature_a);
 
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
-    assert!(ECMULT_CONTEXT.verify_raw(&ctx_sigr, &ctx_sigs, &ctx_pubkey.0, &ctx_message));
-    let mut f_ctx_sigr = Scalar::default();
-    if f_ctx_sigr != ctx_sigr {
-        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey.0, &ctx_message));
+    assert!(ECMULT_CONTEXT.verify_raw(&ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
+    let mut f_ctx_sig = ctx_sig.clone();
+    f_ctx_sig.r.set_int(0);
+    if f_ctx_sig.r != ctx_sig.r {
+        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
     }
-    f_ctx_sigr.set_int(1);
-    if f_ctx_sigr != ctx_sigr {
-        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sigr, &ctx_sigs, &ctx_pubkey.0, &ctx_message));
+    f_ctx_sig.r.set_int(1);
+    if f_ctx_sig.r != ctx_sig.r {
+        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
     }
 }
 
@@ -69,10 +70,10 @@ fn test_recover() {
     for i in 0..64 {
         signature_a[i] = signature_arr[i];
     }
-    let (ctx_sigr, ctx_sigs) = Signature(signature_a).load();
+    let ctx_sig = Signature::parse(&signature_a);
 
     secp256k1.recover(&message, &signature).unwrap();
-    let ctx_pubkey = ECMULT_CONTEXT.recover_raw(&ctx_sigr, &ctx_sigs, rec_id.to_i32() as u8, &ctx_message).unwrap();
+    let ctx_pubkey = ECMULT_CONTEXT.recover_raw(&ctx_sig.r, &ctx_sig.s, rec_id.to_i32() as u8, &ctx_message).unwrap();
     let sp = PublicKey(ctx_pubkey).serialize().unwrap();
 
     let sps: &[u8] = &sp;

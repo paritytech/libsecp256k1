@@ -21,9 +21,15 @@ pub const TAG_PUBKEY_UNCOMPRESSED: u8 = 0x04;
 pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
 pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
 
+#[derive(Debug, Clone)]
 pub struct PublicKey(pub Affine);
-pub struct Signature(pub [u8; 64]);
-pub struct RecoverableSignature(pub Signature, pub u8);
+#[derive(Debug, Clone)]
+pub struct Signature {
+    pub r: Scalar,
+    pub s: Scalar
+}
+#[derive(Debug, Clone)]
+pub struct RecoveryId(pub u8);
 
 impl PublicKey {
     pub fn parse(p: &[u8; 65]) -> Option<PublicKey> {
@@ -86,20 +92,20 @@ impl PublicKey {
 }
 
 impl Signature {
-    pub fn load(&self) -> (Scalar, Scalar) {
+    pub fn parse(p: &[u8; 64]) -> Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
         let mut data = [0u8; 32];
         for i in 0..32 {
-            data[i] = self.0[i];
+            data[i] = p[i];
         }
         r.set_b32(&data);
         for i in 0..32 {
-            data[i] = self.0[i+32];
+            data[i] = p[i+32];
         }
         s.set_b32(&data);
 
-        (r, s)
+        Signature { r, s }
     }
 }
