@@ -11,8 +11,16 @@ pub struct ECMultContext {
     pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G],
 }
 
+pub struct ECMultGenContext {
+    prec: [[AffineStorage; 16]; 64],
+}
+
 pub static ECMULT_CONTEXT: ECMultContext = ECMultContext {
     pre_g: include!("const.rs"),
+};
+
+pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext {
+    prec: include!("const_gen.rs"),
 };
 
 pub fn odd_multiples_table(prej: &mut [Jacobian],
