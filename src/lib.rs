@@ -1,3 +1,5 @@
+#[no_std]
+
 #[macro_use]
 mod field;
 #[macro_use]
