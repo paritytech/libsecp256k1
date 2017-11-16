@@ -14,7 +14,8 @@ pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G,
                 set_table_gej_var, globalz_set_table_gej};
 pub use scalar::Scalar;
 
-pub use ecmult::{ECMultContext, ECMULT_CONTEXT, odd_multiples_table,
+pub use ecmult::{ECMultContext, ECMultGenContext,
+                 ECMULT_CONTEXT, ECMULT_GEN_CONTEXT, odd_multiples_table,
                  WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G};
 
 pub const TAG_PUBKEY_EVEN: u8 = 0x02;
@@ -38,6 +39,14 @@ pub struct RecoveryId(pub u8);
 pub struct Message(pub Scalar);
 
 impl PublicKey {
+    pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
+        let mut pj = Jacobian::default();
+        ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
+        let mut p = Affine::default();
+        p.set_gej(&pj);
+        PublicKey(p)
+    }
+
     pub fn parse(p: &[u8; 65]) -> Option<PublicKey> {
         use {TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
