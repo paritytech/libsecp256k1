@@ -28,7 +28,8 @@ pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext {
     initial: Jacobian {
         x: field_const_raw!(586608, 43357028, 207667908, 262670128, 142222828, 38529388, 267186148, 45417712, 115291924, 13447464),
         y: field_const_raw!(12696548, 208302564, 112025180, 191752716, 143238548, 145482948, 228906000, 69755164, 243572800, 210897016),
-        z: field_const_raw!(3685368, 75404844, 20246216, 5748944, 73206666, 107661790, 110806176, 73488774, 5707384, 104448710)
+        z: field_const_raw!(3685368, 75404844, 20246216, 5748944, 73206666, 107661790, 110806176, 73488774, 5707384, 104448710),
+        infinity: false,
     }
 };
 
@@ -195,13 +196,9 @@ impl ECMultGenContext {
         &self, r: &mut Jacobian, gn: &Scalar
     ) {
         let mut adds = AffineStorage::default();
-        let mut initial = Jacobian::default();
-        initial.set_ge(&AFFINE_G);
-        initial = initial.neg();
-        *r = initial;
-        let mut blind = Scalar::default();
+        *r = self.initial.clone();
 
-        let mut gnb = gn + &blind;
+        let mut gnb = gn + &self.blind;
         let mut add = Affine::default();
         add.infinity = false;
 
