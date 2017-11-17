@@ -121,9 +121,7 @@ impl ECMultGenContext {
         }
         if sigs.is_high() {
             sigs = sigs.neg();
-            if recid > 0 {
-                recid = recid ^ 1;
-            }
+            recid = recid ^ 1;
         }
         return Some((sigr, sigs, recid));
     }

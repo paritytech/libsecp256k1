@@ -211,6 +211,7 @@ fn test_failing_sign_verify() {
     let message = Message::parse(&message_arr);
 
     let (sig, recid) = sign(&message, &seckey).unwrap();
+    assert_eq!(recid.0, 1);
 
     let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
     let rpa = recovered_pubkey.serialize().unwrap();
