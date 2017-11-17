@@ -74,7 +74,7 @@ fn test_recover() {
 
     // secp256k1.recover(&message, &signature).unwrap();
     let ctx_pubkey = recover(&ctx_message, &ctx_sig, &RecoveryId::parse(rec_id.to_i32() as u8).unwrap()).unwrap();
-    let sp = ctx_pubkey.serialize().unwrap();
+    let sp = ctx_pubkey.serialize();
 
     let sps: &[u8] = &sp;
     let gps: &[u8] = &pubkey_a;
@@ -97,7 +97,7 @@ fn test_convert_key1() {
     ];
     let seckey = SecretKey::parse(&secret).unwrap();
     let pubkey = PublicKey::from_secret_key(&seckey);
-    let public = pubkey.serialize().unwrap();
+    let public = pubkey.serialize();
     let pubkey_a: &[u8] = &public;
 
     assert_eq!(expected, pubkey_a);
@@ -119,7 +119,7 @@ fn test_convert_key2() {
     ];
     let seckey = SecretKey::parse(&secret).unwrap();
     let pubkey = PublicKey::from_secret_key(&seckey);
-    let public = pubkey.serialize().unwrap();
+    let public = pubkey.serialize();
     let pubkey_a: &[u8] = &public;
 
     assert_eq!(expected, pubkey_a);
@@ -137,7 +137,7 @@ fn test_convert_anykey() {
 
     let seckey = SecretKey::parse(&secret).unwrap();
     let pubkey = PublicKey::from_secret_key(&seckey);
-    let public = pubkey.serialize().unwrap();
+    let public = pubkey.serialize();
     let pubkey_r: &[u8] = &public;
 
     let secp_pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
@@ -180,8 +180,8 @@ fn test_sign_verify() {
 
     // Self recover
     let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
-    let rpa = recovered_pubkey.serialize().unwrap();
-    let opa = pubkey.serialize().unwrap();
+    let rpa = recovered_pubkey.serialize();
+    let opa = pubkey.serialize();
     let rpr: &[u8] = &rpa;
     let opr: &[u8] = &opa;
     assert_eq!(rpr, opr);
@@ -214,8 +214,8 @@ fn test_failing_sign_verify() {
     assert_eq!(tmp, 1u8);
 
     let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
-    let rpa = recovered_pubkey.serialize().unwrap();
-    let opa = pubkey.serialize().unwrap();
+    let rpa = recovered_pubkey.serialize();
+    let opa = pubkey.serialize();
     let rpr: &[u8] = &rpa;
     let opr: &[u8] = &opa;
     assert_eq!(rpr, opr);

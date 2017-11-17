@@ -2,6 +2,7 @@ use field::Field;
 use group::{Affine, Jacobian};
 use scalar::Scalar;
 use ecmult::{ECMultContext, ECMultGenContext};
+use Error;
 
 const P_MINUS_ORDER: Field = field_const!(
     0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE
@@ -53,11 +54,11 @@ impl ECMultContext {
 
     pub fn recover_raw(
         &self, sigr: &Scalar, sigs: &Scalar, rec_id: u8, message: &Scalar
-    ) -> Option<Affine> {
+    ) -> Result<Affine, Error> {
         debug_assert!(rec_id < 4);
 
         if sigr.is_zero() || sigs.is_zero() {
-            return None;
+            return Err(Error::InvalidSignature);
         }
 
         let brx = sigr.b32();
@@ -66,13 +67,13 @@ impl ECMultContext {
 
         if rec_id & 2 > 0 {
             if fx >= P_MINUS_ORDER {
-                return None;
+                return Err(Error::InvalidSignature);
             }
             fx += ORDER_AS_FE;
         }
         let mut x = Affine::default();
         if !x.set_xo_var(&fx, rec_id & 1 > 0) {
-            return None;
+            return Err(Error::InvalidSignature);
         }
         let mut xj = Jacobian::default();
         xj.set_ge(&x);
@@ -87,15 +88,15 @@ impl ECMultContext {
         pubkey.set_gej_var(&qj);
 
         if pubkey.is_infinity() {
-            return None;
+            return Err(Error::InvalidSignature);
         } else {
-            return Some(pubkey);
+            return Ok(pubkey);
         }
     }
 }
 
 impl ECMultGenContext {
-    pub fn sign_raw(&self, seckey: &Scalar, message: &Scalar, nonce: &Scalar) -> Option<(Scalar, Scalar, u8)> {
+    pub fn sign_raw(&self, seckey: &Scalar, message: &Scalar, nonce: &Scalar) -> Result<(Scalar, Scalar, u8), Error> {
         let mut rp = Jacobian::default();
         self.ecmult_gen(&mut rp, nonce);
         let mut r = Affine::default();
@@ -117,12 +118,12 @@ impl ECMultGenContext {
         rp.clear();
         r.clear();
         if sigs.is_zero() {
-            return None;
+            return Err(Error::InvalidMessage);
         }
         if sigs.is_high() {
             sigs = sigs.neg();
             recid = recid ^ 1;
         }
-        return Some((sigr, sigs, recid));
+        return Ok((sigr, sigs, recid));
     }
 }

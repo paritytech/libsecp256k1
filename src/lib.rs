@@ -14,6 +14,7 @@ mod group;
 mod scalar;
 mod ecmult;
 mod ecdsa;
+mod error;
 
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
@@ -24,6 +25,8 @@ use group::{Affine, Jacobian};
 use scalar::Scalar;
 
 use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+
+pub use error::Error;
 
 /// Curve related structs.
 pub mod curve {
@@ -77,11 +80,11 @@ impl PublicKey {
         PublicKey(p)
     }
 
-    pub fn parse(p: &[u8; 65]) -> Option<PublicKey> {
+    pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
         if !(p[0] == 0x04 || p[0] == 0x06 || p[0] == 0x07) {
-            return None;
+            return Err(Error::InvalidPublicKey);
         }
         let mut x = Field::default();
         let mut y = Field::default();
@@ -90,34 +93,35 @@ impl PublicKey {
             data[i] = p[i+1];
         }
         if !x.set_b32(&data) {
-            return None;
+            return Err(Error::InvalidPublicKey);
         }
         for i in 0..32 {
             data[i] = p[i+33];
         }
         if !y.set_b32(&data) {
-            return None;
+            return Err(Error::InvalidPublicKey);
         }
         let mut elem = Affine::default();
         elem.set_xy(&x, &y);
         if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) &&
             (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
         {
-            return None;
+            return Err(Error::InvalidPublicKey);
+        }
+        if elem.is_infinity() {
+            return Err(Error::InvalidPublicKey);
         }
         if elem.is_valid_var() {
-            return Some(PublicKey(elem));
+            return Ok(PublicKey(elem));
         } else {
-            return None;
+            return Err(Error::InvalidPublicKey);
         }
     }
 
-    pub fn serialize(&self) -> Option<[u8; 65]> {
+    pub fn serialize(&self) -> [u8; 65] {
         use util::TAG_PUBKEY_UNCOMPRESSED;
 
-        if self.0.is_infinity() {
-            return None;
-        }
+        debug_assert!(!self.0.is_infinity());
 
         let mut ret = [0u8; 65];
         let mut elem = self.0.clone();
@@ -134,7 +138,7 @@ impl PublicKey {
         }
         ret[0] = TAG_PUBKEY_UNCOMPRESSED;
 
-        Some(ret)
+        ret
     }
 }
 
@@ -145,12 +149,12 @@ impl Into<Affine> for PublicKey {
 }
 
 impl SecretKey {
-    pub fn parse(p: &[u8; 32]) -> Option<SecretKey> {
+    pub fn parse(p: &[u8; 32]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
         if !elem.set_b32(p) && !elem.is_zero() {
-            Some(SecretKey(elem))
+            Ok(SecretKey(elem))
         } else {
-            None
+            Err(Error::InvalidSecretKey)
         }
     }
 
@@ -213,11 +217,11 @@ impl Message {
 }
 
 impl RecoveryId {
-    pub fn parse(p: u8) -> Option<RecoveryId> {
+    pub fn parse(p: u8) -> Result<RecoveryId, Error> {
         if p < 4 {
-            Some(RecoveryId(p))
+            Ok(RecoveryId(p))
         } else {
-            None
+            Err(Error::InvalidRecoveryId)
         }
     }
 
@@ -244,12 +248,12 @@ pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> b
 }
 
 /// Recover public key from a signed message.
-pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Option<PublicKey> {
+pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
 }
 
 /// Sign a message using the secret key.
-pub fn sign(message: &Message, seckey: &SecretKey) -> Option<(Signature, RecoveryId)> {
+pub fn sign(message: &Message, seckey: &SecretKey) -> Result<(Signature, RecoveryId), Error> {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();
 
@@ -277,12 +281,12 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Option<(Signature, Recover
         nonce = Scalar::default();
         generated_arr = [0u8; 32];
     }
-    if let Some((sigr, sigs, recid)) = result {
-        return Some((Signature {
+    if let Ok((sigr, sigs, recid)) = result {
+        return Ok((Signature {
             r: sigr,
             s: sigs,
         }, RecoveryId(recid)));
     } else {
-        return None;
+        return Err(result.err().unwrap());
     }
 }
