@@ -16,20 +16,24 @@ use sha2::Sha256;
 use typenum::U32;
 
 pub use field::Field;
-pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G,
-                AFFINE_INFINITY, JACOBIAN_INFINITY, CURVE_B,
-                set_table_gej_var, globalz_set_table_gej};
+pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
 pub use scalar::Scalar;
 
 pub use ecmult::{ECMultContext, ECMultGenContext,
-                 ECMULT_CONTEXT, ECMULT_GEN_CONTEXT, odd_multiples_table,
-                 WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G};
+                 ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
-pub const TAG_PUBKEY_EVEN: u8 = 0x02;
-pub const TAG_PUBKEY_ODD: u8 = 0x03;
-pub const TAG_PUBKEY_UNCOMPRESSED: u8 = 0x04;
-pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
-pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
+pub mod util {
+    pub const TAG_PUBKEY_EVEN: u8 = 0x02;
+    pub const TAG_PUBKEY_ODD: u8 = 0x03;
+    pub const TAG_PUBKEY_UNCOMPRESSED: u8 = 0x04;
+    pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
+    pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
+
+    pub use group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
+                    set_table_gej_var, globalz_set_table_gej};
+    pub use ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
+                     odd_multiples_table};
+}
 
 #[derive(Debug, Clone)]
 pub struct PublicKey(pub Affine);
@@ -55,7 +59,7 @@ impl PublicKey {
     }
 
     pub fn parse(p: &[u8; 65]) -> Option<PublicKey> {
-        use {TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
+        use util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
         if !(p[0] == 0x04 || p[0] == 0x06 || p[0] == 0x07) {
             return None;
@@ -90,6 +94,8 @@ impl PublicKey {
     }
 
     pub fn serialize(&self) -> Option<[u8; 65]> {
+        use util::TAG_PUBKEY_UNCOMPRESSED;
+
         if self.0.is_infinity() {
             return None;
         }

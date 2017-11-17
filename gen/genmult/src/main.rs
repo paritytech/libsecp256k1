@@ -1,8 +1,8 @@
 extern crate secp256k1;
 
-use secp256k1::{Jacobian, Field, AffineStorage, Affine, odd_multiples_table,
-                set_table_gej_var, globalz_set_table_gej, AFFINE_G,
-                ECMULT_TABLE_SIZE_G};
+use secp256k1::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
+use secp256k1::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
+                      set_table_gej_var, globalz_set_table_gej};
 
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());
