@@ -103,7 +103,7 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     let mut sign = 1;
     let mut carry = 0;
 
-    debug_assert!(wanf.len() >= 0 && wanf.len() <= 256);
+    debug_assert!(wanf.len() <= 256);
     debug_assert!(w >= 2 && w <= 31);
 
     for i in 0..wanf.len() {

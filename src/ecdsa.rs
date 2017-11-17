@@ -54,7 +54,7 @@ impl ECMultContext {
     pub fn recover_raw(
         &self, sigr: &Scalar, sigs: &Scalar, rec_id: u8, message: &Scalar
     ) -> Option<Affine> {
-        debug_assert!(rec_id >= 0 && rec_id < 4);
+        debug_assert!(rec_id < 4);
 
         if sigr.is_zero() || sigs.is_zero() {
             return None;

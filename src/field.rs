@@ -78,7 +78,6 @@ impl Field {
         r = r && (self.n[7] <= 0x3ffffff * m);
         r = r && (self.n[8] <= 0x3ffffff * m);
         r = r && (self.n[9] <= 0x03fffff * m);
-        r = r && (self.magnitude >= 0);
         r = r && (self.magnitude <= 32);
         if self.normalized {
             r = r && self.magnitude <= 1;
