@@ -1,7 +1,7 @@
 use field::Field;
 use group::{Affine, Jacobian, AffineStorage};
 use scalar::Scalar;
-use ecmult::{ECMultContext, WINDOW_A, WINDOW_G};
+use ecmult::{ECMultContext, ECMultGenContext, WINDOW_A, WINDOW_G};
 
 const P_MINUS_ORDER: Field = field_const!(
     0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE
@@ -91,5 +91,40 @@ impl ECMultContext {
         } else {
             return Some(pubkey);
         }
+    }
+}
+
+impl ECMultGenContext {
+    pub fn sign_raw(&self, seckey: &Scalar, message: &Scalar, nonce: &Scalar) -> Option<(Scalar, Scalar, u8)> {
+        let mut rp = Jacobian::default();
+        self.ecmult_gen(&mut rp, nonce);
+        let mut r = Affine::default();
+        r.set_gej(&rp);
+        r.x.normalize();
+        r.y.normalize();
+        let b = r.x.b32();
+        let mut sigr = Scalar::default();
+        let overflow = sigr.set_b32(&b);
+        debug_assert!(!sigr.is_zero());
+        debug_assert!(!overflow);
+
+        let mut recid = (if overflow { 2 } else { 0 }) | (if r.y.is_odd() { 1 } else { 0 });
+        let mut n = &sigr * seckey;
+        n += message;
+        let mut sigs = nonce.inv();
+        sigs *= &n;
+        n.clear();
+        rp.clear();
+        r.clear();
+        if sigs.is_zero() {
+            return None;
+        }
+        if sigs.is_high() {
+            sigs = sigs.neg();
+            if recid > 0 {
+                recid = recid ^ 1;
+            }
+        }
+        return Some((sigr, sigs, recid));
     }
 }
