@@ -63,7 +63,8 @@ impl ECMultContext {
 
         let brx = sigr.b32();
         let mut fx = Field::default();
-        debug_assert!(fx.set_b32(&brx));
+        let overflow = fx.set_b32(&brx);
+        debug_assert!(overflow);
 
         if rec_id & 2 > 0 {
             if fx >= P_MINUS_ORDER {
