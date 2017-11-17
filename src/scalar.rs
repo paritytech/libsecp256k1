@@ -88,11 +88,11 @@ impl Scalar {
         self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
         t += (self.0[4] as u64) + o * (SECP256K1_N_C_4 as u64);
         self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[5] as u64);
+        t += self.0[5] as u64;
         self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[6] as u64);
+        t += self.0[6] as u64;
         self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[7] as u64);
+        t += self.0[7] as u64;
         self.0[7] = (t & 0xFFFFFFFF) as u32;
         overflow
     }
@@ -129,21 +129,21 @@ impl Scalar {
         let mut t: u64;
         debug_assert!(bit < 256);
         bit += if flag { 0 } else { usize::max_value() } & 0x100;
-        t = (self.0[0] as u64) + ((if ((bit >> 5) == 0) { 1 } else { 0 }) << (bit & 0x1F));
+        t = (self.0[0] as u64) + ((if (bit >> 5) == 0 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[1] as u64) + ((if ((bit >> 5) == 1) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[1] as u64) + ((if (bit >> 5) == 1 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[2] as u64) + ((if ((bit >> 5) == 2) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[2] as u64) + ((if (bit >> 5) == 2 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[3] as u64) + ((if ((bit >> 5) == 3) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[3] as u64) + ((if (bit >> 5) == 3 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[4] as u64) + ((if ((bit >> 5) == 4) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[4] as u64) + ((if (bit >> 5) == 4 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[5] as u64) + ((if ((bit >> 5) == 5) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[5] as u64) + ((if (bit >> 5) == 5 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[6] as u64) + ((if ((bit >> 5) == 6) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[6] as u64) + ((if (bit >> 5) == 6 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (self.0[7] as u64) + ((if ((bit >> 5) == 7) { 1 } else { 0 }) << (bit & 0x1F));
+        t += (self.0[7] as u64) + ((if (bit >> 5) == 7 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[7] = (t & 0xFFFFFFFF) as u32;
         debug_assert!((t >> 32) == 0);
         debug_assert!(!self.check_overflow());
@@ -671,7 +671,7 @@ impl Scalar {
         self.0[4] = (self.0[4] >> n) + (self.0[5] << (32 - n));
         self.0[5] = (self.0[5] >> n) + (self.0[6] << (32 - n));
         self.0[6] = (self.0[6] >> n) + (self.0[7] << (32 - n));
-        self.0[7] = (self.0[7] >> n);
+        self.0[7] = self.0[7] >> n;
         return ret;
     }
 

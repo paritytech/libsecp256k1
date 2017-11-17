@@ -1,4 +1,4 @@
-use group::{Affine, Jacobian, AffineStorage, set_table_gej_var, globalz_set_table_gej, AFFINE_G};
+use group::{Affine, Jacobian, AffineStorage, globalz_set_table_gej};
 use field::Field;
 use scalar::Scalar;
 

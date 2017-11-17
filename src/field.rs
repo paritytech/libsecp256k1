@@ -124,7 +124,7 @@ impl Field {
 
         x = (t9 >> 22) | (if t9 == 0x03fffff { 1 } else { 0 } & if m == 0x3ffffff { 1 } else { 0 } & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff { 1 } else { 0 }));
 
-        t0 += x * 0x3d1; t1 += (x << 6);
+        t0 += x * 0x3d1; t1 += x << 6;
         t1 += t0 >> 26; t0 &= 0x3ffffff;
         t2 += t1 >> 26; t1 &= 0x3ffffff;
         t3 += t2 >> 26; t2 &= 0x3ffffff;
@@ -210,7 +210,7 @@ impl Field {
 
         x = (t9 >> 22) | (if t9 == 0x03fffff { 1 } else { 0 } & if m == 0x3ffffff { 1 } else { 0 } & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff { 1 } else { 0 }));
 
-        if (x > 0) {
+        if x > 0 {
             t0 += 0x3d1; t1 += x << 6;
             t1 += t0 >> 26; t0 &= 0x3ffffff;
             t2 += t1 >> 26; t1 &= 0x3ffffff;
@@ -483,10 +483,10 @@ impl Field {
         debug_assert!(other.verify());
 
         for i in (0..10).rev() {
-            if (self.n[i] > other.n[i]) {
+            if self.n[i] > other.n[i] {
                 return Ordering::Greater;
             }
-            if (self.n[i] < other.n[i]) {
+            if self.n[i] < other.n[i] {
                 return Ordering::Less;
             }
         }
