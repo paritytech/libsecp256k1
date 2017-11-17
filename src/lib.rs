@@ -1,4 +1,7 @@
 #![no_std]
+extern crate hmac_drbg;
+extern crate typenum;
+extern crate sha2;
 
 #[macro_use]
 mod field;
@@ -7,6 +10,10 @@ mod group;
 mod scalar;
 mod ecmult;
 mod ecdsa;
+
+use hmac_drbg::HmacDRBG;
+use sha2::Sha256;
+use typenum::U32;
 
 pub use field::Field;
 pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G,
@@ -174,4 +181,40 @@ pub fn verify(signature: &Signature, pubkey: &PublicKey, message: &Message) -> b
 
 pub fn recover(signature: &Signature, recovery_id: &RecoveryId, message: &Message) -> Option<PublicKey> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
+}
+
+pub fn sign(seckey: &SecretKey, message: &Message) -> Option<(Signature, RecoveryId)> {
+    let seckey_b32 = seckey.0.b32();
+    let message_b32 = message.0.b32();
+
+    let mut drbg = HmacDRBG::<Sha256>::new(&seckey_b32, &message_b32, &[]);
+    let generated = drbg.generate::<U32>(None);
+    let mut generated_arr = [0u8; 32];
+    for i in 0..32 {
+        generated_arr[i] = generated[i];
+    }
+    let mut nonce = Scalar::default();
+    let mut overflow = nonce.set_b32(&generated_arr);
+
+    while overflow || nonce.is_zero() {
+        let generated = drbg.generate::<U32>(None);
+        let mut generated_arr = [0u8; 32];
+        for i in 0..32 {
+            generated_arr[i] = generated[i];
+        }
+        overflow = nonce.set_b32(&generated_arr);
+    }
+
+    if let Some((sigr, sigs, recid)) = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce) {
+        nonce = Scalar::default();
+        generated_arr = [0u8; 32];
+        return Some((Signature {
+            r: sigr,
+            s: sigs,
+        }, RecoveryId(recid)));
+    } else {
+        nonce = Scalar::default();
+        generated_arr = [0u8; 32];
+        return None;
+    }
 }

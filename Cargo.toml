@@ -11,6 +11,9 @@ keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
 name = "secp256k1"
 
 [dependencies]
+hmac-drbg = "0.1"
+sha2 = "0.6"
+typenum = "1.9"
 
 [dev-dependencies]
 secp256k1-test = "0.7"
