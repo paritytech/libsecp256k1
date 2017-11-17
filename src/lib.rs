@@ -175,15 +175,15 @@ impl Message {
     }
 }
 
-pub fn verify(signature: &Signature, pubkey: &PublicKey, message: &Message) -> bool {
+pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     ECMULT_CONTEXT.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
-pub fn recover(signature: &Signature, recovery_id: &RecoveryId, message: &Message) -> Option<PublicKey> {
+pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Option<PublicKey> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
 }
 
-pub fn sign(seckey: &SecretKey, message: &Message) -> Option<(Signature, RecoveryId)> {
+pub fn sign(message: &Message, seckey: &SecretKey) -> Option<(Signature, RecoveryId)> {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();
 

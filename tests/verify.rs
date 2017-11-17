@@ -174,13 +174,13 @@ fn test_sign_verify() {
     let seckey = SecretKey::parse(&seckey_a).unwrap();
     let message = Message::parse(&message_arr);
 
-    let (sig, recid) = sign(&seckey, &message).unwrap();
+    let (sig, recid) = sign(&message, &seckey).unwrap();
 
     // Self verify
-    assert!(verify(&sig, &pubkey, &message));
+    assert!(verify(&message, &sig, &pubkey));
 
     // Self recover
-    let recovered_pubkey = recover(&sig, &recid, &message).unwrap();
+    let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
     let rpa = recovered_pubkey.serialize().unwrap();
     let opa = pubkey.serialize().unwrap();
     let rpr: &[u8] = &rpa;
