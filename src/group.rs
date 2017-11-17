@@ -1,6 +1,7 @@
 use field::{Field, FieldStorage};
 
 #[macro_export]
+/// Define an affine group element constant.
 macro_rules! affine_const {
     ($x: expr, $y: expr) => {
         $crate::group::Affine {
@@ -10,6 +11,7 @@ macro_rules! affine_const {
 }
 
 #[macro_export]
+/// Define a jacobian group element constant.
 macro_rules! jacobian_const {
     ($x: expr, $y: expr) => {
         $crate::group::Jacobian {
@@ -20,6 +22,7 @@ macro_rules! jacobian_const {
 }
 
 #[macro_export]
+/// Define an affine group storage constant.
 macro_rules! affine_storage_const {
     ($x: expr, $y: expr) => {
         $crate::group::AffineStorage {
@@ -29,6 +32,7 @@ macro_rules! affine_storage_const {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// A group element of the secp256k1 curve, in affine coordinates.
 pub struct Affine {
     pub x: Field,
     pub y: Field,
@@ -36,6 +40,7 @@ pub struct Affine {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// A group element of the secp256k1 curve, in jacobian coordinates.
 pub struct Jacobian {
     pub x: Field,
     pub y: Field,
@@ -44,6 +49,7 @@ pub struct Jacobian {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Affine coordinate group element compact storage.
 pub struct AffineStorage {
     pub x: FieldStorage,
     pub y: FieldStorage,

@@ -1,3 +1,7 @@
+//! Pure Rust implementation of the secp256k1 curve and fast ECDSA
+//! signatures. The secp256k1 curve is used excusively in Bitcoin and
+//! Ethereum alike cryptocurrencies.
+
 #![no_std]
 extern crate hmac_drbg;
 extern crate typenum;
@@ -22,6 +26,7 @@ pub use scalar::Scalar;
 pub use ecmult::{ECMultContext, ECMultGenContext,
                  ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
+/// Utilities to manipulate the secp256k1 curve parameters.
 pub mod util {
     pub const TAG_PUBKEY_EVEN: u8 = 0x02;
     pub const TAG_PUBKEY_ODD: u8 = 0x03;
@@ -36,17 +41,22 @@ pub mod util {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Secret key (256-bit) on a secp256k1 curve.
 pub struct SecretKey(Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
     pub s: Scalar
 }
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+/// Tag used for public key recovery from signatures.
 pub struct RecoveryId(u8);
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
 
 impl PublicKey {
@@ -219,14 +229,17 @@ impl Into<i32> for RecoveryId {
     }
 }
 
+/// Check signature is a valid message signed by public key.
 pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     ECMULT_CONTEXT.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
+/// Recover public key from a signed message.
 pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Option<PublicKey> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
 }
 
+/// Sign a message using the secret key.
 pub fn sign(message: &Message, seckey: &SecretKey) -> Option<(Signature, RecoveryId)> {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();

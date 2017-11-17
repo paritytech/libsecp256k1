@@ -46,6 +46,7 @@ macro_rules! field_storage_const {
 }
 
 #[derive(Debug, Clone)]
+/// Field element for secp256k1.
 pub struct Field {
     pub(crate) n: [u32; 10],
     pub(crate) magnitude: u32,
@@ -1340,7 +1341,7 @@ impl Field {
         r
     }
 
-    ///Potentially faster version of secp256k1_fe_inv, without
+    /// Potentially faster version of secp256k1_fe_inv, without
     /// constant-time guarantee.
     pub fn inv_var(&self) -> Field {
         self.inv()
@@ -1478,6 +1479,7 @@ impl PartialOrd for Field {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Compact field element storage.
 pub struct FieldStorage(pub [u32; 8]);
 
 impl Default for FieldStorage {

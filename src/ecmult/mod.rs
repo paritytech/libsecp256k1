@@ -7,20 +7,24 @@ pub const WINDOW_G: usize = 16;
 pub const ECMULT_TABLE_SIZE_A: usize = 1 << (WINDOW_A - 2);
 pub const ECMULT_TABLE_SIZE_G: usize = 1 << (WINDOW_G - 2);
 
+/// Context for accelerating the computation of a*P + b*G.
 pub struct ECMultContext {
     pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G],
 }
 
+/// Context for accelerating the computation of a*G.
 pub struct ECMultGenContext {
     prec: [[AffineStorage; 16]; 64],
     blind: Scalar,
     initial: Jacobian,
 }
 
+/// A static ECMult context.
 pub static ECMULT_CONTEXT: ECMultContext = ECMultContext {
     pre_g: include!("const.rs"),
 };
 
+/// A static ECMultGen context.
 pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext {
     prec: include!("const_gen.rs"),
     blind: Scalar([2217680822, 850875797, 1046150361, 1330484644,
