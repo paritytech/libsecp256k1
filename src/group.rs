@@ -1,5 +1,6 @@
 use field::{Field, FieldStorage};
 
+#[macro_export]
 macro_rules! affine_const {
     ($x: expr, $y: expr) => {
         $crate::group::Affine {
@@ -8,6 +9,7 @@ macro_rules! affine_const {
     }
 }
 
+#[macro_export]
 macro_rules! jacobian_const {
     ($x: expr, $y: expr) => {
         $crate::group::Jacobian {
@@ -17,6 +19,7 @@ macro_rules! jacobian_const {
     }
 }
 
+#[macro_export]
 macro_rules! affine_storage_const {
     ($x: expr, $y: expr) => {
         $crate::group::AffineStorage {
