@@ -9,5 +9,6 @@ SECP256K1 implementation with `no_std` support. Currently we have
 implementation for:
 
 * Convert a private key to a public key.
+* Sign messages.
 * Signature verification.
 * Public key recovery from signed messages.
