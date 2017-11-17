@@ -19,12 +19,21 @@ use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
 use typenum::U32;
 
-pub use field::Field;
-pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
-pub use scalar::Scalar;
+use field::Field;
+use group::{Affine, Jacobian};
+use scalar::Scalar;
 
-pub use ecmult::{ECMultContext, ECMultGenContext,
-                 ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+
+/// Curve related structs.
+pub mod curve {
+    pub use field::Field;
+    pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
+    pub use scalar::Scalar;
+
+    pub use ecmult::{ECMultContext, ECMultGenContext,
+                     ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+}
 
 /// Utilities to manipulate the secp256k1 curve parameters.
 pub mod util {

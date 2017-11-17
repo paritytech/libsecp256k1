@@ -3,6 +3,7 @@ extern crate secp256k1_test;
 extern crate rand;
 
 use secp256k1::*;
+use secp256k1::curve::*;
 use secp256k1_test::{Secp256k1, Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Signature as SecpSignature};
 use secp256k1_test::key;
 use rand::thread_rng;

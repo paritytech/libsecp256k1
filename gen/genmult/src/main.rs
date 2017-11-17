@@ -1,6 +1,6 @@
 extern crate secp256k1;
 
-use secp256k1::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
+use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
 use secp256k1::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
                       set_table_gej_var, globalz_set_table_gej};
 
