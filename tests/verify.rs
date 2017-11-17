@@ -201,3 +201,21 @@ fn test_sign_verify() {
     let rpr: &[u8] = &rpa;
     assert_eq!(rpr, opr);
 }
+
+#[test]
+fn test_failing_sign_verify() {
+    let seckey_a: [u8; 32] = [169, 195, 92, 103, 2, 159, 75, 46, 158, 79, 249, 49, 208, 28, 48, 210, 5, 47, 136, 77, 21, 51, 224, 54, 213, 165, 90, 122, 233, 199, 0, 248];
+    let seckey = SecretKey::parse(&seckey_a).unwrap();
+    let pubkey = PublicKey::from_secret_key(&seckey);
+    let message_arr = [6u8; 32];
+    let message = Message::parse(&message_arr);
+
+    let (sig, recid) = sign(&message, &seckey).unwrap();
+
+    let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
+    let rpa = recovered_pubkey.serialize().unwrap();
+    let opa = pubkey.serialize().unwrap();
+    let rpr: &[u8] = &rpa;
+    let opr: &[u8] = &opa;
+    assert_eq!(rpr, opr);
+}
