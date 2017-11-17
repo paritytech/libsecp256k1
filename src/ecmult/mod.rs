@@ -209,7 +209,10 @@ impl ECMultGenContext {
             }
             add = adds.clone().into();
             *r = r.add_ge(&add);
-            bits = 0;
+            #[allow(unused_assignments)]
+            {
+                bits = 0;
+            }
         }
         add.clear();
         gnb.clear();
