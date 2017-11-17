@@ -3,7 +3,7 @@ extern crate secp256k1_test;
 extern crate rand;
 
 use secp256k1::*;
-use secp256k1_test::{Secp256k1, Message};
+use secp256k1_test::{Secp256k1, Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Signature as SecpSignature};
 use secp256k1_test::key;
 use rand::thread_rng;
 
@@ -13,7 +13,7 @@ fn test_verify() {
 
     let message_arr = [5u8; 32];
     let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
-    let message = Message::from_slice(&message_arr).unwrap();
+    let message = SecpMessage::from_slice(&message_arr).unwrap();
     let signature = secp256k1.sign(&message, &privkey).unwrap();
 
     let pubkey_arr = pubkey.serialize_vec(&secp256k1, false);
@@ -53,7 +53,7 @@ fn test_recover() {
 
     let message_arr = [5u8; 32];
     let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
-    let message = Message::from_slice(&message_arr).unwrap();
+    let message = SecpMessage::from_slice(&message_arr).unwrap();
     let signature = secp256k1.sign_recoverable(&message, &privkey).unwrap();
 
     let pubkey_arr = pubkey.serialize_vec(&secp256k1, false);
@@ -73,7 +73,7 @@ fn test_recover() {
     }
     let ctx_sig = Signature::parse(&signature_a);
 
-    secp256k1.recover(&message, &signature).unwrap();
+    // secp256k1.recover(&message, &signature).unwrap();
     let ctx_pubkey = ECMULT_CONTEXT.recover_raw(&ctx_sig.r, &ctx_sig.s, rec_id.to_i32() as u8, &ctx_message).unwrap();
     let sp = PublicKey(ctx_pubkey).serialize().unwrap();
 
@@ -150,4 +150,54 @@ fn test_convert_anykey() {
     let secp_pubkey_r: &[u8] = &secp_pubkey_a;
 
     assert_eq!(secp_pubkey_r, pubkey_r);
+}
+
+#[test]
+fn test_sign_verify() {
+    let secp256k1 = Secp256k1::new();
+
+    let message_arr = [6u8; 32];
+    let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+
+    let secp_message = SecpMessage::from_slice(&message_arr).unwrap();
+    let pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
+    assert!(pubkey_arr.len() == 65);
+    let mut pubkey_a = [0u8; 65];
+    for i in 0..65 {
+        pubkey_a[i] = pubkey_arr[i];
+    }
+    let pubkey = PublicKey::parse(&pubkey_a).unwrap();
+    let mut seckey_a = [0u8; 32];
+    for i in 0..32 {
+        seckey_a[i] = secp_privkey[i];
+    }
+    let seckey = SecretKey::parse(&seckey_a).unwrap();
+    let message = Message::parse(&message_arr);
+
+    let (sig, recid) = sign(&seckey, &message).unwrap();
+
+    // Self verify
+    assert!(verify(&sig, &pubkey, &message));
+
+    // Self recover
+    let recovered_pubkey = recover(&sig, &recid, &message).unwrap();
+    let rpa = recovered_pubkey.serialize().unwrap();
+    let opa = pubkey.serialize().unwrap();
+    let rpr: &[u8] = &rpa;
+    let opr: &[u8] = &opa;
+    assert_eq!(rpr, opr);
+
+    let signature_a = sig.serialize();
+    let secp_recid = SecpRecoveryId::from_i32(recid.0 as i32).unwrap();
+    let secp_rec_signature = SecpRecoverableSignature::from_compact(&secp256k1, &signature_a, secp_recid).unwrap();
+    let secp_signature = SecpSignature::from_compact(&secp256k1, &signature_a).unwrap();
+
+    // External verify
+    secp256k1.verify(&secp_message, &secp_signature, &secp_pubkey).unwrap();
+
+    // External recover
+    let recovered_pubkey = secp256k1.recover(&secp_message, &secp_rec_signature).unwrap();
+    let rpa = recovered_pubkey.serialize_vec(&secp256k1, false);
+    let rpr: &[u8] = &rpa;
+    assert_eq!(rpr, opr);
 }
