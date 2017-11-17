@@ -344,11 +344,14 @@ macro_rules! define_ops {
         macro_rules! extract {
             () => {
                 {
-                    let n = $c0;
-                    $c0 = $c1;
-                    $c1 = $c2;
-                    $c2 = 0;
-                    n
+                    #[allow(unused_assignments)]
+                    {
+                        let n = $c0;
+                        $c0 = $c1;
+                        $c1 = $c2;
+                        $c2 = 0;
+                        n
+                    }
                 }
             }
         }
@@ -357,11 +360,14 @@ macro_rules! define_ops {
         macro_rules! extract_fast {
             () => {
                 {
-                    let n = $c0;
-                    $c0 = $c1;
-                    $c1 = 0;
-                    debug_assert!($c2 == 0);
-                    n
+                    #[allow(unused_assignments)]
+                    {
+                        let n = $c0;
+                        $c0 = $c1;
+                        $c1 = 0;
+                        debug_assert!($c2 == 0);
+                        n
+                    }
                 }
             }
         }

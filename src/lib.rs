@@ -211,16 +211,18 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Option<(Signature, Recover
         overflow = nonce.set_b32(&generated_arr);
     }
 
-    if let Some((sigr, sigs, recid)) = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce) {
+    let result = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce);
+    #[allow(unused_assignments)]
+    {
         nonce = Scalar::default();
         generated_arr = [0u8; 32];
+    }
+    if let Some((sigr, sigs, recid)) = result {
         return Some((Signature {
             r: sigr,
             s: sigs,
         }, RecoveryId(recid)));
     } else {
-        nonce = Scalar::default();
-        generated_arr = [0u8; 32];
         return None;
     }
 }
