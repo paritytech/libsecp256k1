@@ -267,6 +267,7 @@ impl Scalar {
 
 macro_rules! define_ops {
     ($c0: ident, $c1: ident, $c2: ident) => {
+        #[allow(unused_macros)]
         macro_rules! muladd {
             ($a: expr, $b: expr) => {
                 let a = $a; let b = $b;
@@ -281,6 +282,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! muladd_fast {
             ($a: expr, $b: expr) => {
                 let a = $a; let b = $b;
@@ -294,6 +296,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! muladd2 {
             ($a: expr, $b: expr) => {
                 let a = $a; let b = $b;
@@ -315,6 +318,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! sumadd {
             ($a: expr) => {
                 let a = $a;
@@ -325,6 +329,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! sumadd_fast {
             ($a: expr) => {
                 let a = $a;
@@ -335,6 +340,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! extract {
             () => {
                 {
@@ -347,6 +353,7 @@ macro_rules! define_ops {
             }
         }
 
+        #[allow(unused_macros)]
         macro_rules! extract_fast {
             () => {
                 {
