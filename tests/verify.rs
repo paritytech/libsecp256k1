@@ -24,8 +24,7 @@ fn test_verify() {
     }
 
     let ctx_pubkey = PublicKey::parse(&pubkey_a).unwrap();
-    let mut ctx_message = Scalar::default();
-    ctx_message.set_b32(&message_arr);
+    let mut ctx_message = Message::parse(&message_arr);
     let signature_arr = signature.serialize_compact(&secp256k1);
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
@@ -35,15 +34,15 @@ fn test_verify() {
     let ctx_sig = Signature::parse(&signature_a);
 
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
-    assert!(ECMULT_CONTEXT.verify_raw(&ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
+    assert!(verify(&ctx_message, &ctx_sig, &ctx_pubkey));
     let mut f_ctx_sig = ctx_sig.clone();
     f_ctx_sig.r.set_int(0);
     if f_ctx_sig.r != ctx_sig.r {
-        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
+        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.clone().into(), &ctx_message.0));
     }
     f_ctx_sig.r.set_int(1);
     if f_ctx_sig.r != ctx_sig.r {
-        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.0, &ctx_message));
+        assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.clone().into(), &ctx_message.0));
     }
 }
 
@@ -63,8 +62,7 @@ fn test_recover() {
         pubkey_a[i] = pubkey_arr[i];
     }
 
-    let mut ctx_message = Scalar::default();
-    ctx_message.set_b32(&message_arr);
+    let mut ctx_message = Message::parse(&message_arr);
     let (rec_id, signature_arr) = signature.serialize_compact(&secp256k1);
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
@@ -74,8 +72,8 @@ fn test_recover() {
     let ctx_sig = Signature::parse(&signature_a);
 
     // secp256k1.recover(&message, &signature).unwrap();
-    let ctx_pubkey = ECMULT_CONTEXT.recover_raw(&ctx_sig.r, &ctx_sig.s, rec_id.to_i32() as u8, &ctx_message).unwrap();
-    let sp = PublicKey(ctx_pubkey).serialize().unwrap();
+    let ctx_pubkey = recover(&ctx_message, &ctx_sig, &RecoveryId::parse(rec_id.to_i32() as u8).unwrap()).unwrap();
+    let sp = ctx_pubkey.serialize().unwrap();
 
     let sps: &[u8] = &sp;
     let gps: &[u8] = &pubkey_a;
@@ -188,7 +186,7 @@ fn test_sign_verify() {
     assert_eq!(rpr, opr);
 
     let signature_a = sig.serialize();
-    let secp_recid = SecpRecoveryId::from_i32(recid.0 as i32).unwrap();
+    let secp_recid = SecpRecoveryId::from_i32(recid.into()).unwrap();
     let secp_rec_signature = SecpRecoverableSignature::from_compact(&secp256k1, &signature_a, secp_recid).unwrap();
     let secp_signature = SecpSignature::from_compact(&secp256k1, &signature_a).unwrap();
 
@@ -211,7 +209,8 @@ fn test_failing_sign_verify() {
     let message = Message::parse(&message_arr);
 
     let (sig, recid) = sign(&message, &seckey).unwrap();
-    assert_eq!(recid.0, 1);
+    let tmp: u8 = recid.into();
+    assert_eq!(tmp, 1u8);
 
     let recovered_pubkey = recover(&message, &sig, &recid).unwrap();
     let rpa = recovered_pubkey.serialize().unwrap();

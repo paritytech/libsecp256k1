@@ -35,18 +35,18 @@ pub mod util {
                      odd_multiples_table};
 }
 
-#[derive(Debug, Clone)]
-pub struct PublicKey(pub Affine);
-#[derive(Debug, Clone)]
-pub struct SecretKey(pub Scalar);
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct PublicKey(Affine);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SecretKey(Scalar);
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Signature {
     pub r: Scalar,
     pub s: Scalar
 }
-#[derive(Debug, Clone)]
-pub struct RecoveryId(pub u8);
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct RecoveryId(u8);
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Message(pub Scalar);
 
 impl PublicKey {
@@ -119,6 +119,12 @@ impl PublicKey {
     }
 }
 
+impl Into<Affine> for PublicKey {
+    fn into(self) -> Affine {
+        self.0
+    }
+}
+
 impl SecretKey {
     pub fn parse(p: &[u8; 32]) -> Option<SecretKey> {
         let mut elem = Scalar::default();
@@ -131,6 +137,12 @@ impl SecretKey {
 
     pub fn serialize(&self) -> [u8; 32] {
         self.0.b32()
+    }
+}
+
+impl Into<Scalar> for SecretKey {
+    fn into(self) -> Scalar {
+        self.0
     }
 }
 
@@ -178,6 +190,32 @@ impl Message {
 
     pub fn serialize(&self) -> [u8; 32] {
         self.0.b32()
+    }
+}
+
+impl RecoveryId {
+    pub fn parse(p: u8) -> Option<RecoveryId> {
+        if p < 4 {
+            Some(RecoveryId(p))
+        } else {
+            None
+        }
+    }
+
+    pub fn serialize(&self) -> u8 {
+        self.0
+    }
+}
+
+impl Into<u8> for RecoveryId {
+    fn into(self) -> u8 {
+        self.0
+    }
+}
+
+impl Into<i32> for RecoveryId {
+    fn into(self) -> i32 {
+        self.0 as i32
     }
 }
 

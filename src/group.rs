@@ -28,14 +28,14 @@ macro_rules! affine_storage_const {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Affine {
     pub x: Field,
     pub y: Field,
     pub infinity: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Jacobian {
     pub x: Field,
     pub y: Field,
@@ -43,7 +43,7 @@ pub struct Jacobian {
     pub infinity: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AffineStorage {
     pub x: FieldStorage,
     pub y: FieldStorage,

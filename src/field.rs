@@ -1477,7 +1477,7 @@ impl PartialOrd for Field {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FieldStorage(pub [u32; 8]);
 
 impl Default for FieldStorage {
