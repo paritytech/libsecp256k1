@@ -6,6 +6,7 @@
 extern crate hmac_drbg;
 extern crate typenum;
 extern crate sha2;
+extern crate rand;
 
 #[macro_use]
 mod field;
@@ -25,6 +26,8 @@ use group::{Affine, Jacobian};
 use scalar::Scalar;
 
 use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+
+use rand::Rng;
 
 pub use error::Error;
 
@@ -155,6 +158,18 @@ impl SecretKey {
             Ok(SecretKey(elem))
         } else {
             Err(Error::InvalidSecretKey)
+        }
+    }
+
+    pub fn random<R: Rng>(rng: &mut R) -> SecretKey {
+        loop {
+            let mut ret = [0u8; 32];
+            rng.fill_bytes(&mut ret);
+
+            match Self::parse(&ret) {
+                Ok(key) => return key,
+                Err(_) => (),
+            }
         }
     }
 
