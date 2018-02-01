@@ -265,6 +265,75 @@ impl ECMultContext {
             r.z *= &z;
         }
     }
+
+    pub fn ecmult_const(
+        &self, r: &mut Jacobian, a: &Affine, scalar: &Scalar
+    ) {
+        const WNAF_SIZE: usize = (WNAF_BITS + (WINDOW_A - 1) - 1) / (WINDOW_A - 1);
+
+        let mut tmpa = Affine::default();
+        let mut pre_a: [Affine; ECMULT_TABLE_SIZE_A] = Default::default();
+        let mut z = Field::default();
+
+        let mut wnaf_1 = [0i32; 1 + WNAF_SIZE];
+
+        let sc = scalar.clone();
+        let skew_1 = ecmult_wnaf_const(&mut wnaf_1, &sc, WINDOW_A - 1);
+
+        /* Calculate odd multiples of a.  All multiples are brought to
+         * the same Z 'denominator', which is stored in Z. Due to
+         * secp256k1' isomorphism we can do all operations pretending
+         * that the Z coordinate was 1, use affine addition formulae,
+         * and correct the Z coordinate of the result once at the end.
+         */
+        r.set_ge(a);
+        odd_multiples_table_globalz_windowa(&mut pre_a, &mut z, r);
+        for i in 0..ECMULT_TABLE_SIZE_A {
+            pre_a[i].y.normalize_weak();
+        }
+
+        /* first loop iteration (separated out so we can directly set
+         * r, rather than having it start at infinity, get doubled
+         * several times, then have its new value added to it) */
+        let i = wnaf_1[WNAF_SIZE];
+        debug_assert!(i != 0);
+        table_get_ge_const(&mut tmpa, &pre_a, i, WINDOW_A);
+        r.set_ge(&tmpa);
+
+        /* remaining loop iterations */
+        for i in (0..WNAF_SIZE).rev() {
+            for j in 0..(WINDOW_A - 1) {
+                let r2 = r.clone();
+                r.double_nonzero_in_place(&r2, None);
+            }
+
+            let n = wnaf_1[i];
+            table_get_ge_const(&mut tmpa, &pre_a, n, WINDOW_A);
+            debug_assert!(n != 0);
+            *r = r.add_ge(&tmpa);
+        }
+
+        r.z *= &z;
+
+        /* Correct for wNAF skew */
+        let mut correction = a.clone();
+        let mut correction_1_stor = AffineStorage::default();
+        let mut a2_stor = AffineStorage::default();
+        let mut tmpj = Jacobian::default();
+        tmpj.set_ge(&correction);
+        tmpj = tmpj.double_var(None);
+        correction.set_gej(&tmpj);
+        correction_1_stor = a.clone().into();
+        a2_stor = correction.into();
+
+        /* For odd numbers this is 2a (so replace it), for even ones a (so no-op) */
+        correction_1_stor.cmov(&a2_stor, skew_1 == 2);
+
+        /* Apply the correction */
+        correction = correction_1_stor.into();
+        correction = correction.neg();
+        *r = r.add_ge(&correction)
+    }
 }
 
 impl ECMultGenContext {
