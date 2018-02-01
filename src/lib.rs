@@ -5,6 +5,7 @@
 #![no_std]
 extern crate hmac_drbg;
 extern crate typenum;
+extern crate digest;
 extern crate sha2;
 extern crate rand;
 
@@ -15,6 +16,7 @@ mod group;
 mod scalar;
 mod ecmult;
 mod ecdsa;
+mod ecdh;
 mod error;
 
 use hmac_drbg::HmacDRBG;

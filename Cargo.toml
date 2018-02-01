@@ -14,6 +14,7 @@ name = "secp256k1"
 rand = { version = "0.4", default-features = false }
 hmac-drbg = "0.1"
 sha2 = "0.6"
+digest = "0.6"
 typenum = "1.9"
 
 [dev-dependencies]
