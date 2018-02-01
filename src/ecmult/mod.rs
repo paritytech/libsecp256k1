@@ -221,7 +221,8 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     wnaf[word] = (u * global_sign as u32) as i32;
 
     debug_assert!(s.is_zero());
-    debug_assert!(word == wnaf.len());
+    let wnaf_size = (WNAF_BITS + w - 1) / w;
+    debug_assert!(word == wnaf_size);
 
     skew
 }
