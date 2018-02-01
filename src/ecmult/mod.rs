@@ -213,7 +213,7 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
         let sign = 2 * (if u_last > 0 { 1 } else { 0 }) - 1;
         u += sign * if even { 1 } else { 0 };
 
-        wnaf[word] = (u_last * global_sign as u32) as i32;
+        wnaf[word] = (u_last as i32 * global_sign as i32) as i32;
         word += 1;
 
         u_last = u;
