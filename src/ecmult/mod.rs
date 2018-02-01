@@ -205,20 +205,21 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     global_sign *= if not_neg_one { 1 } else { 0 } * 2 - 1;
     let skew = 1 << (if bit { 1 } else { 0 });
 
-    let mut u_last = s.shr_int(w);
-    let mut u = 0;
+    let mut u_last: i32 = s.shr_int(w) as i32;
+    let mut u: i32 = 0;
     while word * w < WNAF_BITS {
-        u = s.shr_int(w);
+        u = s.shr_int(w) as i32;
         let even = (u & 1) == 0;
         let sign = 2 * (if u_last > 0 { 1 } else { 0 }) - 1;
         u += sign * if even { 1 } else { 0 };
+        u_last -= sign * if even { 1 } else { 0 } * (1 << w);
 
         wnaf[word] = (u_last as i32 * global_sign as i32) as i32;
         word += 1;
 
         u_last = u;
     }
-    wnaf[word] = (u * global_sign as u32) as i32;
+    wnaf[word] = (u * global_sign as i32);
 
     debug_assert!(s.is_zero());
     let wnaf_size = (WNAF_BITS + w - 1) / w;
