@@ -6,6 +6,7 @@ pub const WINDOW_A: usize = 5;
 pub const WINDOW_G: usize = 16;
 pub const ECMULT_TABLE_SIZE_A: usize = 1 << (WINDOW_A - 2);
 pub const ECMULT_TABLE_SIZE_G: usize = 1 << (WINDOW_G - 2);
+pub const WNAF_BITS: usize = 256;
 
 /// Context for accelerating the computation of a*P + b*G.
 pub struct ECMultContext {
@@ -115,18 +116,18 @@ fn table_get_ge_storage(r: &mut Affine, pre: &[AffineStorage], n: i32, w: usize)
     }
 }
 
-pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
+pub fn ecmult_wnaf(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     let mut s = a.clone();
     let mut last_set_bit: i32 = -1;
     let mut bit = 0;
     let mut sign = 1;
     let mut carry = 0;
 
-    debug_assert!(wanf.len() <= 256);
+    debug_assert!(wnaf.len() <= 256);
     debug_assert!(w >= 2 && w <= 31);
 
-    for i in 0..wanf.len() {
-        wanf[i] = 0;
+    for i in 0..wnaf.len() {
+        wnaf[i] = 0;
     }
 
     if s.bits(255, 1) > 0 {
@@ -134,7 +135,7 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
         sign = -1;
     }
 
-    while bit < wanf.len() {
+    while bit < wnaf.len() {
         let mut now;
         let mut word;
         if s.bits(bit, 1) == carry as u32 {
@@ -143,8 +144,8 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
         }
 
         now = w;
-        if now > wanf.len() - bit {
-            now = wanf.len() - bit;
+        if now > wnaf.len() - bit {
+            now = wnaf.len() - bit;
         }
 
         word = (s.bits_var(bit, now) as i32) + carry;
@@ -152,7 +153,7 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
         carry = (word >> (w-1)) & 1;
         word -= carry << w;
 
-        wanf[bit] = sign * word;
+        wnaf[bit] = sign * word;
         last_set_bit = bit as i32;
 
         bit += now;
@@ -167,6 +168,62 @@ pub fn ecmult_wnaf(wanf: &mut [i32], a: &Scalar, w: usize) -> i32 {
         t
     });
     last_set_bit + 1
+}
+
+pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
+    let mut s = a.clone();
+    let mut word = 0;
+
+    /* Note that we cannot handle even numbers by negating them to be
+     * odd, as is done in other implementations, since if our scalars
+     * were specified to have width < 256 for performance reasons,
+     * their negations would have width 256 and we'd lose any
+     * performance benefit. Instead, we use a technique from Section
+     * 4.2 of the Okeya/Tagaki paper, which is to add either 1 (for
+     * even) or 2 (for odd) to the number we are encoding, returning a
+     * skew value indicating this, and having the caller compensate
+     * after doing the multiplication. */
+
+    /* Negative numbers will be negated to keep their bit
+     * representation below the maximum width */
+    let flip = s.is_high();
+    /* We add 1 to even numbers, 2 to odd ones, noting that negation
+     * flips parity */
+    let bit = flip ^ !s.is_even();
+    /* We add 1 to even numbers, 2 to odd ones, noting that negation
+     * flips parity */
+    let neg_s = s.neg();
+    let not_neg_one = !neg_s.is_one();
+    s.cadd_bit(if bit { 1 } else { 0 }, not_neg_one);
+    /* If we had negative one, flip == 1, s.d[0] == 0, bit == 1, so
+     * caller expects that we added two to it and flipped it. In fact
+     * for -1 these operations are identical. We only flipped, but
+     * since skewing is required (in the sense that the skew must be 1
+     * or 2, never zero) and flipping is not, we need to change our
+     * flags to claim that we only skewed. */
+    let mut global_sign = s.cond_neg_mut(flip);
+    global_sign *= if not_neg_one { 1 } else { 0 } * 2 - 1;
+    let skew = 1 << (if bit { 1 } else { 0 });
+
+    let mut u_last = s.shr_int(w);
+    let mut u = 0;
+    while word * w < WNAF_BITS {
+        u = s.shr_int(w);
+        let even = (u & 1) == 0;
+        let sign = 2 * (if u_last > 0 { 1 } else { 0 }) - 1;
+        u += sign * if even { 1 } else { 0 };
+
+        wnaf[word] = (u_last * global_sign as u32) as i32;
+        word += 1;
+
+        u_last = u;
+    }
+    wnaf[word] = (u * global_sign as u32) as i32;
+
+    debug_assert!(s.is_zero());
+    debug_assert!(word == wnaf.len());
+
+    skew
 }
 
 impl ECMultContext {
