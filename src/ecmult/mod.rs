@@ -88,6 +88,21 @@ fn table_get_ge(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
     }
 }
 
+fn table_get_ge_const(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
+    let abs_n = n * (if n > 0 { 1 } else { 0 } * 2 - 1);
+    let idx_n = abs_n / 2;
+    debug_assert!(n & 1 == 1);
+    debug_assert!(n >= -((1 << (w-1)) - 1));
+    debug_assert!(n <=  ((1 << (w-1)) - 1));
+    for m in 0..pre.len() {
+        r.x.cmov(&pre[m].x, m == idx_n as usize);
+        r.y.cmov(&pre[m].y, m == idx_n as usize);
+    }
+    r.infinity = false;
+    let neg_y = r.y.neg(1);
+    r.y.cmov(&neg_y, n != abs_n);
+}
+
 fn table_get_ge_storage(r: &mut Affine, pre: &[AffineStorage], n: i32, w: usize) {
     debug_assert!(n & 1 == 1);
     debug_assert!(n >= -((1 << (w-1)) - 1));
