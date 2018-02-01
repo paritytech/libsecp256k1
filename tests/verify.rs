@@ -5,6 +5,7 @@ extern crate rand;
 use secp256k1::*;
 use secp256k1::curve::*;
 use secp256k1_test::{Secp256k1, Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Signature as SecpSignature};
+use secp256k1_test::ecdh::{SharedSecret as SecpSharedSecret};
 use secp256k1_test::key;
 use rand::thread_rng;
 
@@ -219,4 +220,46 @@ fn test_failing_sign_verify() {
     let rpr: &[u8] = &rpa;
     let opr: &[u8] = &opa;
     assert_eq!(rpr, opr);
+}
+
+fn genkey(secp256k1: &Secp256k1) -> (key::PublicKey, key::SecretKey, PublicKey, SecretKey) {
+    let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
+    assert!(pubkey_arr.len() == 65);
+    let mut pubkey_a = [0u8; 65];
+    for i in 0..65 {
+        pubkey_a[i] = pubkey_arr[i];
+    }
+    let pubkey = PublicKey::parse(&pubkey_a).unwrap();
+    let mut seckey_a = [0u8; 32];
+    for i in 0..32 {
+        seckey_a[i] = secp_privkey[i];
+    }
+    let seckey = SecretKey::parse(&seckey_a).unwrap();
+
+    (secp_pubkey, secp_privkey, pubkey, seckey)
+}
+
+#[test]
+fn test_shared_secret() {
+    let secp256k1 = Secp256k1::new();
+
+    let (spub1, ssec1, pub1, sec1) = genkey(&secp256k1);
+    let (spub2, ssec2, pub2, sec2) = genkey(&secp256k1);
+
+    let shared1 = SharedSecret::new(&pub1, &sec2).unwrap();
+    let shared2 = SharedSecret::new(&pub2, &sec1).unwrap();
+
+    let secp_shared1 = SecpSharedSecret::new(&secp256k1, &spub1, &ssec2);
+    let secp_shared2 = SecpSharedSecret::new(&secp256k1, &spub2, &ssec1);
+
+    assert_eq!(shared1, shared2);
+
+    for i in 0..32 {
+        assert_eq!(shared1.as_ref()[i], secp_shared1[i]);
+    }
+
+    for i in 0..32 {
+        assert_eq!(shared2.as_ref()[i], secp_shared2[i]);
+    }
 }
