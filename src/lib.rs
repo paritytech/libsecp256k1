@@ -75,6 +75,8 @@ pub struct RecoveryId(u8);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct SharedSecret([u8; 32]);
 
 impl PublicKey {
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
@@ -256,6 +258,23 @@ impl Into<u8> for RecoveryId {
 impl Into<i32> for RecoveryId {
     fn into(self) -> i32 {
         self.0 as i32
+    }
+}
+
+impl SharedSecret {
+    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret, Error> {
+        let inner = match ECMULT_CONTEXT.ecdh_raw(&pubkey.0, &seckey.0) {
+            Some(val) => val,
+            None => return Err(Error::InvalidSecretKey),
+        };
+
+        Ok(SharedSecret(inner))
+    }
+}
+
+impl AsRef<[u8]> for SharedSecret {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
     }
 }
 
