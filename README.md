@@ -12,3 +12,4 @@ implementation for:
 * Sign messages.
 * Signature verification.
 * Public key recovery from signed messages.
+* Shared secrets.
