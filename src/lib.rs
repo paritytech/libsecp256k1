@@ -2,6 +2,11 @@
 //! signatures. The secp256k1 curve is used excusively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
+#![deny(unused_import_braces, unused_imports,
+        unused_comparisons, unused_must_use,
+        unused_variables, non_shorthand_field_patterns,
+        unreachable_code, unused_parens)]
+
 #![no_std]
 extern crate hmac_drbg;
 extern crate typenum;
@@ -76,6 +81,7 @@ pub struct RecoveryId(u8);
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
+/// Shared secret using ECDH.
 pub struct SharedSecret([u8; 32]);
 
 impl PublicKey {

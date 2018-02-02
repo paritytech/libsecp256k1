@@ -1,15 +1,13 @@
-use sha2::{Sha256, Digest};
+use sha2::Sha256;
 use digest::{FixedOutput, Input};
-use field::Field;
 use group::{Affine, Jacobian};
 use scalar::Scalar;
-use ecmult::{ECMultContext, ECMultGenContext};
-use Error;
+use ecmult::ECMultContext;
 
 impl ECMultContext {
     pub fn ecdh_raw(&self, point: &Affine, scalar: &Scalar) -> Option<[u8; 32]> {
         let mut pt = point.clone();
-        let mut s = scalar.clone();
+        let s = scalar.clone();
 
         let mut result = [0u8; 32];
         if s.is_zero() {

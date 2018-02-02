@@ -219,7 +219,7 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
 
         u_last = u;
     }
-    wnaf[word] = (u * global_sign as i32);
+    wnaf[word] = u * global_sign as i32;
 
     debug_assert!(s.is_zero());
     let wnaf_size = (WNAF_BITS + w - 1) / w;
@@ -304,7 +304,7 @@ impl ECMultContext {
 
         /* remaining loop iterations */
         for i in (0..WNAF_SIZE).rev() {
-            for j in 0..(WINDOW_A - 1) {
+            for _ in 0..(WINDOW_A - 1) {
                 let r2 = r.clone();
                 r.double_nonzero_in_place(&r2, None);
             }
@@ -319,8 +319,8 @@ impl ECMultContext {
 
         /* Correct for wNAF skew */
         let mut correction = a.clone();
-        let mut correction_1_stor = AffineStorage::default();
-        let mut a2_stor = AffineStorage::default();
+        let mut correction_1_stor: AffineStorage;
+        let a2_stor: AffineStorage;
         let mut tmpj = Jacobian::default();
         tmpj.set_ge(&correction);
         tmpj = tmpj.double_var(None);
