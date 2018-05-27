@@ -1,8 +1,6 @@
 extern crate secp256k1;
 
 use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
-use secp256k1::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
-                      set_table_gej_var, globalz_set_table_gej};
 
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());
@@ -11,7 +9,7 @@ pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
             az.push(a[i].z.clone());
         }
     }
-    let mut azi: Vec<Field> = inv_all_var(&az);
+    let azi: Vec<Field> = inv_all_var(&az);
 
     let mut ret = Vec::with_capacity(a.len());
     for _ in 0..a.len() {

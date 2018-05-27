@@ -26,7 +26,7 @@ fn test_verify() {
     }
 
     let ctx_pubkey = PublicKey::parse(&pubkey_a).unwrap();
-    let mut ctx_message = Message::parse(&message_arr);
+    let ctx_message = Message::parse(&message_arr);
     let signature_arr = signature.serialize_compact(&secp256k1);
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
@@ -64,7 +64,7 @@ fn test_recover() {
         pubkey_a[i] = pubkey_arr[i];
     }
 
-    let mut ctx_message = Message::parse(&message_arr);
+    let ctx_message = Message::parse(&message_arr);
     let (rec_id, signature_arr) = signature.serialize_compact(&secp256k1);
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
