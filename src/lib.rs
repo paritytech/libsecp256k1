@@ -13,6 +13,8 @@ extern crate typenum;
 extern crate digest;
 extern crate sha2;
 extern crate rand;
+#[macro_use]
+extern crate arrayref;
 
 #[macro_use]
 mod field;
@@ -101,17 +103,10 @@ impl PublicKey {
         }
         let mut x = Field::default();
         let mut y = Field::default();
-        let mut data = [0u8; 32];
-        for i in 0..32 {
-            data[i] = p[i+1];
-        }
-        if !x.set_b32(&data) {
+        if !x.set_b32(array_ref!(p, 1, 32)) {
             return Err(Error::InvalidPublicKey);
         }
-        for i in 0..32 {
-            data[i] = p[i+33];
-        }
-        if !y.set_b32(&data) {
+        if !y.set_b32(array_ref!(p, 33, 32)) {
             return Err(Error::InvalidPublicKey);
         }
         let mut elem = Affine::default();
@@ -141,14 +136,8 @@ impl PublicKey {
 
         elem.x.normalize_var();
         elem.y.normalize_var();
-        let d = elem.x.b32();
-        for i in 0..32 {
-            ret[1+i] = d[i];
-        }
-        let d = elem.y.b32();
-        for i in 0..32 {
-            ret[33+i] = d[i];
-        }
+        elem.x.fill_b32(array_mut_ref!(ret, 1, 32));
+        elem.y.fill_b32(array_mut_ref!(ret, 33, 32));
         ret[0] = TAG_PUBKEY_UNCOMPRESSED;
 
         ret
@@ -199,31 +188,16 @@ impl Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
-        let mut data = [0u8; 32];
-        for i in 0..32 {
-            data[i] = p[i];
-        }
-        r.set_b32(&data);
-        for i in 0..32 {
-            data[i] = p[i+32];
-        }
-        s.set_b32(&data);
+        r.set_b32(array_ref!(p, 0, 32));
+        s.set_b32(array_ref!(p, 32, 32));
 
         Signature { r, s }
     }
 
     pub fn serialize(&self) -> [u8; 64] {
         let mut ret = [0u8; 64];
-
-        let ra = self.r.b32();
-        for i in 0..32 {
-            ret[i] = ra[i];
-        }
-        let sa = self.s.b32();
-        for i in 0..32 {
-            ret[i+32] = sa[i];
-        }
-
+        self.r.fill_b32(array_mut_ref!(ret, 0, 32));
+        self.s.fill_b32(array_mut_ref!(ret, 32, 32));
         ret
     }
 }

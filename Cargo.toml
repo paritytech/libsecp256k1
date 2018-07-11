@@ -16,6 +16,7 @@ hmac-drbg = "0.1"
 sha2 = "0.6"
 digest = "0.6"
 typenum = "1.9"
+arrayref = "0.3"
 
 [dev-dependencies]
 secp256k1-test = "0.7"
