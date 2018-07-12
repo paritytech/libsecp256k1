@@ -153,6 +153,30 @@ impl PublicKey {
 
         ret
     }
+
+    pub fn serialize_compressed(&self) -> [u8; 33] {
+        use util::{TAG_PUBKEY_ODD, TAG_PUBKEY_EVEN};
+
+        debug_assert!(!self.0.is_infinity());
+
+        let mut ret = [0u8; 33];
+        let mut elem = self.0.clone();
+
+        elem.x.normalize_var();
+        elem.y.normalize_var();
+        let d = elem.x.b32();
+        for i in 0..32 {
+            ret[1+i] = d[i];
+        }
+
+        ret[0] = if elem.y.is_odd() {
+            TAG_PUBKEY_ODD
+        } else {
+            TAG_PUBKEY_EVEN
+        };
+
+        ret
+    }
 }
 
 impl Into<Affine> for PublicKey {
