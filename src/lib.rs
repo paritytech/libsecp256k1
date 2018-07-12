@@ -153,11 +153,7 @@ impl PublicKey {
 
         elem.x.normalize_var();
         elem.y.normalize_var();
-        let d = elem.x.b32();
-        for i in 0..32 {
-            ret[1+i] = d[i];
-        }
-
+        elem.x.fill_b32(array_mut_ref!(ret, 1, 32));
         ret[0] = if elem.y.is_odd() {
             TAG_PUBKEY_ODD
         } else {
@@ -299,27 +295,18 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> Result<(Signature, Recover
 
     let mut drbg = HmacDRBG::<Sha256>::new(&seckey_b32, &message_b32, &[]);
     let generated = drbg.generate::<U32>(None);
-    let mut generated_arr = [0u8; 32];
-    for i in 0..32 {
-        generated_arr[i] = generated[i];
-    }
     let mut nonce = Scalar::default();
-    let mut overflow = nonce.set_b32(&generated_arr);
+    let mut overflow = nonce.set_b32(array_ref!(generated, 0, 32));
 
     while overflow || nonce.is_zero() {
         let generated = drbg.generate::<U32>(None);
-        let mut generated_arr = [0u8; 32];
-        for i in 0..32 {
-            generated_arr[i] = generated[i];
-        }
-        overflow = nonce.set_b32(&generated_arr);
+        overflow = nonce.set_b32(array_ref!(generated, 0, 32));
     }
 
     let result = ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce);
     #[allow(unused_assignments)]
     {
         nonce = Scalar::default();
-        generated_arr = [0u8; 32];
     }
     if let Ok((sigr, sigs, recid)) = result {
         return Ok((Signature {
