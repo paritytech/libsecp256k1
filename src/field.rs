@@ -381,13 +381,9 @@ impl Field {
         return true;
     }
 
-    /// Convert a field element to a 32-byte big endian
-    /// value. Requires the input to be normalized.
-    pub fn b32(&self) -> [u8; 32] {
+    pub fn fill_b32(&self, r: &mut [u8; 32]) {
         debug_assert!(self.normalized);
         debug_assert!(self.verify());
-
-        let mut r = [0u8; 32];
 
         r[0] = ((self.n[9] >> 14) & 0xff) as u8;
         r[1] = ((self.n[9] >> 6) & 0xff) as u8;
@@ -421,7 +417,13 @@ impl Field {
         r[29] = ((self.n[0] >> 16) & 0xff) as u8;
         r[30] = ((self.n[0] >> 8) & 0xff) as u8;
         r[31] = (self.n[0] & 0xff) as u8;
+    }
 
+    /// Convert a field element to a 32-byte big endian
+    /// value. Requires the input to be normalized.
+    pub fn b32(&self) -> [u8; 32] {
+        let mut r = [0u8; 32];
+        self.fill_b32(&mut r);
         r
     }
 

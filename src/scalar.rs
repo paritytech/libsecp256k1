@@ -168,6 +168,12 @@ impl Scalar {
     /// Convert a scalar to a byte array.
     pub fn b32(&self) -> [u8; 32] {
         let mut bin = [0u8; 32];
+        self.fill_b32(&mut bin);
+        bin
+    }
+
+    /// Convert a scalar to a byte array.
+    pub fn fill_b32(&self, bin: &mut [u8; 32]) {
         bin[0] = (self.0[7] >> 24) as u8; bin[1] = (self.0[7] >> 16) as u8; bin[2] = (self.0[7] >> 8) as u8; bin[3] = (self.0[7]) as u8;
         bin[4] = (self.0[6] >> 24) as u8; bin[5] = (self.0[6] >> 16) as u8; bin[6] = (self.0[6] >> 8) as u8; bin[7] = (self.0[6]) as u8;
         bin[8] = (self.0[5] >> 24) as u8; bin[9] = (self.0[5] >> 16) as u8; bin[10] = (self.0[5] >> 8) as u8; bin[11] = (self.0[5]) as u8;
@@ -176,7 +182,6 @@ impl Scalar {
         bin[20] = (self.0[2] >> 24) as u8; bin[21] = (self.0[2] >> 16) as u8; bin[22] = (self.0[2] >> 8) as u8; bin[23] = (self.0[2]) as u8;
         bin[24] = (self.0[1] >> 24) as u8; bin[25] = (self.0[1] >> 16) as u8; bin[26] = (self.0[1] >> 8) as u8; bin[27] = (self.0[1]) as u8;
         bin[28] = (self.0[0] >> 24) as u8; bin[29] = (self.0[0] >> 16) as u8; bin[30] = (self.0[0] >> 8) as u8; bin[31] = (self.0[0]) as u8;
-        bin
     }
 
     /// Check whether a scalar equals zero.
