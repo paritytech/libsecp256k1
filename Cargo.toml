@@ -21,7 +21,6 @@ arrayref = "0.3"
 [dev-dependencies]
 secp256k1-test = "0.7"
 rand = "0.4"
-etcommon-hexutil = "0.2"
 
 [workspace]
 members = [
