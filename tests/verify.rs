@@ -139,17 +139,27 @@ fn test_convert_anykey() {
     let seckey = SecretKey::parse(&secret).unwrap();
     let pubkey = PublicKey::from_secret_key(&seckey);
     let public = pubkey.serialize();
+    let public_compressed = pubkey.serialize_compressed();
     let pubkey_r: &[u8] = &public;
+    let pubkey_compressed_r: &[u8] = &public_compressed;
 
     let secp_pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
     assert!(secp_pubkey_arr.len() == 65);
+    let secp_pubkey_compressed_arr = secp_pubkey.serialize_vec(&secp256k1, true);
+    assert!(secp_pubkey_compressed_arr.len() == 33);
     let mut secp_pubkey_a = [0u8; 65];
     for i in 0..65 {
         secp_pubkey_a[i] = secp_pubkey_arr[i];
     }
+    let mut secp_pubkey_compressed_a = [0u8; 33];
+    for i in 0..33 {
+        secp_pubkey_compressed_a[i] = secp_pubkey_compressed_arr[i];
+    }
     let secp_pubkey_r: &[u8] = &secp_pubkey_a;
+    let secp_pubkey_compressed_r: &[u8] = &secp_pubkey_compressed_a;
 
     assert_eq!(secp_pubkey_r, pubkey_r);
+    assert_eq!(secp_pubkey_compressed_r, pubkey_compressed_r);
 }
 
 #[test]
