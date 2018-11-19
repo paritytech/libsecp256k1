@@ -25,6 +25,7 @@ mod ecmult;
 mod ecdsa;
 mod ecdh;
 mod error;
+mod der;
 
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
@@ -62,6 +63,8 @@ pub mod util {
                     set_table_gej_var, globalz_set_table_gej};
     pub use ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
                      odd_multiples_table};
+
+    pub use der::SignatureArray;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -218,6 +221,46 @@ impl Signature {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
         self.s.fill_b32(array_mut_ref!(ret, 32, 32));
+        ret
+    }
+
+    pub fn serialize_der(&self) -> der::SignatureArray {
+        fn fill_scalar_with_leading_zero(scalar: &Scalar) -> [u8; 33] {
+            let mut ret = [0u8; 33];
+            scalar.fill_b32(array_mut_ref!(ret, 1, 32));
+            ret
+        }
+
+        let r_full = fill_scalar_with_leading_zero(&self.r);
+        let s_full = fill_scalar_with_leading_zero(&self.s);
+
+        fn integer_slice(full: &[u8; 33]) -> &[u8] {
+            let mut len = 33;
+            while len > 1 &&
+                full[full.len() - len] == 0 &&
+                full[full.len() - len + 1] < 0x80
+            {
+                len += 1;
+            }
+            &full[(full.len() - len)..]
+        }
+
+        let r = integer_slice(&r_full);
+        let s = integer_slice(&s_full);
+
+        let mut ret = der::SignatureArray::new(6 + r.len() + s.len());
+        {
+            let l = ret.as_mut();
+            l[0] = 0x30;
+            l[1] = 4 + r.len() as u8 + s.len() as u8;
+            l[2] = 0x02;
+            l[3] = r.len() as u8;
+            l[4..(4 + r.len())].copy_from_slice(r);
+            l[4 + r.len()] = 0x02;
+            l[5 + r.len()] = s.len() as u8;
+            l[(6 + r.len())..(6 + r.len() + s.len())].copy_from_slice(s);
+        }
+
         ret
     }
 }
