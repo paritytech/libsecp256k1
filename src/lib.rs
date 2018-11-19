@@ -217,6 +217,30 @@ impl Signature {
         Signature { r, s }
     }
 
+    pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
+        if p.len() == 0 || p[0] != 0x30 {
+            return Err(Error::InvalidSignature);
+        }
+
+        let mut decoder = der::Decoder::new(p);
+
+        decoder.read_constructed_sequence()?;
+        let rlen = decoder.read_len()?;
+
+        if rlen != decoder.remaining_len() {
+            return Err(Error::InvalidSignature);
+        }
+
+        let r = decoder.read_integer()?;
+        let s = decoder.read_integer()?;
+
+        if decoder.remaining_len() != 0 {
+            return Err(Error::InvalidSignature);
+        }
+
+        Ok(Signature { r, s })
+    }
+
     pub fn serialize(&self) -> [u8; 64] {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
