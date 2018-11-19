@@ -18,13 +18,13 @@ impl SignatureArray {
 
 impl AsRef<[u8]> for SignatureArray {
     fn as_ref(&self) -> &[u8] {
-        &self.0
+        &self.0[..self.1]
     }
 }
 
 impl AsMut<[u8]> for SignatureArray {
     fn as_mut(&mut self) -> &mut [u8] {
-        &mut self.0
+        &mut self.0[..self.1]
     }
 }
 
@@ -59,7 +59,7 @@ impl<'a> Decoder<'a> {
     }
 
     pub fn peek_slice(&self, len: usize) -> Result<&[u8], Error> {
-        if self.1 + len >= self.0.len() {
+        if (len == 0 && self.1 >= self.0.len()) || self.1 + len > self.0.len() {
             Err(Error::InvalidSignature)
         } else {
             let v = &self.0[self.1..(self.1 + len)];
@@ -68,7 +68,7 @@ impl<'a> Decoder<'a> {
     }
 
     pub fn skip(&mut self, len: usize) -> Result<(), Error> {
-        if self.1 + len >= self.0.len() {
+        if (len == 0 && self.1 >= self.0.len()) || self.1 + len > self.0.len() {
             Err(Error::InvalidSignature)
         } else {
             self.1 += len;
@@ -92,7 +92,7 @@ impl<'a> Decoder<'a> {
         }
 
         // Short form
-        if b1 & 0x80 == 0{
+        if b1 & 0x80 == 0 {
             return Ok(b1 as usize);
         }
 

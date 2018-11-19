@@ -83,6 +83,27 @@ fn test_recover() {
 }
 
 #[test]
+fn test_signature_der() {
+    let secp256k1 = Secp256k1::new();
+
+    let message_arr = [5u8; 32];
+    let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+
+    assert!(privkey[..].len() == 32);
+    let mut privkey_a = [0u8; 32];
+    for i in 0..32 {
+        privkey_a[i] = privkey[i];
+    }
+
+    let ctx_privkey = SecretKey::parse(&privkey_a).unwrap();
+    let ctx_message = Message::parse(&message_arr);
+
+    let (signature, _) = sign(&ctx_message, &ctx_privkey).unwrap();
+    let reconstructed = Signature::parse_der(signature.serialize_der().as_ref()).unwrap();
+    assert_eq!(signature, reconstructed);
+}
+
+#[test]
 fn test_convert_key1() {
     let secret: [u8; 32] = [
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,

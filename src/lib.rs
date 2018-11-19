@@ -218,10 +218,6 @@ impl Signature {
     }
 
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
-        if p.len() == 0 || p[0] != 0x30 {
-            return Err(Error::InvalidSignature);
-        }
-
         let mut decoder = der::Decoder::new(p);
 
         decoder.read_constructed_sequence()?;
@@ -264,7 +260,7 @@ impl Signature {
                 full[full.len() - len] == 0 &&
                 full[full.len() - len + 1] < 0x80
             {
-                len += 1;
+                len -= 1;
             }
             &full[(full.len() - len)..]
         }
