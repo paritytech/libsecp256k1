@@ -37,7 +37,7 @@ impl ECMultContext {
 
         c = sigr.b32();
         let mut xr: Field = Default::default();
-        xr.set_b32(&c);
+        let _ = xr.set_b32(&c);
 
         if pr.eq_x_var(&xr) {
             return true;

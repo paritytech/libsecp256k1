@@ -358,6 +358,7 @@ impl Field {
 
     /// Set a field element equal to 32-byte big endian value. If
     /// successful, the resulting field element is normalized.
+    #[must_use]
     pub fn set_b32(&mut self, a: &[u8; 32]) -> bool {
         self.n[0] = (a[31] as u32) | ((a[30] as u32) << 8) | ((a[29] as u32) << 16) | (((a[28] & 0x3) as u32) << 24);
         self.n[1] = (((a[28] >> 2) & 0x3f) as u32) | ((a[27] as u32) << 6) | ((a[26] as u32) << 14) | (((a[25] & 0xf) as u32) << 22);
