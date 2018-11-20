@@ -221,6 +221,22 @@ impl PublicKey {
         self.0.set_gej(&r);
         Ok(())
     }
+
+    pub fn combine(keys: &[PublicKey]) -> Result<Self, Error> {
+        let mut qj = Jacobian::default();
+        qj.set_infinity();
+
+        for key in keys {
+            qj = qj.add_ge(&key.0);
+        }
+
+        if qj.is_infinity() {
+            return Err(Error::InvalidPublicKey);
+        }
+
+        let q = Affine::from_gej(&qj);
+        Ok(PublicKey(q))
+    }
 }
 
 impl Into<Affine> for PublicKey {
