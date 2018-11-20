@@ -351,9 +351,21 @@ impl Signature {
 impl Message {
     pub fn parse(p: &[u8; 32]) -> Message {
         let mut m = Scalar::default();
+
+        // Okay for message to overflow.
         let _ = m.set_b32(p);
 
         Message(m)
+    }
+
+    pub fn parse_slice(p: &[u8]) -> Result<Message, Error> {
+        if p.len() != 32 {
+            return Err(Error::InvalidInputLength);
+        }
+
+        let mut a = [0; 32];
+        a.copy_from_slice(p);
+        Ok(Self::parse(&a))
     }
 
     pub fn serialize(&self) -> [u8; 32] {
