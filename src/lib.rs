@@ -209,8 +209,8 @@ impl PublicKey {
     }
 
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
-        let mut r = Jacobian::from_ge(&self.0);
-        let a = r.clone();
+        let mut r = Jacobian::default();
+        let a = Jacobian::from_ge(&self.0);
         let one = Scalar::from_int(1);
         ECMULT_CONTEXT.ecmult(&mut r, &a, &one, &tweak.0);
 
