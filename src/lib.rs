@@ -89,6 +89,16 @@ pub struct Message(pub Scalar);
 /// Shared secret using ECDH.
 pub struct SharedSecret([u8; 32]);
 
+/// Format for public key parsing.
+pub enum PublicKeyFormat {
+    /// Compressed public key, 33 bytes.
+    Compressed,
+    /// Full length public key, 65 bytes.
+    Full,
+    /// Raw public key, 64 bytes.
+    Raw,
+}
+
 impl PublicKey {
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
@@ -98,23 +108,33 @@ impl PublicKey {
         PublicKey(p)
     }
 
-    pub fn parse_slice(p: &[u8], compressed: Option<bool>) -> Result<PublicKey, Error> {
-        let compressed = match (p.len(), compressed) {
-            (65, None) => false,
-            (33, None) => true,
-            (65, Some(false)) => false,
-            (33, Some(true)) => true,
+    pub fn parse_slice(p: &[u8], format: Option<PublicKeyFormat>) -> Result<PublicKey, Error> {
+        let format = match (p.len(), format) {
+            (65, None) | (65, Some(PublicKeyFormat::Full)) => PublicKeyFormat::Full,
+            (33, None) | (33, Some(PublicKeyFormat::Compressed)) => PublicKeyFormat::Compressed,
+            (64, None) | (64, Some(PublicKeyFormat::Raw)) => PublicKeyFormat::Raw,
             _ => return Err(Error::InvalidInputLength),
         };
 
-        if compressed {
-            let mut a = [0; 33];
-            a.copy_from_slice(p);
-            Self::parse_compressed(&a)
-        } else {
-            let mut a = [0; 65];
-            a.copy_from_slice(p);
-            Self::parse(&a)
+        match format {
+            PublicKeyFormat::Full => {
+                let mut a = [0; 65];
+                a.copy_from_slice(p);
+                Self::parse(&a)
+            },
+            PublicKeyFormat::Raw => {
+                use util::TAG_PUBKEY_UNCOMPRESSED;
+
+                let mut a = [0; 65];
+                a[0] = TAG_PUBKEY_UNCOMPRESSED;
+                a[1..].copy_from_slice(p);
+                Self::parse(&a)
+            },
+            PublicKeyFormat::Compressed => {
+                let mut a = [0; 33];
+                a.copy_from_slice(p);
+                Self::parse_compressed(&a)
+            },
         }
     }
 
