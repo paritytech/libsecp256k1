@@ -39,6 +39,13 @@ impl Scalar {
         self.0 = [v, 0, 0, 0, 0, 0, 0, 0];
     }
 
+    /// Create a scalar from an unsigned integer.
+    pub fn from_int(v: u32) -> Self {
+        let mut scalar = Self::default();
+        scalar.set_int(v);
+        scalar
+    }
+
     /// Access bits from a scalar. All requested bits must belong to
     /// the same 32-bit limb.
     pub fn bits(&self, offset: usize, count: usize) -> u32 {

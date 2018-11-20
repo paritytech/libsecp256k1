@@ -198,6 +198,12 @@ impl Affine {
         self.y = a.y;
     }
 
+    pub fn from_gej(a: &Jacobian) -> Self {
+        let mut ge = Self::default();
+        ge.set_gej(a);
+        ge
+    }
+
     pub fn set_gej_var(&mut self, a: &Jacobian) {
         let mut a = a.clone();
         self.infinity = a.infinity;
@@ -289,6 +295,12 @@ impl Jacobian {
         self.x = a.x.clone();
         self.y = a.y.clone();
         self.z.set_int(1);
+    }
+
+    pub fn from_ge(a: &Affine) -> Self {
+        let mut gej = Self::default();
+        gej.set_ge(a);
+        gej
     }
 
     /// Compare the X coordinate of a group element (jacobian).

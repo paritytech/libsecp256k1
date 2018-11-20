@@ -207,6 +207,20 @@ impl PublicKey {
 
         ret
     }
+
+    pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+        let mut r = Jacobian::from_ge(&self.0);
+        let a = r.clone();
+        let one = Scalar::from_int(1);
+        ECMULT_CONTEXT.ecmult(&mut r, &a, &one, &tweak.0);
+
+        if r.is_infinity() {
+            return Err(Error::TweakOutOfRange);
+        }
+
+        self.0.set_gej(&r);
+        Ok(())
+    }
 }
 
 impl Into<Affine> for PublicKey {

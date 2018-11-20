@@ -6,4 +6,5 @@ pub enum Error {
     InvalidRecoveryId,
     InvalidMessage,
     InvalidInputLength,
+    TweakOutOfRange,
 }
