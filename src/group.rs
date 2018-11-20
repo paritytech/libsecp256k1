@@ -459,7 +459,7 @@ impl Jacobian {
     /// Set r equal to the sum of a and b (with b given in affine
     /// coordinates, and not infinity).
     pub fn add_ge_in_place(&mut self, a: &Jacobian, b: &Affine) {
-        const FE1: Field = field_const!(0, 0, 0, 0, 0, 0, 0, 0);
+        const FE1: Field = field_const!(0, 0, 0, 0, 0, 0, 0, 1);
 
         debug_assert!(!b.infinity);
 
