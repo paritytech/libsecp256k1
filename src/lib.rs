@@ -222,6 +222,20 @@ impl PublicKey {
         Ok(())
     }
 
+    pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+        if tweak.0.is_zero() {
+            return Err(Error::TweakOutOfRange);
+        }
+
+        let mut r = Jacobian::default();
+        let zero = Scalar::from_int(0);
+        let pt = Jacobian::from_ge(&self.0);
+        ECMULT_CONTEXT.ecmult(&mut r, &pt, &tweak.0, &zero);
+
+        self.0.set_gej(&r);
+        Ok(())
+    }
+
     pub fn combine(keys: &[PublicKey]) -> Result<Self, Error> {
         let mut qj = Jacobian::default();
         qj.set_infinity();
