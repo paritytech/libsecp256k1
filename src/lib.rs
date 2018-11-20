@@ -96,9 +96,9 @@ impl PublicKey {
     }
 
     pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
-        use util::{TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
+        use util::{TAG_PUBKEY_UNCOMPRESSED, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
-        if !(p[0] == 0x04 || p[0] == 0x06 || p[0] == 0x07) {
+        if !(p[0] == TAG_PUBKEY_UNCOMPRESSED || p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) {
             return Err(Error::InvalidPublicKey);
         }
         let mut x = Field::default();
@@ -116,6 +116,28 @@ impl PublicKey {
         {
             return Err(Error::InvalidPublicKey);
         }
+        if elem.is_infinity() {
+            return Err(Error::InvalidPublicKey);
+        }
+        if elem.is_valid_var() {
+            return Ok(PublicKey(elem));
+        } else {
+            return Err(Error::InvalidPublicKey);
+        }
+    }
+
+    pub fn parse_compressed(p: &[u8; 33]) -> Result<PublicKey, Error> {
+        use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
+
+        if !(p[0] == TAG_PUBKEY_EVEN || p[0] == TAG_PUBKEY_ODD) {
+            return Err(Error::InvalidPublicKey);
+        }
+        let mut x = Field::default();
+        if !x.set_b32(array_ref!(p, 1, 32)) {
+            return Err(Error::InvalidPublicKey);
+        }
+        let mut elem = Affine::default();
+        elem.set_xo_var(&x, p[0] == TAG_PUBKEY_ODD);
         if elem.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
