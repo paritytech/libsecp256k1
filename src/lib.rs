@@ -294,6 +294,24 @@ impl SecretKey {
     pub fn serialize(&self) -> [u8; 32] {
         self.0.b32()
     }
+
+    pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+        let v = &self.0 + &tweak.0;
+        if v.is_zero() {
+            return Err(Error::TweakOutOfRange);
+        }
+        self.0 = v;
+        Ok(())
+    }
+
+    pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+        if tweak.0.is_zero() {
+            return Err(Error::TweakOutOfRange);
+        }
+
+        self.0 *= &tweak.0;
+        Ok(())
+    }
 }
 
 impl Into<Scalar> for SecretKey {
