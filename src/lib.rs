@@ -98,6 +98,26 @@ impl PublicKey {
         PublicKey(p)
     }
 
+    pub fn parse_slice(p: &[u8], compressed: Option<bool>) -> Result<PublicKey, Error> {
+        let compressed = match (p.len(), compressed) {
+            (65, None) => false,
+            (33, None) => true,
+            (65, Some(false)) => false,
+            (33, Some(true)) => true,
+            _ => return Err(Error::InvalidInputLength),
+        };
+
+        if compressed {
+            let mut a = [0; 33];
+            a.copy_from_slice(p);
+            Self::parse_compressed(&a)
+        } else {
+            let mut a = [0; 65];
+            a.copy_from_slice(p);
+            Self::parse(&a)
+        }
+    }
+
     pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_UNCOMPRESSED, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
