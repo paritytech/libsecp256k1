@@ -1,6 +1,7 @@
 extern crate secp256k1;
 extern crate secp256k1_test;
 extern crate rand;
+extern crate clear_on_drop;
 
 use secp256k1::*;
 use secp256k1::curve::*;
@@ -46,6 +47,15 @@ fn test_verify() {
     if f_ctx_sig.r != ctx_sig.r {
         assert!(!ECMULT_CONTEXT.verify_raw(&f_ctx_sig.r, &ctx_sig.s, &ctx_pubkey.clone().into(), &ctx_message.0));
     }
+}
+
+#[test]
+fn secret_clear_on_drop() {
+    let secret: [u8; 32] = [1; 32];
+    let mut seckey = SecretKey::parse(&secret).unwrap();
+
+    clear_on_drop::clear::Clear::clear(&mut seckey);
+    assert_eq!(seckey, SecretKey::default());
 }
 
 #[test]
