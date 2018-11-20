@@ -225,6 +225,16 @@ impl SecretKey {
         }
     }
 
+    pub fn parse_slice(p: &[u8]) -> Result<SecretKey, Error> {
+        if p.len() != 32 {
+            return Err(Error::InvalidInputLength);
+        }
+
+        let mut a = [0; 32];
+        a.copy_from_slice(p);
+        Self::parse(&a)
+    }
+
     pub fn random<R: Rng>(rng: &mut R) -> SecretKey {
         loop {
             let mut ret = [0u8; 32];
@@ -253,10 +263,21 @@ impl Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
-        r.set_b32(array_ref!(p, 0, 32));
-        s.set_b32(array_ref!(p, 32, 32));
+        // Okay for signature to overflow
+        let _ = r.set_b32(array_ref!(p, 0, 32));
+        let _ = s.set_b32(array_ref!(p, 32, 32));
 
         Signature { r, s }
+    }
+
+    pub fn parse_slice(p: &[u8]) -> Result<Signature, Error> {
+        if p.len() != 64 {
+            return Err(Error::InvalidInputLength);
+        }
+
+        let mut a = [0; 64];
+        a.copy_from_slice(p);
+        Ok(Self::parse(&a))
     }
 
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
@@ -330,7 +351,7 @@ impl Signature {
 impl Message {
     pub fn parse(p: &[u8; 32]) -> Message {
         let mut m = Scalar::default();
-        m.set_b32(p);
+        let _ = m.set_b32(p);
 
         Message(m)
     }

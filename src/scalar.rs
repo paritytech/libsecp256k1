@@ -58,6 +58,7 @@ impl Scalar {
         }
     }
 
+    #[must_use]
     fn check_overflow(&self) -> bool {
         let mut yes: bool = false;
         let mut no: bool = false;
@@ -76,6 +77,7 @@ impl Scalar {
         return yes;
     }
 
+    #[must_use]
     fn reduce(&mut self, overflow: bool) -> bool {
         let o: u64 = if overflow { 1 } else { 0 };
         let mut t: u64;
@@ -100,8 +102,9 @@ impl Scalar {
 
     /// Add two scalars together (modulo the group order). Returns
     /// whether it overflowed.
+    #[must_use]
     pub fn add_in_place(&mut self, a: &Scalar, b: &Scalar) -> bool {
-        let overflow: u64;
+        let mut overflow: u64;
         let mut t: u64 = (a.0[0] as u64) + (b.0[0] as u64);
         self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
         t += (a.0[1] as u64) + (b.0[1] as u64);
@@ -120,7 +123,7 @@ impl Scalar {
         self.0[7] = (t & 0xFFFFFFFF) as u32; t >>= 32;
         overflow = t + if self.check_overflow() { 1 } else { 0 };
         debug_assert!(overflow == 0 || overflow == 1);
-        self.reduce(overflow == 1);
+        overflow = overflow | if self.reduce(overflow == 1) { 1 } else { 0 };
         return overflow == 1;
     }
 
@@ -150,7 +153,8 @@ impl Scalar {
         debug_assert!(!self.check_overflow());
     }
 
-    /// Set a scalar from a big endian byte array.
+    /// Set a scalar from a big endian byte array, return whether it overflowed.
+    #[must_use]
     pub fn set_b32(&mut self, b32: &[u8; 32]) -> bool {
         self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8) | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
         self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8) | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
@@ -519,7 +523,7 @@ impl Scalar {
 
         let overflow = self.check_overflow();
         debug_assert!(c + if overflow { 1 } else { 0 } <= 1);
-        self.reduce(c + if overflow { 1 } else { 0 } == 1);
+        let _ = self.reduce(c + if overflow { 1 } else { 0 } == 1);
     }
 
     fn mul_512(&self, b: &Scalar, l: &mut [u32; 16]) {
@@ -877,7 +881,7 @@ impl Add<Scalar> for Scalar {
     type Output = Scalar;
     fn add(self, other: Scalar) -> Scalar {
         let mut ret = Scalar::default();
-        ret.add_in_place(&self, &other);
+        let _ = ret.add_in_place(&self, &other);
         ret
     }
 }
@@ -886,7 +890,7 @@ impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
     type Output = Scalar;
     fn add(self, other: &'a Scalar) -> Scalar {
         let mut ret = Scalar::default();
-        ret.add_in_place(self, other);
+        let _ = ret.add_in_place(self, other);
         ret
     }
 }
@@ -894,7 +898,7 @@ impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
 impl<'a> AddAssign<&'a Scalar> for Scalar {
     fn add_assign(&mut self, other: &'a Scalar) {
         let mut ret = Scalar::default();
-        ret.add_in_place(self, other);
+        let _ = ret.add_in_place(self, other);
         *self = ret;
     }
 }
