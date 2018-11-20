@@ -312,6 +312,10 @@ impl SecretKey {
         self.0 *= &tweak.0;
         Ok(())
     }
+
+    pub fn inv(&self) -> Self {
+        SecretKey(self.0.inv())
+    }
 }
 
 impl Into<Scalar> for SecretKey {
