@@ -55,9 +55,17 @@ pub mod curve {
 pub mod util {
     pub const TAG_PUBKEY_EVEN: u8 = 0x02;
     pub const TAG_PUBKEY_ODD: u8 = 0x03;
-    pub const TAG_PUBKEY_UNCOMPRESSED: u8 = 0x04;
+    pub const TAG_PUBKEY_FULL: u8 = 0x04;
     pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
     pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
+
+    pub const MESSAGE_SIZE: usize = 32;
+    pub const SECRET_KEY_SIZE: usize = 32;
+    pub const RAW_PUBLIC_KEY_SIZE: usize = 64;
+    pub const FULL_PUBLIC_KEY_SIZE: usize = 65;
+    pub const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
+    pub const SIGNATURE_SIZE: usize = 64;
+    pub const DER_MAX_SIGNATURE_SIZE: usize = 72;
 
     pub use group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
                     set_table_gej_var, globalz_set_table_gej};
@@ -110,38 +118,44 @@ impl PublicKey {
 
     pub fn parse_slice(p: &[u8], format: Option<PublicKeyFormat>) -> Result<PublicKey, Error> {
         let format = match (p.len(), format) {
-            (65, None) | (65, Some(PublicKeyFormat::Full)) => PublicKeyFormat::Full,
-            (33, None) | (33, Some(PublicKeyFormat::Compressed)) => PublicKeyFormat::Compressed,
-            (64, None) | (64, Some(PublicKeyFormat::Raw)) => PublicKeyFormat::Raw,
+            (util::FULL_PUBLIC_KEY_SIZE, None) |
+            (util::FULL_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Full)) =>
+                PublicKeyFormat::Full,
+            (util::COMPRESSED_PUBLIC_KEY_SIZE, None) |
+            (util::COMPRESSED_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Compressed)) =>
+                PublicKeyFormat::Compressed,
+            (util::RAW_PUBLIC_KEY_SIZE, None) |
+            (util::RAW_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Raw)) =>
+                PublicKeyFormat::Raw,
             _ => return Err(Error::InvalidInputLength),
         };
 
         match format {
             PublicKeyFormat::Full => {
-                let mut a = [0; 65];
+                let mut a = [0; util::FULL_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
                 Self::parse(&a)
             },
             PublicKeyFormat::Raw => {
-                use util::TAG_PUBKEY_UNCOMPRESSED;
+                use util::TAG_PUBKEY_FULL;
 
-                let mut a = [0; 65];
-                a[0] = TAG_PUBKEY_UNCOMPRESSED;
+                let mut a = [0; util::FULL_PUBLIC_KEY_SIZE];
+                a[0] = TAG_PUBKEY_FULL;
                 a[1..].copy_from_slice(p);
                 Self::parse(&a)
             },
             PublicKeyFormat::Compressed => {
-                let mut a = [0; 33];
+                let mut a = [0; util::COMPRESSED_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
                 Self::parse_compressed(&a)
             },
         }
     }
 
-    pub fn parse(p: &[u8; 65]) -> Result<PublicKey, Error> {
-        use util::{TAG_PUBKEY_UNCOMPRESSED, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
+    pub fn parse(p: &[u8; util::FULL_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
+        use util::{TAG_PUBKEY_FULL, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
-        if !(p[0] == TAG_PUBKEY_UNCOMPRESSED || p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) {
+        if !(p[0] == TAG_PUBKEY_FULL || p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) {
             return Err(Error::InvalidPublicKey);
         }
         let mut x = Field::default();
@@ -169,7 +183,7 @@ impl PublicKey {
         }
     }
 
-    pub fn parse_compressed(p: &[u8; 33]) -> Result<PublicKey, Error> {
+    pub fn parse_compressed(p: &[u8; util::COMPRESSED_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         if !(p[0] == TAG_PUBKEY_EVEN || p[0] == TAG_PUBKEY_ODD) {
@@ -191,8 +205,8 @@ impl PublicKey {
         }
     }
 
-    pub fn serialize(&self) -> [u8; 65] {
-        use util::TAG_PUBKEY_UNCOMPRESSED;
+    pub fn serialize(&self) -> [u8; util::FULL_PUBLIC_KEY_SIZE] {
+        use util::TAG_PUBKEY_FULL;
 
         debug_assert!(!self.0.is_infinity());
 
@@ -203,12 +217,12 @@ impl PublicKey {
         elem.y.normalize_var();
         elem.x.fill_b32(array_mut_ref!(ret, 1, 32));
         elem.y.fill_b32(array_mut_ref!(ret, 33, 32));
-        ret[0] = TAG_PUBKEY_UNCOMPRESSED;
+        ret[0] = TAG_PUBKEY_FULL;
 
         ret
     }
 
-    pub fn serialize_compressed(&self) -> [u8; 33] {
+    pub fn serialize_compressed(&self) -> [u8; util::COMPRESSED_PUBLIC_KEY_SIZE] {
         use util::{TAG_PUBKEY_ODD, TAG_PUBKEY_EVEN};
 
         debug_assert!(!self.0.is_infinity());
@@ -280,7 +294,7 @@ impl Into<Affine> for PublicKey {
 }
 
 impl SecretKey {
-    pub fn parse(p: &[u8; 32]) -> Result<SecretKey, Error> {
+    pub fn parse(p: &[u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
         if !elem.set_b32(p) && !elem.is_zero() {
             Ok(SecretKey(elem))
@@ -290,7 +304,7 @@ impl SecretKey {
     }
 
     pub fn parse_slice(p: &[u8]) -> Result<SecretKey, Error> {
-        if p.len() != 32 {
+        if p.len() != util::SECRET_KEY_SIZE {
             return Err(Error::InvalidInputLength);
         }
 
@@ -301,7 +315,7 @@ impl SecretKey {
 
     pub fn random<R: Rng>(rng: &mut R) -> SecretKey {
         loop {
-            let mut ret = [0u8; 32];
+            let mut ret = [0u8; util::SECRET_KEY_SIZE];
             rng.fill_bytes(&mut ret);
 
             match Self::parse(&ret) {
@@ -311,7 +325,7 @@ impl SecretKey {
         }
     }
 
-    pub fn serialize(&self) -> [u8; 32] {
+    pub fn serialize(&self) -> [u8; util::SECRET_KEY_SIZE] {
         self.0.b32()
     }
 
@@ -359,7 +373,7 @@ impl Into<Scalar> for SecretKey {
 }
 
 impl Signature {
-    pub fn parse(p: &[u8; 64]) -> Signature {
+    pub fn parse(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
@@ -371,11 +385,11 @@ impl Signature {
     }
 
     pub fn parse_slice(p: &[u8]) -> Result<Signature, Error> {
-        if p.len() != 64 {
+        if p.len() != util::SIGNATURE_SIZE {
             return Err(Error::InvalidInputLength);
         }
 
-        let mut a = [0; 64];
+        let mut a = [0; util::SIGNATURE_SIZE];
         a.copy_from_slice(p);
         Ok(Self::parse(&a))
     }
@@ -400,7 +414,7 @@ impl Signature {
         Ok(Signature { r, s })
     }
 
-    pub fn serialize(&self) -> [u8; 64] {
+    pub fn serialize(&self) -> [u8; util::SIGNATURE_SIZE] {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
         self.s.fill_b32(array_mut_ref!(ret, 32, 32));
@@ -449,7 +463,7 @@ impl Signature {
 }
 
 impl Message {
-    pub fn parse(p: &[u8; 32]) -> Message {
+    pub fn parse(p: &[u8; util::MESSAGE_SIZE]) -> Message {
         let mut m = Scalar::default();
 
         // Okay for message to overflow.
@@ -459,16 +473,16 @@ impl Message {
     }
 
     pub fn parse_slice(p: &[u8]) -> Result<Message, Error> {
-        if p.len() != 32 {
+        if p.len() != util::MESSAGE_SIZE {
             return Err(Error::InvalidInputLength);
         }
 
-        let mut a = [0; 32];
+        let mut a = [0; util::MESSAGE_SIZE];
         a.copy_from_slice(p);
         Ok(Self::parse(&a))
     }
 
-    pub fn serialize(&self) -> [u8; 32] {
+    pub fn serialize(&self) -> [u8; util::MESSAGE_SIZE] {
         self.0.b32()
     }
 }
