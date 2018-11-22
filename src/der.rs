@@ -181,4 +181,84 @@ impl<'a> Decoder<'a> {
 
         Ok(int)
     }
+
+    pub fn read_seq_len_lax(&mut self) -> Result<usize, Error> {
+        let mut len = self.read()?;
+        if len & 0x80 != 0x00 {
+            len -= 0x80;
+            if len as usize > self.remaining_len() {
+                return Err(Error::InvalidSignature);
+            }
+            self.skip(len as usize)?;
+        }
+
+        Ok(len as usize)
+    }
+
+    pub fn read_len_lax(&mut self) -> Result<usize, Error> {
+        let mut ret = 0usize;
+        let mut len = self.read()?;
+        if len & 0x80 != 0x00 {
+            len -= 0x80;
+            if len as usize > self.remaining_len() {
+                return Err(Error::InvalidSignature);
+            }
+            while len > 0 && self.peek(0)? == 0 {
+                self.skip(1)?;
+                len -= 1;
+            }
+            if (len as usize) >= mem::size_of::<usize>() {
+                return Err(Error::InvalidSignature);
+            }
+            while len > 0 {
+                ret = (ret << 8) + (self.read()? as usize);
+                len -= 1;
+            }
+        } else {
+            ret = len as usize;
+        }
+        if ret > self.remaining_len() {
+            return Err(Error::InvalidSignature);
+        }
+
+        Ok(ret)
+    }
+
+    pub fn read_integer_lax(&mut self) -> Result<Scalar, Error> {
+        // Integer tag byte.
+        if self.read()? != 0x02 {
+            return Err(Error::InvalidSignature);
+        }
+
+        let mut len = self.read_len_lax()?;
+
+        // Ignore leading zeroes.
+        while len > 0 && self.peek(0)? == 0 {
+            len -= 1;
+            self.skip(1)?;
+        }
+
+        let mut overflow = false;
+        // Copy value
+        if len > 32 {
+            overflow |= true;
+        }
+
+        let mut int = Scalar::default();
+
+        if !overflow {
+            let mut b32 = [0u8; 32];
+            b32[32 - len..].copy_from_slice(&self.peek_slice(len)?);
+            self.skip(len)?;
+
+            overflow |= int.set_b32(&b32);
+        }
+
+        if overflow {
+            int = Scalar::default();
+        }
+
+        Ok(int)
+    }
+
 }
