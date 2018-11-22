@@ -414,6 +414,10 @@ impl Signature {
         Ok(Signature { r, s })
     }
 
+    /// Converts a "lax DER"-encoded byte slice to a signature. This is basically
+    /// only useful for validating signatures in the Bitcoin blockchain from before
+    /// 2016. It should never be used in new applications. This library does not
+    /// support serializing to this "format"
     pub fn parse_der_lax(p: &[u8]) -> Result<Signature, Error> {
         let mut decoder = der::Decoder::new(p);
 
