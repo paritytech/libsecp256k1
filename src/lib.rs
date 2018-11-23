@@ -414,6 +414,47 @@ impl Signature {
         Ok(Signature { r, s })
     }
 
+    /// Converts a "lax DER"-encoded byte slice to a signature. This is basically
+    /// only useful for validating signatures in the Bitcoin blockchain from before
+    /// 2016. It should never be used in new applications. This library does not
+    /// support serializing to this "format"
+    pub fn parse_der_lax(p: &[u8]) -> Result<Signature, Error> {
+        let mut decoder = der::Decoder::new(p);
+
+        decoder.read_constructed_sequence()?;
+        decoder.read_seq_len_lax()?;
+
+        let r = decoder.read_integer_lax()?;
+        let s = decoder.read_integer_lax()?;
+
+        Ok(Signature { r, s })
+    }
+
+    /// Normalizes a signature to a "low S" form. In ECDSA, signatures are
+    /// of the form (r, s) where r and s are numbers lying in some finite
+    /// field. The verification equation will pass for (r, s) iff it passes
+    /// for (r, -s), so it is possible to ``modify'' signatures in transit
+    /// by flipping the sign of s. This does not constitute a forgery since
+    /// the signed message still cannot be changed, but for some applications,
+    /// changing even the signature itself can be a problem. Such applications
+    /// require a "strong signature". It is believed that ECDSA is a strong
+    /// signature except for this ambiguity in the sign of s, so to accommodate
+    /// these applications libsecp256k1 will only accept signatures for which
+    /// s is in the lower half of the field range. This eliminates the
+    /// ambiguity.
+    ///
+    /// However, for some systems, signatures with high s-values are considered
+    /// valid. (For example, parsing the historic Bitcoin blockchain requires
+    /// this.) For these applications we provide this normalization function,
+    /// which ensures that the s value lies in the lower half of its range.
+    pub fn normalize_s(&mut self) {
+        if self.s.is_high() {
+            let s = self.s.clone();
+            self.s.neg_in_place(&s);
+        }
+    }
+
+
     pub fn serialize(&self) -> [u8; util::SIGNATURE_SIZE] {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
