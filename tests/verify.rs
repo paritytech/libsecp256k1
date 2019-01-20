@@ -149,7 +149,7 @@ macro_rules! hex {
 fn test_signature_der_lax() {
     macro_rules! check_lax_sig {
         ($hex:expr) => ({
-            let mut sig = hex!($hex);
+            let sig = hex!($hex);
             assert!(Signature::parse_der_lax(&sig[..]).is_ok());
         });
     }
