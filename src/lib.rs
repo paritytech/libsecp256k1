@@ -529,9 +529,19 @@ impl Message {
 }
 
 impl RecoveryId {
+    /// Parse recovery ID starting with 0.
     pub fn parse(p: u8) -> Result<RecoveryId, Error> {
         if p < 4 {
             Ok(RecoveryId(p))
+        } else {
+            Err(Error::InvalidRecoveryId)
+        }
+    }
+
+    /// Parse recovery ID as Ethereum RPC format, starting with 27.
+    pub fn parse_rpc(p: u8) -> Result<RecoveryId, Error> {
+        if p >= 27 && p < 27 + 4 {
+            RecoveryId::parse(p - 27)
         } else {
             Err(Error::InvalidRecoveryId)
         }
