@@ -575,7 +575,9 @@ impl SharedSecret {
     }
 
     pub fn clear(&mut self) {
-        self.0 = [0u8; 32];
+        unsafe {
+            core::ptr::write_volatile(&mut self.0, [0u8; 32]);
+        }
     }
 }
 

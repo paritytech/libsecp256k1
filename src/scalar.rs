@@ -31,7 +31,9 @@ pub struct Scalar(pub [u32; 8]);
 impl Scalar {
     /// Clear a scalar to prevent the leak of sensitive data.
     pub fn clear(&mut self) {
-        self.0 = [0u32; 8];
+        unsafe {
+            core::ptr::write_volatile(&mut self.0, [0u32; 8]);
+        }
     }
 
     /// Set a scalar to an unsigned integer.
