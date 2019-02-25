@@ -366,6 +366,12 @@ impl Default for SecretKey {
     }
 }
 
+impl Into<Scalar> for SecretKey {
+    fn into(self) -> Scalar {
+        self.0.clone()
+    }
+}
+
 impl Drop for SecretKey {
     fn drop(&mut self) {
         self.0.clear();
@@ -574,11 +580,6 @@ impl SharedSecret {
         Ok(SharedSecret(inner))
     }
 
-    pub fn clear(&mut self) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.0, [0u8; 32]);
-        }
-    }
 }
 
 impl AsRef<[u8]> for SharedSecret {
@@ -589,7 +590,9 @@ impl AsRef<[u8]> for SharedSecret {
 
 impl Drop for SharedSecret {
     fn drop(&mut self) {
-        self.clear();
+         unsafe {
+            core::ptr::write_volatile(&mut self.0, [0u8; 32]);
+        }
     }
 }
 
