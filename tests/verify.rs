@@ -108,7 +108,7 @@ fn test_signature_der() {
     let ctx_privkey = SecretKey::parse(&privkey_a).unwrap();
     let ctx_message = Message::parse(&message_arr);
 
-    let (signature, _) = sign(&ctx_message, &ctx_privkey).unwrap();
+    let (signature, _) = sign(&ctx_message, &ctx_privkey);
     let reconstructed = Signature::parse_der(signature.serialize_der().as_ref()).unwrap();
     assert_eq!(signature, reconstructed);
 }
@@ -290,7 +290,7 @@ fn test_sign_verify() {
     let seckey = SecretKey::parse(&seckey_a).unwrap();
     let message = Message::parse(&message_arr);
 
-    let (sig, recid) = sign(&message, &seckey).unwrap();
+    let (sig, recid) = sign(&message, &seckey);
 
     // Self verify
     assert!(verify(&message, &sig, &pubkey));
@@ -326,7 +326,7 @@ fn test_failing_sign_verify() {
     let message_arr = [6u8; 32];
     let message = Message::parse(&message_arr);
 
-    let (sig, recid) = sign(&message, &seckey).unwrap();
+    let (sig, recid) = sign(&message, &seckey);
     let tmp: u8 = recid.into();
     assert_eq!(tmp, 1u8);
 
