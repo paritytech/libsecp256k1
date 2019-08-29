@@ -4,7 +4,7 @@ description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
 version = "0.2.2"
 authors = ["Wei Tang <hi@that.world>"]
-repository = "https://source.that.world/source/libsecp256k1-rs/"
+repository = "https://github.com/sorpaas/libsecp256k1-rs"
 keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
 
 [lib]
