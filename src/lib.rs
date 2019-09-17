@@ -67,7 +67,7 @@ pub mod util {
     pub use crate::der::SignatureArray;
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Default, Clone, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
 #[derive(Debug, Clone, Eq, PartialEq)]
