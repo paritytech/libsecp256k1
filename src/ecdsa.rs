@@ -1,8 +1,8 @@
-use field::Field;
-use group::{Affine, Jacobian};
-use scalar::Scalar;
-use ecmult::{ECMultContext, ECMultGenContext};
-use Error;
+use crate::field::Field;
+use crate::group::{Affine, Jacobian};
+use crate::scalar::Scalar;
+use crate::ecmult::{ECMultContext, ECMultGenContext};
+use crate::Error;
 
 const P_MINUS_ORDER: Field = field_const!(
     0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE

@@ -1,6 +1,6 @@
-use group::{Affine, Jacobian, AffineStorage, globalz_set_table_gej};
-use field::Field;
-use scalar::Scalar;
+use crate::group::{Affine, Jacobian, AffineStorage, globalz_set_table_gej};
+use crate::field::Field;
+use crate::scalar::Scalar;
 
 pub const WINDOW_A: usize = 5;
 pub const WINDOW_G: usize = 16;

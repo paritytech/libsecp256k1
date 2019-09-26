@@ -6,6 +6,7 @@ version = "0.3.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://source.that.world/source/libsecp256k1-rs/"
 keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
+edition = "2018"
 
 [lib]
 name = "secp256k1"

@@ -1,8 +1,3 @@
-extern crate secp256k1;
-extern crate secp256k1_test;
-extern crate rand_test;
-extern crate clear_on_drop;
-
 use rand_test::thread_rng;
 use secp256k1::*;
 use secp256k1::curve::*;

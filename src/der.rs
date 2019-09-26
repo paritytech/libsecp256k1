@@ -1,8 +1,8 @@
 use core::convert::{AsRef, AsMut};
 use core::mem;
 
-use scalar::Scalar;
-use error::Error;
+use crate::scalar::Scalar;
+use crate::error::Error;
 
 pub struct SignatureArray([u8; 6 + 33 + 33], usize);
 

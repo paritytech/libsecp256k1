@@ -1,4 +1,4 @@
-use field::{Field, FieldStorage};
+use crate::field::{Field, FieldStorage};
 
 #[macro_export]
 /// Define an affine group element constant.

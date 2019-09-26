@@ -8,13 +8,6 @@
         unreachable_code, unused_parens)]
 
 #![no_std]
-extern crate hmac_drbg;
-extern crate typenum;
-extern crate digest;
-extern crate sha2;
-extern crate rand;
-#[macro_use]
-extern crate arrayref;
 
 #[macro_use]
 mod field;
@@ -30,25 +23,24 @@ mod der;
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
 use typenum::U32;
-
-use field::Field;
-use group::{Affine, Jacobian};
-use scalar::Scalar;
-
-use ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
-
+use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
 
-pub use error::Error;
+use crate::field::Field;
+use crate::group::{Affine, Jacobian};
+use crate::scalar::Scalar;
+use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+
+pub use crate::error::Error;
 
 /// Curve related structs.
 pub mod curve {
-    pub use field::Field;
-    pub use group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
-    pub use scalar::Scalar;
+    pub use crate::field::Field;
+    pub use crate::group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
+    pub use crate::scalar::Scalar;
 
-    pub use ecmult::{ECMultContext, ECMultGenContext,
-                     ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+    pub use crate::ecmult::{ECMultContext, ECMultGenContext,
+                            ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 }
 
 /// Utilities to manipulate the secp256k1 curve parameters.
@@ -67,12 +59,12 @@ pub mod util {
     pub const SIGNATURE_SIZE: usize = 64;
     pub const DER_MAX_SIGNATURE_SIZE: usize = 72;
 
-    pub use group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
-                    set_table_gej_var, globalz_set_table_gej};
-    pub use ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
-                     odd_multiples_table};
+    pub use crate::group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
+                           set_table_gej_var, globalz_set_table_gej};
+    pub use crate::ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
+                            odd_multiples_table};
 
-    pub use der::SignatureArray;
+    pub use crate::der::SignatureArray;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
