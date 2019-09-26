@@ -1,14 +1,14 @@
 extern crate secp256k1;
 extern crate secp256k1_test;
-extern crate rand;
+extern crate rand_test;
 extern crate clear_on_drop;
 
+use rand_test::thread_rng;
 use secp256k1::*;
 use secp256k1::curve::*;
 use secp256k1_test::{Secp256k1, Error as SecpError, Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Signature as SecpSignature};
 use secp256k1_test::ecdh::{SharedSecret as SecpSharedSecret};
 use secp256k1_test::key;
-use rand::thread_rng;
 
 #[test]
 fn test_verify() {
@@ -123,9 +123,9 @@ fn from_hex(hex: &str, target: &mut [u8]) -> Result<usize, ()> {
     for c in hex.bytes() {
         b <<= 4;
         match c {
-            b'A'...b'F' => b |= c - b'A' + 10,
-            b'a'...b'f' => b |= c - b'a' + 10,
-            b'0'...b'9' => b |= c - b'0',
+            b'A'..=b'F' => b |= c - b'A' + 10,
+            b'a'..=b'f' => b |= c - b'a' + 10,
+            b'0'..=b'9' => b |= c - b'0',
             _ => return Err(()),
         }
         if (idx & 1) == 1 {

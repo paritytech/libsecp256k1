@@ -25,8 +25,8 @@ impl ECMultContext {
         let y = 0x02 | (if pt.y.is_odd() { 1 } else { 0 });
 
         let mut sha = Sha256::default();
-        sha.process(&[y]);
-        sha.process(&x);
+        sha.input(&[y]);
+        sha.input(&x);
         let generic = sha.fixed_result();
 
         for i in 0..32 {
