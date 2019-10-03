@@ -1,4 +1,5 @@
 use core::ops::{Add, AddAssign, Mul, MulAssign};
+use subtle::Choice;
 
 const SECP256K1_N_0: u32 = 0xD0364141;
 const SECP256K1_N_1: u32 = 0xBFD25E8C;
@@ -69,21 +70,21 @@ impl Scalar {
 
     #[must_use]
     fn check_overflow(&self) -> bool {
-        let mut yes: bool = false;
-        let mut no: bool = false;
-        no = no || (self.0[7] < SECP256K1_N_7); /* No need for a > check. */
-        no = no || (self.0[6] < SECP256K1_N_6); /* No need for a > check. */
-        no = no || (self.0[5] < SECP256K1_N_5); /* No need for a > check. */
-        no = no || (self.0[4] < SECP256K1_N_4);
-        yes = yes || ((self.0[4] > SECP256K1_N_4) && !no);
-        no = no || ((self.0[3] < SECP256K1_N_3) && !yes);
-        yes = yes || ((self.0[3] > SECP256K1_N_3) && !no);
-        no = no || ((self.0[2] < SECP256K1_N_2) && !yes);
-        yes = yes || ((self.0[2] > SECP256K1_N_2) && !no);
-        no = no || ((self.0[1] < SECP256K1_N_1) && !yes);
-        yes = yes || ((self.0[1] > SECP256K1_N_1) && !no);
-        yes = yes || ((self.0[0] >= SECP256K1_N_0) && !no);
-        return yes;
+        let mut yes: Choice = 0.into();
+        let mut no: Choice = 0.into();
+        no |= Choice::from((self.0[7] < SECP256K1_N_7) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[6] < SECP256K1_N_6) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[5] < SECP256K1_N_5) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[4] < SECP256K1_N_4) as u8);
+        yes |= Choice::from((self.0[4] > SECP256K1_N_4) as u8) & !no;
+        no |= Choice::from((self.0[3] < SECP256K1_N_3) as u8) & !yes;
+        yes |= Choice::from((self.0[3] > SECP256K1_N_3) as u8) & !no;
+        no |= Choice::from((self.0[2] < SECP256K1_N_2) as u8) & !yes;
+        yes |= Choice::from((self.0[2] > SECP256K1_N_2) as u8) & !no;
+        no |= Choice::from((self.0[1] < SECP256K1_N_1) as u8) & !yes;
+        yes |= Choice::from((self.0[1] > SECP256K1_N_1) as u8) & !no;
+        yes |= Choice::from((self.0[0] >= SECP256K1_N_0) as u8) & !no;
+        return yes.into();
     }
 
     #[must_use]

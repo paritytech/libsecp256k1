@@ -2,7 +2,7 @@
 name = "libsecp256k1"
 description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/sorpaas/libsecp256k1-rs"
 keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
@@ -18,11 +18,16 @@ sha2 = "0.8"
 digest = "0.8"
 typenum = "1.11"
 arrayref = "0.3"
+subtle = { version = "2.2", default-features = false }
 
 [dev-dependencies]
 secp256k1-test = "0.7"
 clear_on_drop = "0.2"
 rand-test = { package = "rand", version = "0.4" }
+
+[features]
+default = ["std"]
+std = ["subtle/std", "rand/std"]
 
 [workspace]
 members = [

@@ -7,7 +7,7 @@
         unused_variables, non_shorthand_field_patterns,
         unreachable_code, unused_parens)]
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[macro_use]
 mod field;
