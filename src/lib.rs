@@ -25,6 +25,8 @@ use sha2::Sha256;
 use typenum::U32;
 use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
+use digest::generic_array::GenericArray;
+use digest::Digest;
 
 use crate::field::Field;
 use crate::group::{Affine, Jacobian};
@@ -87,7 +89,7 @@ pub struct RecoveryId(u8);
 pub struct Message(pub Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Shared secret using ECDH.
-pub struct SharedSecret([u8; 32]);
+pub struct SharedSecret<D: Digest>(GenericArray<u8, D::OutputSize>);
 
 /// Format for public key parsing.
 pub enum PublicKeyFormat {
@@ -562,9 +564,9 @@ impl Into<i32> for RecoveryId {
     }
 }
 
-impl SharedSecret {
-    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret, Error> {
-        let inner = match ECMULT_CONTEXT.ecdh_raw(&pubkey.0, &seckey.0) {
+impl<D: Digest + Default> SharedSecret<D> {
+    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
+        let inner = match ECMULT_CONTEXT.ecdh_raw::<D>(&pubkey.0, &seckey.0) {
             Some(val) => val,
             None => return Err(Error::InvalidSecretKey),
         };
@@ -574,16 +576,17 @@ impl SharedSecret {
 
 }
 
-impl AsRef<[u8]> for SharedSecret {
+impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
     fn as_ref(&self) -> &[u8] {
-        &self.0
+        &self.0.as_ref()
     }
 }
 
-impl Drop for SharedSecret {
+impl<D: Digest> Drop for SharedSecret<D> {
     fn drop(&mut self) {
+        let zero_array = GenericArray::clone_from_slice(&vec![0;D::output_size()]);
          unsafe {
-            core::ptr::write_volatile(&mut self.0, [0u8; 32]);
+            core::ptr::write_volatile(&mut self.0, zero_array);
         }
     }
 }

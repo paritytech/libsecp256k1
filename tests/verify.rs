@@ -4,6 +4,7 @@ use secp256k1::curve::*;
 use secp256k1_test::{Secp256k1, Error as SecpError, Message as SecpMessage, RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Signature as SecpSignature};
 use secp256k1_test::ecdh::{SharedSecret as SecpSharedSecret};
 use secp256k1_test::key;
+use sha2::Sha256;
 
 #[test]
 fn test_verify() {
@@ -358,13 +359,13 @@ fn test_shared_secret() {
     let (spub1, ssec1, pub1, sec1) = genkey(&secp256k1);
     let (spub2, ssec2, pub2, sec2) = genkey(&secp256k1);
 
-    let shared1 = SharedSecret::new(&pub1, &sec2).unwrap();
-    let shared2 = SharedSecret::new(&pub2, &sec1).unwrap();
+    let shared1 = SharedSecret::<Sha256>::new(&pub1, &sec2).unwrap();
+    let shared2 = SharedSecret::<Sha256>::new(&pub2, &sec1).unwrap();
 
     let secp_shared1 = SecpSharedSecret::new(&secp256k1, &spub1, &ssec2);
     let secp_shared2 = SecpSharedSecret::new(&secp256k1, &spub2, &ssec1);
 
-    assert_eq!(shared1, shared2);
+    assert_eq!(shared1.as_ref(), shared2.as_ref());
 
     for i in 0..32 {
         assert_eq!(shared1.as_ref()[i], secp_shared1[i]);
