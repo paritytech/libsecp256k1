@@ -9,6 +9,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use std::fmt;
+
 #[macro_use]
 mod field;
 #[macro_use]
@@ -25,6 +27,8 @@ use sha2::Sha256;
 use typenum::U32;
 use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
+
+use serde::{Serialize, Deserialize, ser::Serializer, de};
 
 use crate::field::Field;
 use crate::group::{Affine, Jacobian};
@@ -282,6 +286,78 @@ impl PublicKey {
 impl Into<Affine> for PublicKey {
     fn into(self) -> Affine {
         self.0
+    }
+}
+
+impl Serialize for PublicKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+    }
+}
+
+struct PublicKeyVisitor;
+
+impl<'de> de::Visitor<'de> for PublicKeyVisitor {
+    type Value = PublicKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str(
+            "a bytestring of either 33 (compressed), 64 (raw), or 65 bytes in length"
+        )
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where E: de::Error
+    {
+        let value: &[u8] = &base64::decode(value).unwrap();
+        match value.len() {
+            33 => {
+                let pkey = PublicKey::parse_slice(
+                    value,
+                    Some(PublicKeyFormat::Compressed),
+                );
+                if pkey.is_err() {
+                    Err(E::custom("Issue parsing compressed public key"))
+                } else {
+                    Ok(pkey.unwrap())
+                }
+            },
+            64 => {
+                let pkey = PublicKey::parse_slice(
+                    value,
+                    Some(PublicKeyFormat::Raw),
+                );
+                if pkey.is_err() {
+                    Err(E::custom("Issue parsing raw public key"))
+                } else {
+                    Ok(pkey.unwrap())
+                }
+            },
+            65 => {
+                let pkey = PublicKey::parse_slice(
+                    value,
+                    Some(PublicKeyFormat::Full),
+                );
+                if pkey.is_err() {
+                    Err(E::custom("Issue parsing full public key"))
+                } else {
+                    Ok(pkey.unwrap())
+                }
+            },
+            len @ _ => Err(
+                E::custom(format!("Key is the wrong size! (size is {})", len))
+            ),
+        }
+    }
+}
+
+impl <'de> Deserialize<'de> for PublicKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: de::Deserializer<'de>,
+    {
+        deserializer.deserialize_str(PublicKeyVisitor)
     }
 }
 
