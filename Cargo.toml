@@ -14,7 +14,7 @@ name = "secp256k1"
 [dependencies]
 rand = { version = "0.6", default-features = false }
 hmac-drbg = "0.2"
-sha2 = "0.8"
+sha2 = { version = "0.8", default-features = false }
 digest = "0.8"
 typenum = "1.11"
 arrayref = "0.3"
@@ -27,7 +27,7 @@ rand-test = { package = "rand", version = "0.4" }
 
 [features]
 default = ["std"]
-std = ["subtle/std", "rand/std"]
+std = ["subtle/std", "rand/std", "sha2/std"]
 
 [workspace]
 members = [
