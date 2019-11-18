@@ -1,4 +1,4 @@
-use core::ops::{Add, AddAssign, Mul, MulAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg};
 use subtle::Choice;
 
 const SECP256K1_N_0: u32 = 0xD0364141;
@@ -204,33 +204,6 @@ impl Scalar {
     /// Check whether a scalar equals zero.
     pub fn is_zero(&self) -> bool {
         (self.0[0] | self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
-    }
-
-    /// Compute the complement of a scalar (modulo the group order).
-    pub fn neg_in_place(&mut self, a: &Scalar) {
-        let nonzero: u64 = 0xFFFFFFFF * if !a.is_zero() { 1 } else { 0 };
-        let mut t: u64 = (!a.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
-        self.0[0] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[1]) as u64 + SECP256K1_N_1 as u64;
-        self.0[1] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[2]) as u64 + SECP256K1_N_2 as u64;
-        self.0[2] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[3]) as u64 + SECP256K1_N_3 as u64;
-        self.0[3] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[4]) as u64 + SECP256K1_N_4 as u64;
-        self.0[4] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[5]) as u64 + SECP256K1_N_5 as u64;
-        self.0[5] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[6]) as u64 + SECP256K1_N_6 as u64;
-        self.0[6] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[7]) as u64 + SECP256K1_N_7 as u64;
-        self.0[7] = (t & nonzero) as u32;
-    }
-
-    pub fn neg(&self) -> Scalar {
-        let mut ret = Scalar::default();
-        ret.neg_in_place(self);
-        ret
     }
 
     /// Check whether a scalar equals one.
@@ -982,5 +955,54 @@ impl<'a> MulAssign<&'a Scalar> for Scalar {
 impl MulAssign<Scalar> for Scalar {
     fn mul_assign(&mut self, other: Scalar) {
         self.mul_assign(&other)
+    }
+}
+
+impl Neg for Scalar {
+    type Output = Scalar;
+    fn neg(mut self) -> Scalar {
+        let nonzero: u64 = 0xFFFFFFFF * self.is_zero() as u64;
+        let mut t: u64;
+
+        t = (!self.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
+        self.0[0] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[1]) as u64 + SECP256K1_N_1 as u64;
+        self.0[1] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[2]) as u64 + SECP256K1_N_2 as u64;
+        self.0[2] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[3]) as u64 + SECP256K1_N_3 as u64;
+        self.0[3] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[4]) as u64 + SECP256K1_N_4 as u64;
+        self.0[4] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[5]) as u64 + SECP256K1_N_5 as u64;
+        self.0[5] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[6]) as u64 + SECP256K1_N_6 as u64;
+        self.0[6] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[7]) as u64 + SECP256K1_N_7 as u64;
+        self.0[7] = (t & nonzero) as u32;
+
+        self
+    }
+}
+
+impl<'a> Neg for &'a Scalar {
+    type Output = Scalar;
+    fn neg(self) -> Scalar {
+        let value = self.clone();
+        -value
     }
 }

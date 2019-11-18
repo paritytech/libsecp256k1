@@ -449,8 +449,7 @@ impl Signature {
     /// which ensures that the s value lies in the lower half of its range.
     pub fn normalize_s(&mut self) {
         if self.s.is_high() {
-            let s = self.s.clone();
-            self.s.neg_in_place(&s);
+            self.s = -self.s.clone();
         }
     }
 

@@ -80,7 +80,7 @@ impl ECMultContext {
         xj.set_ge(&x);
         let rn = sigr.inv();
         let mut u1 = &rn * message;
-        u1 = u1.neg();
+        u1 = -u1;
         let u2 = &rn * sigs;
         let mut qj = Jacobian::default();
         self.ecmult(&mut qj, &xj, &u2, &u1);
@@ -122,7 +122,7 @@ impl ECMultGenContext {
             return Err(Error::InvalidMessage);
         }
         if sigs.is_high() {
-            sigs = sigs.neg();
+            sigs = -sigs;
             recid = recid ^ 1;
         }
         return Ok((sigr, sigs, recid));

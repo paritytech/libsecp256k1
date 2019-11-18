@@ -131,7 +131,7 @@ pub fn ecmult_wnaf(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     }
 
     if s.bits(255, 1) > 0 {
-        s = s.neg();
+        s = -s;
         sign = -1;
     }
 
@@ -192,7 +192,7 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     let bit = flip ^ !s.is_even();
     /* We add 1 to even numbers, 2 to odd ones, noting that negation
      * flips parity */
-    let neg_s = s.neg();
+    let neg_s = -s.clone();
     let not_neg_one = !neg_s.is_one();
     s.cadd_bit(if bit { 1 } else { 0 }, not_neg_one);
     /* If we had negative one, flip == 1, s.d[0] == 0, bit == 1, so
