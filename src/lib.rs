@@ -288,7 +288,7 @@ impl Into<Affine> for PublicKey {
 impl SecretKey {
     pub fn parse(p: &[u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
-        if !elem.set_b32(p) && !elem.is_zero() {
+        if !bool::from(elem.set_b32(p)) && !elem.is_zero() {
             Ok(SecretKey(elem))
         } else {
             Err(Error::InvalidSecretKey)
@@ -347,11 +347,11 @@ impl SecretKey {
 impl Default for SecretKey {
     fn default() -> SecretKey {
         let mut elem = Scalar::default();
-        let overflowed = elem.set_b32(
+        let overflowed = bool::from(elem.set_b32(
             &[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
               0x00,0x00,0x00,0x00,0x00,0x01]
-        );
+        ));
         debug_assert!(!overflowed);
         debug_assert!(!elem.is_zero());
         SecretKey(elem)
@@ -610,7 +610,7 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let result;
     loop {
         let generated = drbg.generate::<U32>(None);
-        overflow = nonce.set_b32(array_ref!(generated, 0, 32));
+        overflow = bool::from(nonce.set_b32(array_ref!(generated, 0, 32)));
 
         if !overflow && !nonce.is_zero() {
             match ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce) {

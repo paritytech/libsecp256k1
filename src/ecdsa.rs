@@ -106,7 +106,7 @@ impl ECMultGenContext {
         r.y.normalize();
         let b = r.x.b32();
         let mut sigr = Scalar::default();
-        let overflow = sigr.set_b32(&b);
+        let overflow = bool::from(sigr.set_b32(&b));
         debug_assert!(!sigr.is_zero());
         debug_assert!(!overflow);
 
