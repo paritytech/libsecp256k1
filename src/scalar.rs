@@ -961,7 +961,7 @@ impl MulAssign<Scalar> for Scalar {
 impl Neg for Scalar {
     type Output = Scalar;
     fn neg(mut self) -> Scalar {
-        let nonzero: u64 = 0xFFFFFFFF * self.is_zero() as u64;
+        let nonzero: u64 = 0xFFFFFFFF * !self.is_zero() as u64;
         let mut t: u64;
 
         t = (!self.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
