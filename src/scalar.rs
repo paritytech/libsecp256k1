@@ -535,7 +535,7 @@ impl Scalar {
         self.0[7] = (c & 0xFFFFFFFF) as u32; c >>= 32;
 
         let overflow = self.check_overflow();
-        self.reduce(Choice::from(c as u8) & overflow);
+        self.reduce(Choice::from(c as u8) | overflow);
     }
 
     fn mul_512(&self, b: &Scalar, l: &mut [u32; 16]) {
@@ -940,9 +940,10 @@ impl<'a> AddAssign<&'a Scalar> for Scalar {
 
         t += (self.0[7] as u64) + (other.0[7] as u64);
         self.0[7] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
 
         let overflow = self.check_overflow();
-        self.reduce(overflow);
+        self.reduce(Choice::from(t as u8) | overflow);
     }
 }
 
