@@ -228,33 +228,22 @@ impl Scalar {
         return yes.into();
     }
 
-    /// Conditionally negate a number, in constant time. Returns -1 if
-    /// the number was negated, 1 otherwise.
-    pub fn cond_neg_mut(&mut self, flag: bool) -> isize {
-        let mask = if flag { u32::max_value() } else { 0 };
-        let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
-        let mut t: u64 = (self.0[0] ^ mask) as u64 + ((SECP256K1_N[0] + 1) & mask) as u64;
-        self.0[0] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[1] ^ mask) as u64 + (SECP256K1_N[1] & mask) as u64;
-        self.0[1] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[2] ^ mask) as u64 + (SECP256K1_N[2] & mask) as u64;
-        self.0[2] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[3] ^ mask) as u64 + (SECP256K1_N[3] & mask) as u64;
-        self.0[3] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[4] ^ mask) as u64 + (SECP256K1_N[4] & mask) as u64;
-        self.0[4] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[5] ^ mask) as u64 + (SECP256K1_N[5] & mask) as u64;
-        self.0[5] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[6] ^ mask) as u64 + (SECP256K1_N[6] & mask) as u64;
-        self.0[6] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[7] ^ mask) as u64 + (SECP256K1_N[7] & mask) as u64;
-        self.0[7] = (t & nonzero) as u32;
+    /// Conditionally negate a number, in constant time.
+    pub fn cond_neg_assign(&mut self, flag: Choice) {
+        let mask = u32::max_value() * flag.unwrap_u8() as u32;
 
-        if mask == 0 {
-            return 1;
-        } else {
-            return -1;
+        let nonzero = 0xFFFFFFFFu64 * !self.is_zero() as u64;
+        let mut t = 1u64;
+
+        unroll! {
+            for i in 0..8 {
+                t += (self.0[i] ^ mask) as u64 + (SECP256K1_N[i] & mask) as u64;
+                self.0[i] = (t & nonzero) as u32;
+                t >>= 32;
+            }
         }
+
+        let _ = t;
     }
 }
 
@@ -934,18 +923,7 @@ impl MulAssign<Scalar> for Scalar {
 impl Neg for Scalar {
     type Output = Scalar;
     fn neg(mut self) -> Scalar {
-        let nonzero = 0xFFFFFFFFu64 * !self.is_zero() as u64;
-        let mut t = 1u64;
-
-        unroll! {
-            for i in 0..8 {
-                t += (!self.0[i]) as u64 + SECP256K1_N[i] as u64;
-                self.0[i] = (t & nonzero) as u32;
-                t >>= 32;
-            }
-        }
-
-        let _ = t;
+        self.cond_neg_assign(1.into());
         self
     }
 }
