@@ -233,7 +233,7 @@ impl Scalar {
         let mask = u32::max_value() * flag.unwrap_u8() as u32;
 
         let nonzero = 0xFFFFFFFFu64 * !self.is_zero() as u64;
-        let mut t = 1u64;
+        let mut t = 1u64 * flag.unwrap_u8() as u64;
 
         unroll! {
             for i in 0..8 {
