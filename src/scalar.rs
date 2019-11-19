@@ -935,11 +935,11 @@ impl Neg for Scalar {
     type Output = Scalar;
     fn neg(mut self) -> Scalar {
         let nonzero = 0xFFFFFFFFu64 * !self.is_zero() as u64;
-        let mut t = 0u64;
+        let mut t = 1u64;
 
         unroll! {
             for i in 0..8 {
-                t += (!self.0[i]) as u64 + (SECP256K1_N[i] + 1) as u64;
+                t += (!self.0[i]) as u64 + SECP256K1_N[i] as u64;
                 self.0[i] = (t & nonzero) as u32;
                 t >>= 32;
             }
