@@ -945,6 +945,7 @@ impl Neg for Scalar {
             }
         }
 
+        let _ = t;
         self
     }
 }
