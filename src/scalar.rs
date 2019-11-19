@@ -1,4 +1,4 @@
-use core::ops::{Add, AddAssign, Mul, MulAssign};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg};
 use subtle::Choice;
 
 const SECP256K1_N_0: u32 = 0xD0364141;
@@ -75,7 +75,7 @@ impl Scalar {
     }
 
     #[must_use]
-    fn check_overflow(&self) -> bool {
+    fn check_overflow(&self) -> Choice {
         let mut yes: Choice = 0.into();
         let mut no: Choice = 0.into();
         no |= Choice::from((self.0[7] < SECP256K1_N_7) as u8); /* No need for a > check. */
@@ -90,57 +90,44 @@ impl Scalar {
         no |= Choice::from((self.0[1] < SECP256K1_N_1) as u8) & !yes;
         yes |= Choice::from((self.0[1] > SECP256K1_N_1) as u8) & !no;
         yes |= Choice::from((self.0[0] >= SECP256K1_N_0) as u8) & !no;
-        return yes.into();
+
+        yes
     }
 
-    #[must_use]
-    fn reduce(&mut self, overflow: bool) -> bool {
-        let o: u64 = if overflow { 1 } else { 0 };
+    fn reduce(&mut self, overflow: Choice) {
+        let o = overflow.unwrap_u8() as u64;
         let mut t: u64;
+
         t = (self.0[0] as u64) + o * (SECP256K1_N_C_0 as u64);
-        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[0] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += (self.0[1] as u64) + o * (SECP256K1_N_C_1 as u64);
-        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[1] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += (self.0[2] as u64) + o * (SECP256K1_N_C_2 as u64);
-        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[2] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += (self.0[3] as u64) + o * (SECP256K1_N_C_3 as u64);
-        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[3] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += (self.0[4] as u64) + o * (SECP256K1_N_C_4 as u64);
-        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[4] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += self.0[5] as u64;
-        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[5] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += self.0[6] as u64;
-        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[6] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
         t += self.0[7] as u64;
         self.0[7] = (t & 0xFFFFFFFF) as u32;
-        overflow
-    }
-
-    /// Add two scalars together (modulo the group order). Returns
-    /// whether it overflowed.
-    #[must_use]
-    pub fn add_in_place(&mut self, a: &Scalar, b: &Scalar) -> bool {
-        let mut overflow: u64;
-        let mut t: u64 = (a.0[0] as u64) + (b.0[0] as u64);
-        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[1] as u64) + (b.0[1] as u64);
-        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[2] as u64) + (b.0[2] as u64);
-        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[3] as u64) + (b.0[3] as u64);
-        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[4] as u64) + (b.0[4] as u64);
-        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[5] as u64) + (b.0[5] as u64);
-        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[6] as u64) + (b.0[6] as u64);
-        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        t += (a.0[7] as u64) + (b.0[7] as u64);
-        self.0[7] = (t & 0xFFFFFFFF) as u32; t >>= 32;
-        overflow = t + if self.check_overflow() { 1 } else { 0 };
-        debug_assert!(overflow == 0 || overflow == 1);
-        overflow = overflow | if self.reduce(overflow == 1) { 1 } else { 0 };
-        return overflow == 1;
     }
 
     /// Conditionally add a power of two to a scalar. The result is
@@ -166,23 +153,33 @@ impl Scalar {
         t += (self.0[7] as u64) + ((if (bit >> 5) == 7 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[7] = (t & 0xFFFFFFFF) as u32;
         debug_assert!((t >> 32) == 0);
-        debug_assert!(!self.check_overflow());
+        debug_assert!(!bool::from(self.check_overflow()));
     }
 
     /// Set a scalar from a big endian byte array, return whether it overflowed.
     #[must_use]
-    pub fn set_b32(&mut self, b32: &[u8; 32]) -> bool {
-        self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8) | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
-        self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8) | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
-        self.0[2] = (b32[23] as u32) | ((b32[22] as u32) << 8) | ((b32[21] as u32) << 16) | ((b32[20] as u32) << 24);
-        self.0[3] = (b32[19] as u32) | ((b32[18] as u32) << 8) | ((b32[17] as u32) << 16) | ((b32[16] as u32) << 24);
-        self.0[4] = (b32[15] as u32) | ((b32[14] as u32) << 8) | ((b32[13] as u32) << 16) | ((b32[12] as u32) << 24);
-        self.0[5] = (b32[11] as u32) | ((b32[10] as u32) << 8) | ((b32[9] as u32) << 16) | ((b32[8] as u32) << 24);
-        self.0[6] = (b32[7] as u32) | ((b32[6] as u32) << 8) | ((b32[5] as u32) << 16) | ((b32[4] as u32) << 24);
-        self.0[7] = (b32[3] as u32) | ((b32[2] as u32) << 8) | ((b32[1] as u32) << 16) | ((b32[0] as u32) << 24);
+    pub fn set_b32(&mut self, b32: &[u8; 32]) -> Choice {
+        self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8)
+            | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
+        self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8)
+            | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
+        self.0[2] = (b32[23] as u32) | ((b32[22] as u32) << 8)
+            | ((b32[21] as u32) << 16) | ((b32[20] as u32) << 24);
+        self.0[3] = (b32[19] as u32) | ((b32[18] as u32) << 8)
+            | ((b32[17] as u32) << 16) | ((b32[16] as u32) << 24);
+        self.0[4] = (b32[15] as u32) | ((b32[14] as u32) << 8)
+            | ((b32[13] as u32) << 16) | ((b32[12] as u32) << 24);
+        self.0[5] = (b32[11] as u32) | ((b32[10] as u32) << 8)
+            | ((b32[9] as u32) << 16) | ((b32[8] as u32) << 24);
+        self.0[6] = (b32[7] as u32) | ((b32[6] as u32) << 8)
+            | ((b32[5] as u32) << 16) | ((b32[4] as u32) << 24);
+        self.0[7] = (b32[3] as u32) | ((b32[2] as u32) << 8)
+            | ((b32[1] as u32) << 16) | ((b32[0] as u32) << 24);
 
         let overflow = self.check_overflow();
-        self.reduce(overflow)
+        self.reduce(overflow);
+
+        overflow
     }
 
     /// Convert a scalar to a byte array.
@@ -207,33 +204,6 @@ impl Scalar {
     /// Check whether a scalar equals zero.
     pub fn is_zero(&self) -> bool {
         (self.0[0] | self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
-    }
-
-    /// Compute the complement of a scalar (modulo the group order).
-    pub fn neg_in_place(&mut self, a: &Scalar) {
-        let nonzero: u64 = 0xFFFFFFFF * if !a.is_zero() { 1 } else { 0 };
-        let mut t: u64 = (!a.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
-        self.0[0] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[1]) as u64 + SECP256K1_N_1 as u64;
-        self.0[1] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[2]) as u64 + SECP256K1_N_2 as u64;
-        self.0[2] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[3]) as u64 + SECP256K1_N_3 as u64;
-        self.0[3] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[4]) as u64 + SECP256K1_N_4 as u64;
-        self.0[4] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[5]) as u64 + SECP256K1_N_5 as u64;
-        self.0[5] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[6]) as u64 + SECP256K1_N_6 as u64;
-        self.0[6] = (t & nonzero) as u32; t >>= 32;
-        t += (!a.0[7]) as u64 + SECP256K1_N_7 as u64;
-        self.0[7] = (t & nonzero) as u32;
-    }
-
-    pub fn neg(&self) -> Scalar {
-        let mut ret = Scalar::default();
-        ret.neg_in_place(self);
-        ret
     }
 
     /// Check whether a scalar equals one.
@@ -538,8 +508,7 @@ impl Scalar {
         self.0[7] = (c & 0xFFFFFFFF) as u32; c >>= 32;
 
         let overflow = self.check_overflow();
-        debug_assert!(c + if overflow { 1 } else { 0 } <= 1);
-        let _ = self.reduce(c + if overflow { 1 } else { 0 } == 1);
+        self.reduce(Choice::from(c as u8) | overflow);
     }
 
     fn mul_512(&self, b: &Scalar, l: &mut [u32; 16]) {
@@ -895,27 +864,59 @@ impl Default for Scalar {
 
 impl Add<Scalar> for Scalar {
     type Output = Scalar;
-    fn add(self, other: Scalar) -> Scalar {
-        let mut ret = Scalar::default();
-        let _ = ret.add_in_place(&self, &other);
-        ret
+    fn add(mut self, other: Scalar) -> Scalar {
+        self.add_assign(&other);
+        self
     }
 }
 
 impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
     type Output = Scalar;
     fn add(self, other: &'a Scalar) -> Scalar {
-        let mut ret = Scalar::default();
-        let _ = ret.add_in_place(self, other);
+        let mut ret = self.clone();
+        ret.add_assign(other);
         ret
     }
 }
 
 impl<'a> AddAssign<&'a Scalar> for Scalar {
     fn add_assign(&mut self, other: &'a Scalar) {
-        let mut ret = Scalar::default();
-        let _ = ret.add_in_place(self, other);
-        *self = ret;
+        let mut t: u64;
+
+        t = (self.0[0] as u64) + (other.0[0] as u64);
+        self.0[0] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[1] as u64) + (other.0[1] as u64);
+        self.0[1] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[2] as u64) + (other.0[2] as u64);
+        self.0[2] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[3] as u64) + (other.0[3] as u64);
+        self.0[3] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[4] as u64) + (other.0[4] as u64);
+        self.0[4] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[5] as u64) + (other.0[5] as u64);
+        self.0[5] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[6] as u64) + (other.0[6] as u64);
+        self.0[6] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        t += (self.0[7] as u64) + (other.0[7] as u64);
+        self.0[7] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
+
+        let overflow = self.check_overflow();
+        self.reduce(Choice::from(t as u8) | overflow);
     }
 }
 
@@ -954,5 +955,54 @@ impl<'a> MulAssign<&'a Scalar> for Scalar {
 impl MulAssign<Scalar> for Scalar {
     fn mul_assign(&mut self, other: Scalar) {
         self.mul_assign(&other)
+    }
+}
+
+impl Neg for Scalar {
+    type Output = Scalar;
+    fn neg(mut self) -> Scalar {
+        let nonzero: u64 = 0xFFFFFFFF * !self.is_zero() as u64;
+        let mut t: u64;
+
+        t = (!self.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
+        self.0[0] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[1]) as u64 + SECP256K1_N_1 as u64;
+        self.0[1] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[2]) as u64 + SECP256K1_N_2 as u64;
+        self.0[2] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[3]) as u64 + SECP256K1_N_3 as u64;
+        self.0[3] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[4]) as u64 + SECP256K1_N_4 as u64;
+        self.0[4] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[5]) as u64 + SECP256K1_N_5 as u64;
+        self.0[5] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[6]) as u64 + SECP256K1_N_6 as u64;
+        self.0[6] = (t & nonzero) as u32;
+        t >>= 32;
+
+        t += (!self.0[7]) as u64 + SECP256K1_N_7 as u64;
+        self.0[7] = (t & nonzero) as u32;
+
+        self
+    }
+}
+
+impl<'a> Neg for &'a Scalar {
+    type Output = Scalar;
+    fn neg(self) -> Scalar {
+        let value = self.clone();
+        -value
     }
 }
