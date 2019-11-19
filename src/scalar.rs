@@ -1,19 +1,16 @@
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg};
 use subtle::Choice;
+use crunchy::unroll;
 
-const SECP256K1_N_0: u32 = 0xD0364141;
-const SECP256K1_N_1: u32 = 0xBFD25E8C;
-const SECP256K1_N_2: u32 = 0xAF48A03B;
-const SECP256K1_N_3: u32 = 0xBAAEDCE6;
-const SECP256K1_N_4: u32 = 0xFFFFFFFE;
-const SECP256K1_N_5: u32 = 0xFFFFFFFF;
-const SECP256K1_N_6: u32 = 0xFFFFFFFF;
-const SECP256K1_N_7: u32 = 0xFFFFFFFF;
+const SECP256K1_N: [u32; 8] = [
+    0xD0364141, 0xBFD25E8C, 0xAF48A03B, 0xBAAEDCE6,
+    0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF
+];
 
-const SECP256K1_N_C_0: u32 = !SECP256K1_N_0 + 1;
-const SECP256K1_N_C_1: u32 = !SECP256K1_N_1;
-const SECP256K1_N_C_2: u32 = !SECP256K1_N_2;
-const SECP256K1_N_C_3: u32 = !SECP256K1_N_3;
+const SECP256K1_N_C_0: u32 = !SECP256K1_N[0] + 1;
+const SECP256K1_N_C_1: u32 = !SECP256K1_N[1];
+const SECP256K1_N_C_2: u32 = !SECP256K1_N[2];
+const SECP256K1_N_C_3: u32 = !SECP256K1_N[3];
 const SECP256K1_N_C_4: u32 = 1;
 
 const SECP256K1_N_H_0: u32 = 0x681B20A0;
@@ -78,18 +75,18 @@ impl Scalar {
     fn check_overflow(&self) -> Choice {
         let mut yes: Choice = 0.into();
         let mut no: Choice = 0.into();
-        no |= Choice::from((self.0[7] < SECP256K1_N_7) as u8); /* No need for a > check. */
-        no |= Choice::from((self.0[6] < SECP256K1_N_6) as u8); /* No need for a > check. */
-        no |= Choice::from((self.0[5] < SECP256K1_N_5) as u8); /* No need for a > check. */
-        no |= Choice::from((self.0[4] < SECP256K1_N_4) as u8);
-        yes |= Choice::from((self.0[4] > SECP256K1_N_4) as u8) & !no;
-        no |= Choice::from((self.0[3] < SECP256K1_N_3) as u8) & !yes;
-        yes |= Choice::from((self.0[3] > SECP256K1_N_3) as u8) & !no;
-        no |= Choice::from((self.0[2] < SECP256K1_N_2) as u8) & !yes;
-        yes |= Choice::from((self.0[2] > SECP256K1_N_2) as u8) & !no;
-        no |= Choice::from((self.0[1] < SECP256K1_N_1) as u8) & !yes;
-        yes |= Choice::from((self.0[1] > SECP256K1_N_1) as u8) & !no;
-        yes |= Choice::from((self.0[0] >= SECP256K1_N_0) as u8) & !no;
+        no |= Choice::from((self.0[7] < SECP256K1_N[7]) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[6] < SECP256K1_N[6]) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[5] < SECP256K1_N[5]) as u8); /* No need for a > check. */
+        no |= Choice::from((self.0[4] < SECP256K1_N[4]) as u8);
+        yes |= Choice::from((self.0[4] > SECP256K1_N[4]) as u8) & !no;
+        no |= Choice::from((self.0[3] < SECP256K1_N[3]) as u8) & !yes;
+        yes |= Choice::from((self.0[3] > SECP256K1_N[3]) as u8) & !no;
+        no |= Choice::from((self.0[2] < SECP256K1_N[2]) as u8) & !yes;
+        yes |= Choice::from((self.0[2] > SECP256K1_N[2]) as u8) & !no;
+        no |= Choice::from((self.0[1] < SECP256K1_N[1]) as u8) & !yes;
+        yes |= Choice::from((self.0[1] > SECP256K1_N[1]) as u8) & !no;
+        yes |= Choice::from((self.0[0] >= SECP256K1_N[0]) as u8) & !no;
 
         yes
     }
@@ -236,21 +233,21 @@ impl Scalar {
     pub fn cond_neg_mut(&mut self, flag: bool) -> isize {
         let mask = if flag { u32::max_value() } else { 0 };
         let nonzero: u64 = 0xFFFFFFFF * if !self.is_zero() { 1 } else { 0 };
-        let mut t: u64 = (self.0[0] ^ mask) as u64 + ((SECP256K1_N_0 + 1) & mask) as u64;
+        let mut t: u64 = (self.0[0] ^ mask) as u64 + ((SECP256K1_N[0] + 1) & mask) as u64;
         self.0[0] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[1] ^ mask) as u64 + (SECP256K1_N_1 & mask) as u64;
+        t += (self.0[1] ^ mask) as u64 + (SECP256K1_N[1] & mask) as u64;
         self.0[1] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[2] ^ mask) as u64 + (SECP256K1_N_2 & mask) as u64;
+        t += (self.0[2] ^ mask) as u64 + (SECP256K1_N[2] & mask) as u64;
         self.0[2] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[3] ^ mask) as u64 + (SECP256K1_N_3 & mask) as u64;
+        t += (self.0[3] ^ mask) as u64 + (SECP256K1_N[3] & mask) as u64;
         self.0[3] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[4] ^ mask) as u64 + (SECP256K1_N_4 & mask) as u64;
+        t += (self.0[4] ^ mask) as u64 + (SECP256K1_N[4] & mask) as u64;
         self.0[4] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[5] ^ mask) as u64 + (SECP256K1_N_5 & mask) as u64;
+        t += (self.0[5] ^ mask) as u64 + (SECP256K1_N[5] & mask) as u64;
         self.0[5] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[6] ^ mask) as u64 + (SECP256K1_N_6 & mask) as u64;
+        t += (self.0[6] ^ mask) as u64 + (SECP256K1_N[6] & mask) as u64;
         self.0[6] = (t & nonzero) as u32; t >>= 32;
-        t += (self.0[7] ^ mask) as u64 + (SECP256K1_N_7 & mask) as u64;
+        t += (self.0[7] ^ mask) as u64 + (SECP256K1_N[7] & mask) as u64;
         self.0[7] = (t & nonzero) as u32;
 
         if mask == 0 {
@@ -881,39 +878,15 @@ impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
 
 impl<'a> AddAssign<&'a Scalar> for Scalar {
     fn add_assign(&mut self, other: &'a Scalar) {
-        let mut t: u64;
+        let mut t = 0u64;
 
-        t = (self.0[0] as u64) + (other.0[0] as u64);
-        self.0[0] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[1] as u64) + (other.0[1] as u64);
-        self.0[1] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[2] as u64) + (other.0[2] as u64);
-        self.0[2] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[3] as u64) + (other.0[3] as u64);
-        self.0[3] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[4] as u64) + (other.0[4] as u64);
-        self.0[4] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[5] as u64) + (other.0[5] as u64);
-        self.0[5] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[6] as u64) + (other.0[6] as u64);
-        self.0[6] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
-
-        t += (self.0[7] as u64) + (other.0[7] as u64);
-        self.0[7] = (t & 0xFFFFFFFF) as u32;
-        t >>= 32;
+        unroll! {
+            for i in 0..8 {
+                t += (self.0[i] as u64) + (other.0[i] as u64);
+                self.0[i] = (t & 0xFFFFFFFF) as u32;
+                t >>= 32;
+            }
+        }
 
         let overflow = self.check_overflow();
         self.reduce(Choice::from(t as u8) | overflow);
@@ -961,40 +934,18 @@ impl MulAssign<Scalar> for Scalar {
 impl Neg for Scalar {
     type Output = Scalar;
     fn neg(mut self) -> Scalar {
-        let nonzero: u64 = 0xFFFFFFFF * !self.is_zero() as u64;
-        let mut t: u64;
+        let nonzero = 0xFFFFFFFFu64 * !self.is_zero() as u64;
+        let mut t = 1u64;
 
-        t = (!self.0[0]) as u64 + (SECP256K1_N_0 + 1) as u64;
-        self.0[0] = (t & nonzero) as u32;
-        t >>= 32;
+        unroll! {
+            for i in 0..8 {
+                t += (!self.0[i]) as u64 + SECP256K1_N[i] as u64;
+                self.0[i] = (t & nonzero) as u32;
+                t >>= 32;
+            }
+        }
 
-        t += (!self.0[1]) as u64 + SECP256K1_N_1 as u64;
-        self.0[1] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[2]) as u64 + SECP256K1_N_2 as u64;
-        self.0[2] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[3]) as u64 + SECP256K1_N_3 as u64;
-        self.0[3] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[4]) as u64 + SECP256K1_N_4 as u64;
-        self.0[4] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[5]) as u64 + SECP256K1_N_5 as u64;
-        self.0[5] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[6]) as u64 + SECP256K1_N_6 as u64;
-        self.0[6] = (t & nonzero) as u32;
-        t >>= 32;
-
-        t += (!self.0[7]) as u64 + SECP256K1_N_7 as u64;
-        self.0[7] = (t & nonzero) as u32;
-
+        let _ = t;
         self
     }
 }
