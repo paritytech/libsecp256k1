@@ -12,3 +12,4 @@ matrix:
 script:
   - cargo build --verbose --all
   - cargo test --verbose --all
+  - cargo build --verbose --no-default-features
