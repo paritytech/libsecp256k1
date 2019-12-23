@@ -20,6 +20,9 @@ mod ecdh;
 mod error;
 mod der;
 
+#[macro_use]
+extern crate alloc;
+
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
 use typenum::U32;
