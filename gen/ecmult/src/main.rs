@@ -1,11 +1,9 @@
 extern crate secp256k1;
 
-use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
-use secp256k1::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
-                      set_table_gej_var};
+use secp256k1::curve::{Affine, AffineStorage, Field, Jacobian, AFFINE_G};
+use secp256k1::util::{odd_multiples_table, set_table_gej_var, ECMULT_TABLE_SIZE_G};
 
-fn odd_multiples_table_storage_var(pre: &mut [AffineStorage],
-                                   a: &Jacobian) {
+fn odd_multiples_table_storage_var(pre: &mut [AffineStorage], a: &Jacobian) {
     let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
     for _ in 0..pre.len() {
         prej.push(Jacobian::default());

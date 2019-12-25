@@ -1,10 +1,9 @@
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg};
-use subtle::Choice;
 use crunchy::unroll;
+use subtle::Choice;
 
 const SECP256K1_N: [u32; 8] = [
-    0xD0364141, 0xBFD25E8C, 0xAF48A03B, 0xBAAEDCE6,
-    0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF
+    0xD0364141, 0xBFD25E8C, 0xAF48A03B, 0xBAAEDCE6, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF,
 ];
 
 const SECP256K1_N_C_0: u32 = !SECP256K1_N[0] + 1;
@@ -67,7 +66,9 @@ impl Scalar {
             return self.bits(offset, count);
         } else {
             debug_assert!((offset >> 5) + 1 < 8);
-            return ((self.0[offset >> 5] >> (offset & 0x1f)) | (self.0[(offset >> 5) + 1] << (32 - (offset & 0x1f)))) & ((1 << count) - 1);
+            return ((self.0[offset >> 5] >> (offset & 0x1f))
+                | (self.0[(offset >> 5) + 1] << (32 - (offset & 0x1f))))
+                & ((1 << count) - 1);
         }
     }
 
@@ -134,19 +135,26 @@ impl Scalar {
         debug_assert!(bit < 256);
         bit += if flag { 0 } else { usize::max_value() } & 0x100;
         t = (self.0[0] as u64) + ((if (bit >> 5) == 0 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[0] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[0] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[1] as u64) + ((if (bit >> 5) == 1 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[1] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[1] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[2] as u64) + ((if (bit >> 5) == 2 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[2] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[2] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[3] as u64) + ((if (bit >> 5) == 3 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[3] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[3] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[4] as u64) + ((if (bit >> 5) == 4 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[4] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[4] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[5] as u64) + ((if (bit >> 5) == 5 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[5] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[5] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[6] as u64) + ((if (bit >> 5) == 6 { 1 } else { 0 }) << (bit & 0x1F));
-        self.0[6] = (t & 0xFFFFFFFF) as u32; t >>= 32;
+        self.0[6] = (t & 0xFFFFFFFF) as u32;
+        t >>= 32;
         t += (self.0[7] as u64) + ((if (bit >> 5) == 7 { 1 } else { 0 }) << (bit & 0x1F));
         self.0[7] = (t & 0xFFFFFFFF) as u32;
         debug_assert!((t >> 32) == 0);
@@ -156,22 +164,38 @@ impl Scalar {
     /// Set a scalar from a big endian byte array, return whether it overflowed.
     #[must_use]
     pub fn set_b32(&mut self, b32: &[u8; 32]) -> Choice {
-        self.0[0] = (b32[31] as u32) | ((b32[30] as u32) << 8)
-            | ((b32[29] as u32) << 16) | ((b32[28] as u32) << 24);
-        self.0[1] = (b32[27] as u32) | ((b32[26] as u32) << 8)
-            | ((b32[25] as u32) << 16) | ((b32[24] as u32) << 24);
-        self.0[2] = (b32[23] as u32) | ((b32[22] as u32) << 8)
-            | ((b32[21] as u32) << 16) | ((b32[20] as u32) << 24);
-        self.0[3] = (b32[19] as u32) | ((b32[18] as u32) << 8)
-            | ((b32[17] as u32) << 16) | ((b32[16] as u32) << 24);
-        self.0[4] = (b32[15] as u32) | ((b32[14] as u32) << 8)
-            | ((b32[13] as u32) << 16) | ((b32[12] as u32) << 24);
-        self.0[5] = (b32[11] as u32) | ((b32[10] as u32) << 8)
-            | ((b32[9] as u32) << 16) | ((b32[8] as u32) << 24);
-        self.0[6] = (b32[7] as u32) | ((b32[6] as u32) << 8)
-            | ((b32[5] as u32) << 16) | ((b32[4] as u32) << 24);
-        self.0[7] = (b32[3] as u32) | ((b32[2] as u32) << 8)
-            | ((b32[1] as u32) << 16) | ((b32[0] as u32) << 24);
+        self.0[0] = (b32[31] as u32)
+            | ((b32[30] as u32) << 8)
+            | ((b32[29] as u32) << 16)
+            | ((b32[28] as u32) << 24);
+        self.0[1] = (b32[27] as u32)
+            | ((b32[26] as u32) << 8)
+            | ((b32[25] as u32) << 16)
+            | ((b32[24] as u32) << 24);
+        self.0[2] = (b32[23] as u32)
+            | ((b32[22] as u32) << 8)
+            | ((b32[21] as u32) << 16)
+            | ((b32[20] as u32) << 24);
+        self.0[3] = (b32[19] as u32)
+            | ((b32[18] as u32) << 8)
+            | ((b32[17] as u32) << 16)
+            | ((b32[16] as u32) << 24);
+        self.0[4] = (b32[15] as u32)
+            | ((b32[14] as u32) << 8)
+            | ((b32[13] as u32) << 16)
+            | ((b32[12] as u32) << 24);
+        self.0[5] = (b32[11] as u32)
+            | ((b32[10] as u32) << 8)
+            | ((b32[9] as u32) << 16)
+            | ((b32[8] as u32) << 24);
+        self.0[6] = (b32[7] as u32)
+            | ((b32[6] as u32) << 8)
+            | ((b32[5] as u32) << 16)
+            | ((b32[4] as u32) << 24);
+        self.0[7] = (b32[3] as u32)
+            | ((b32[2] as u32) << 8)
+            | ((b32[1] as u32) << 16)
+            | ((b32[0] as u32) << 24);
 
         let overflow = self.check_overflow();
         self.reduce(overflow);
@@ -188,24 +212,64 @@ impl Scalar {
 
     /// Convert a scalar to a byte array.
     pub fn fill_b32(&self, bin: &mut [u8; 32]) {
-        bin[0] = (self.0[7] >> 24) as u8; bin[1] = (self.0[7] >> 16) as u8; bin[2] = (self.0[7] >> 8) as u8; bin[3] = (self.0[7]) as u8;
-        bin[4] = (self.0[6] >> 24) as u8; bin[5] = (self.0[6] >> 16) as u8; bin[6] = (self.0[6] >> 8) as u8; bin[7] = (self.0[6]) as u8;
-        bin[8] = (self.0[5] >> 24) as u8; bin[9] = (self.0[5] >> 16) as u8; bin[10] = (self.0[5] >> 8) as u8; bin[11] = (self.0[5]) as u8;
-        bin[12] = (self.0[4] >> 24) as u8; bin[13] = (self.0[4] >> 16) as u8; bin[14] = (self.0[4] >> 8) as u8; bin[15] = (self.0[4]) as u8;
-        bin[16] = (self.0[3] >> 24) as u8; bin[17] = (self.0[3] >> 16) as u8; bin[18] = (self.0[3] >> 8) as u8; bin[19] = (self.0[3]) as u8;
-        bin[20] = (self.0[2] >> 24) as u8; bin[21] = (self.0[2] >> 16) as u8; bin[22] = (self.0[2] >> 8) as u8; bin[23] = (self.0[2]) as u8;
-        bin[24] = (self.0[1] >> 24) as u8; bin[25] = (self.0[1] >> 16) as u8; bin[26] = (self.0[1] >> 8) as u8; bin[27] = (self.0[1]) as u8;
-        bin[28] = (self.0[0] >> 24) as u8; bin[29] = (self.0[0] >> 16) as u8; bin[30] = (self.0[0] >> 8) as u8; bin[31] = (self.0[0]) as u8;
+        bin[0] = (self.0[7] >> 24) as u8;
+        bin[1] = (self.0[7] >> 16) as u8;
+        bin[2] = (self.0[7] >> 8) as u8;
+        bin[3] = (self.0[7]) as u8;
+        bin[4] = (self.0[6] >> 24) as u8;
+        bin[5] = (self.0[6] >> 16) as u8;
+        bin[6] = (self.0[6] >> 8) as u8;
+        bin[7] = (self.0[6]) as u8;
+        bin[8] = (self.0[5] >> 24) as u8;
+        bin[9] = (self.0[5] >> 16) as u8;
+        bin[10] = (self.0[5] >> 8) as u8;
+        bin[11] = (self.0[5]) as u8;
+        bin[12] = (self.0[4] >> 24) as u8;
+        bin[13] = (self.0[4] >> 16) as u8;
+        bin[14] = (self.0[4] >> 8) as u8;
+        bin[15] = (self.0[4]) as u8;
+        bin[16] = (self.0[3] >> 24) as u8;
+        bin[17] = (self.0[3] >> 16) as u8;
+        bin[18] = (self.0[3] >> 8) as u8;
+        bin[19] = (self.0[3]) as u8;
+        bin[20] = (self.0[2] >> 24) as u8;
+        bin[21] = (self.0[2] >> 16) as u8;
+        bin[22] = (self.0[2] >> 8) as u8;
+        bin[23] = (self.0[2]) as u8;
+        bin[24] = (self.0[1] >> 24) as u8;
+        bin[25] = (self.0[1] >> 16) as u8;
+        bin[26] = (self.0[1] >> 8) as u8;
+        bin[27] = (self.0[1]) as u8;
+        bin[28] = (self.0[0] >> 24) as u8;
+        bin[29] = (self.0[0] >> 16) as u8;
+        bin[30] = (self.0[0] >> 8) as u8;
+        bin[31] = (self.0[0]) as u8;
     }
 
     /// Check whether a scalar equals zero.
     pub fn is_zero(&self) -> bool {
-        (self.0[0] | self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
+        (self.0[0]
+            | self.0[1]
+            | self.0[2]
+            | self.0[3]
+            | self.0[4]
+            | self.0[5]
+            | self.0[6]
+            | self.0[7])
+            == 0
     }
 
     /// Check whether a scalar equals one.
     pub fn is_one(&self) -> bool {
-        ((self.0[0] ^ 1) |  self.0[1] | self.0[2] | self.0[3] | self.0[4] | self.0[5] | self.0[6] | self.0[7]) == 0
+        ((self.0[0] ^ 1)
+            | self.0[1]
+            | self.0[2]
+            | self.0[3]
+            | self.0[4]
+            | self.0[5]
+            | self.0[6]
+            | self.0[7])
+            == 0
     }
 
     /// Check whether a scalar is higher than the group order divided
@@ -252,7 +316,8 @@ macro_rules! define_ops {
         #[allow(unused_macros)]
         macro_rules! muladd {
             ($a: expr, $b: expr) => {
-                let a = $a; let b = $b;
+                let a = $a;
+                let b = $b;
                 let t = (a as u64) * (b as u64);
                 let mut th = (t >> 32) as u32;
                 let tl = t as u32;
@@ -261,13 +326,14 @@ macro_rules! define_ops {
                 $c1 = $c1.wrapping_add(th);
                 $c2 = $c2.wrapping_add(if $c1 < th { 1 } else { 0 });
                 debug_assert!($c1 >= th || $c2 != 0);
-            }
+            };
         }
 
         #[allow(unused_macros)]
         macro_rules! muladd_fast {
             ($a: expr, $b: expr) => {
-                let a = $a; let b = $b;
+                let a = $a;
+                let b = $b;
                 let t = (a as u64) * (b as u64);
                 let mut th = (t >> 32) as u32;
                 let tl = t as u32;
@@ -275,13 +341,14 @@ macro_rules! define_ops {
                 th = th.wrapping_add(if $c0 < tl { 1 } else { 0 });
                 $c1 = $c1.wrapping_add(th);
                 debug_assert!($c1 >= th);
-            }
+            };
         }
 
         #[allow(unused_macros)]
         macro_rules! muladd2 {
             ($a: expr, $b: expr) => {
-                let a = $a; let b = $b;
+                let a = $a;
+                let b = $b;
                 let t = (a as u64) * (b as u64);
                 let th = (t >> 32) as u32;
                 let tl = t as u32;
@@ -297,7 +364,7 @@ macro_rules! define_ops {
                 $c1 = $c1.wrapping_add(th2);
                 $c2 = $c2.wrapping_add(if $c1 < th2 { 1 } else { 0 });
                 debug_assert!($c1 >= th2 || $c2 != 0);
-            }
+            };
         }
 
         #[allow(unused_macros)]
@@ -308,7 +375,7 @@ macro_rules! define_ops {
                 let over = if $c0 < a { 1 } else { 0 };
                 $c1 = $c1.wrapping_add(over);
                 $c2 = $c2.wrapping_add(if $c1 < over { 1 } else { 0 });
-            }
+            };
         }
 
         #[allow(unused_macros)]
@@ -319,41 +386,37 @@ macro_rules! define_ops {
                 $c1 = $c1.wrapping_add(if $c0 < a { 1 } else { 0 });
                 debug_assert!($c1 != 0 || $c0 >= a);
                 debug_assert!($c2 == 0);
-            }
+            };
         }
 
         #[allow(unused_macros)]
         macro_rules! extract {
-            () => {
+            () => {{
+                #[allow(unused_assignments)]
                 {
-                    #[allow(unused_assignments)]
-                    {
-                        let n = $c0;
-                        $c0 = $c1;
-                        $c1 = $c2;
-                        $c2 = 0;
-                        n
-                    }
+                    let n = $c0;
+                    $c0 = $c1;
+                    $c1 = $c2;
+                    $c2 = 0;
+                    n
                 }
-            }
+            }};
         }
 
         #[allow(unused_macros)]
         macro_rules! extract_fast {
-            () => {
+            () => {{
+                #[allow(unused_assignments)]
                 {
-                    #[allow(unused_assignments)]
-                    {
-                        let n = $c0;
-                        $c0 = $c1;
-                        $c1 = 0;
-                        debug_assert!($c2 == 0);
-                        n
-                    }
+                    let n = $c0;
+                    $c0 = $c1;
+                    $c1 = 0;
+                    debug_assert!($c2 == 0);
+                    n
                 }
-            }
+            }};
         }
-    }
+    };
 }
 
 impl Scalar {
@@ -362,11 +425,28 @@ impl Scalar {
         define_ops!(c0, c1, c2);
 
         let mut c: u64;
-        let (n0, n1, n2, n3, n4, n5, n6, n7) = (l[8], l[9], l[10], l[11], l[12], l[13], l[14], l[15]);
-        let (m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12): (u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32);
+        let (n0, n1, n2, n3, n4, n5, n6, n7) =
+            (l[8], l[9], l[10], l[11], l[12], l[13], l[14], l[15]);
+        let (m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12): (
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+            u32,
+        );
         let (p0, p1, p2, p3, p4, p5, p6, p7, p8): (u32, u32, u32, u32, u32, u32, u32, u32, u32);
 
-        c0 = l[0]; c1 = 0; c2 = 0;
+        c0 = l[0];
+        c1 = 0;
+        c2 = 0;
         muladd_fast!(n0, SECP256K1_N_C_0);
         m0 = extract_fast!();
         sumadd_fast!(l[1]);
@@ -431,7 +511,9 @@ impl Scalar {
 
         /* Reduce 385 bits into 258. */
         /* p[0..8] = m[0..7] + m[8..12] * SECP256K1_N_C. */
-        c0 = m0; c1 = 0; c2 = 0;
+        c0 = m0;
+        c1 = 0;
+        c2 = 0;
         muladd_fast!(m8, SECP256K1_N_C_0);
         p0 = extract_fast!();
         sumadd_fast!(m1);
@@ -477,21 +559,29 @@ impl Scalar {
         /* Reduce 258 bits into 256. */
         /* r[0..7] = p[0..7] + p[8] * SECP256K1_N_C. */
         c = p0 as u64 + SECP256K1_N_C_0 as u64 * p8 as u64;
-        self.0[0] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[0] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p1 as u64 + SECP256K1_N_C_1 as u64 * p8 as u64;
-        self.0[1] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[1] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p2 as u64 + SECP256K1_N_C_2 as u64 * p8 as u64;
-        self.0[2] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[2] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p3 as u64 + SECP256K1_N_C_3 as u64 * p8 as u64;
-        self.0[3] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[3] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p4 as u64 + p8 as u64;
-        self.0[4] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[4] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p5 as u64;
-        self.0[5] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[5] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p6 as u64;
-        self.0[6] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[6] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
         c += p7 as u64;
-        self.0[7] = (c & 0xFFFFFFFF) as u32; c >>= 32;
+        self.0[7] = (c & 0xFFFFFFFF) as u32;
+        c >>= 32;
 
         let overflow = self.check_overflow();
         self.reduce(Choice::from(c as u8) | overflow);

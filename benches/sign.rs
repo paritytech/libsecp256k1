@@ -1,16 +1,16 @@
 #![feature(test)]
 
-extern crate test;
+extern crate rand;
 extern crate secp256k1;
 extern crate secp256k1_test;
-extern crate rand;
+extern crate test;
 #[macro_use]
 extern crate arrayref;
 
-use test::Bencher;
-use secp256k1::{sign, SecretKey, Message};
-use secp256k1_test::Secp256k1;
 use rand::thread_rng;
+use secp256k1::{sign, Message, SecretKey};
+use secp256k1_test::Secp256k1;
+use test::Bencher;
 
 #[bench]
 fn bench_sign_message(b: &mut Bencher) {

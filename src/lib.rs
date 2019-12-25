@@ -2,50 +2,54 @@
 //! signatures. The secp256k1 curve is used excusively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
-#![deny(unused_import_braces, unused_imports,
-        unused_comparisons, unused_must_use,
-        unused_variables, non_shorthand_field_patterns,
-        unreachable_code, unused_parens)]
-
+#![deny(
+    unused_import_braces,
+    unused_imports,
+    unused_comparisons,
+    unused_must_use,
+    unused_variables,
+    non_shorthand_field_patterns,
+    unreachable_code,
+    unused_parens
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[macro_use]
 mod field;
 #[macro_use]
 mod group;
-mod scalar;
-mod ecmult;
-mod ecdsa;
-mod ecdh;
-mod error;
 mod der;
+mod ecdh;
+mod ecdsa;
+mod ecmult;
+mod error;
+mod scalar;
 
 #[macro_use]
 extern crate alloc;
 
-use hmac_drbg::HmacDRBG;
-use sha2::Sha256;
-use typenum::U32;
-use arrayref::{array_ref, array_mut_ref};
-use rand::Rng;
+use arrayref::{array_mut_ref, array_ref};
 use digest::generic_array::GenericArray;
 use digest::Digest;
+use hmac_drbg::HmacDRBG;
+use rand::Rng;
+use sha2::Sha256;
+use typenum::U32;
 
+use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 use crate::field::Field;
 use crate::group::{Affine, Jacobian};
 use crate::scalar::Scalar;
-use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
 pub use crate::error::Error;
 
 /// Curve related structs.
 pub mod curve {
     pub use crate::field::Field;
-    pub use crate::group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
+    pub use crate::group::{Affine, AffineStorage, Jacobian, AFFINE_G, CURVE_B};
     pub use crate::scalar::Scalar;
 
-    pub use crate::ecmult::{ECMultContext, ECMultGenContext,
-                            ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+    pub use crate::ecmult::{ECMultContext, ECMultGenContext, ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 }
 
 /// Utilities to manipulate the secp256k1 curve parameters.
@@ -64,10 +68,12 @@ pub mod util {
     pub const SIGNATURE_SIZE: usize = 64;
     pub const DER_MAX_SIGNATURE_SIZE: usize = 72;
 
-    pub use crate::group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
-                           set_table_gej_var, globalz_set_table_gej};
-    pub use crate::ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
-                            odd_multiples_table};
+    pub use crate::ecmult::{
+        odd_multiples_table, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G, WINDOW_A, WINDOW_G,
+    };
+    pub use crate::group::{
+        globalz_set_table_gej, set_table_gej_var, AFFINE_INFINITY, JACOBIAN_INFINITY,
+    };
 
     pub use crate::der::SignatureArray;
 }
@@ -82,7 +88,7 @@ pub struct SecretKey(Scalar);
 /// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
-    pub s: Scalar
+    pub s: Scalar,
 }
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
@@ -115,15 +121,14 @@ impl PublicKey {
 
     pub fn parse_slice(p: &[u8], format: Option<PublicKeyFormat>) -> Result<PublicKey, Error> {
         let format = match (p.len(), format) {
-            (util::FULL_PUBLIC_KEY_SIZE, None) |
-            (util::FULL_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Full)) =>
-                PublicKeyFormat::Full,
-            (util::COMPRESSED_PUBLIC_KEY_SIZE, None) |
-            (util::COMPRESSED_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Compressed)) =>
-                PublicKeyFormat::Compressed,
-            (util::RAW_PUBLIC_KEY_SIZE, None) |
-            (util::RAW_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Raw)) =>
-                PublicKeyFormat::Raw,
+            (util::FULL_PUBLIC_KEY_SIZE, None)
+            | (util::FULL_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Full)) => PublicKeyFormat::Full,
+            (util::COMPRESSED_PUBLIC_KEY_SIZE, None)
+            | (util::COMPRESSED_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Compressed)) => {
+                PublicKeyFormat::Compressed
+            }
+            (util::RAW_PUBLIC_KEY_SIZE, None)
+            | (util::RAW_PUBLIC_KEY_SIZE, Some(PublicKeyFormat::Raw)) => PublicKeyFormat::Raw,
             _ => return Err(Error::InvalidInputLength),
         };
 
@@ -132,7 +137,7 @@ impl PublicKey {
                 let mut a = [0; util::FULL_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
                 Self::parse(&a)
-            },
+            }
             PublicKeyFormat::Raw => {
                 use util::TAG_PUBKEY_FULL;
 
@@ -140,19 +145,22 @@ impl PublicKey {
                 a[0] = TAG_PUBKEY_FULL;
                 a[1..].copy_from_slice(p);
                 Self::parse(&a)
-            },
+            }
             PublicKeyFormat::Compressed => {
                 let mut a = [0; util::COMPRESSED_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
                 Self::parse_compressed(&a)
-            },
+            }
         }
     }
 
     pub fn parse(p: &[u8; util::FULL_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_FULL, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
-        if !(p[0] == TAG_PUBKEY_FULL || p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) {
+        if !(p[0] == TAG_PUBKEY_FULL
+            || p[0] == TAG_PUBKEY_HYBRID_EVEN
+            || p[0] == TAG_PUBKEY_HYBRID_ODD)
+        {
             return Err(Error::InvalidPublicKey);
         }
         let mut x = Field::default();
@@ -165,8 +173,8 @@ impl PublicKey {
         }
         let mut elem = Affine::default();
         elem.set_xy(&x, &y);
-        if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD) &&
-            (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
+        if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
+            && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
         {
             return Err(Error::InvalidPublicKey);
         }
@@ -180,7 +188,9 @@ impl PublicKey {
         }
     }
 
-    pub fn parse_compressed(p: &[u8; util::COMPRESSED_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
+    pub fn parse_compressed(
+        p: &[u8; util::COMPRESSED_PUBLIC_KEY_SIZE],
+    ) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         if !(p[0] == TAG_PUBKEY_EVEN || p[0] == TAG_PUBKEY_ODD) {
@@ -220,7 +230,7 @@ impl PublicKey {
     }
 
     pub fn serialize_compressed(&self) -> [u8; util::COMPRESSED_PUBLIC_KEY_SIZE] {
-        use util::{TAG_PUBKEY_ODD, TAG_PUBKEY_EVEN};
+        use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         debug_assert!(!self.0.is_infinity());
 
@@ -352,11 +362,11 @@ impl SecretKey {
 impl Default for SecretKey {
     fn default() -> SecretKey {
         let mut elem = Scalar::default();
-        let overflowed = bool::from(elem.set_b32(
-            &[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-		      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-              0x00,0x00,0x00,0x00,0x00,0x01]
-        ));
+        let overflowed = bool::from(elem.set_b32(&[
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x01,
+        ]));
         debug_assert!(!overflowed);
         debug_assert!(!elem.is_zero());
         SecretKey(elem)
@@ -456,7 +466,6 @@ impl Signature {
         }
     }
 
-
     pub fn serialize(&self) -> [u8; util::SIGNATURE_SIZE] {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
@@ -476,10 +485,7 @@ impl Signature {
 
         fn integer_slice(full: &[u8; 33]) -> &[u8] {
             let mut len = 33;
-            while len > 1 &&
-                full[full.len() - len] == 0 &&
-                full[full.len() - len + 1] < 0x80
-            {
+            while len > 1 && full[full.len() - len] == 0 && full[full.len() - len + 1] < 0x80 {
                 len -= 1;
             }
             &full[(full.len() - len)..]
@@ -575,7 +581,6 @@ impl<D: Digest + Default> SharedSecret<D> {
 
         Ok(SharedSecret(inner))
     }
-
 }
 
 impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
@@ -586,8 +591,8 @@ impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
 
 impl<D: Digest> Drop for SharedSecret<D> {
     fn drop(&mut self) {
-        let zero_array = GenericArray::clone_from_slice(&vec![0;D::output_size()]);
-         unsafe {
+        let zero_array = GenericArray::clone_from_slice(&vec![0; D::output_size()]);
+        unsafe {
             core::ptr::write_volatile(&mut self.0, zero_array);
         }
     }
@@ -599,8 +604,14 @@ pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> b
 }
 
 /// Recover public key from a signed message.
-pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
-    ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
+pub fn recover(
+    message: &Message,
+    signature: &Signature,
+    recovery_id: &RecoveryId,
+) -> Result<PublicKey, Error> {
+    ECMULT_CONTEXT
+        .recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0)
+        .map(|v| PublicKey(v))
 }
 
 /// Sign a message using the secret key.
@@ -621,8 +632,8 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
             match ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce) {
                 Ok(val) => {
                     result = val;
-                    break
-                },
+                    break;
+                }
                 Err(_) => (),
             }
         }
@@ -634,8 +645,5 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     }
     let (sigr, sigs, recid) = result;
 
-    (Signature {
-        r: sigr,
-        s: sigs,
-    }, RecoveryId(recid))
+    (Signature { r: sigr, s: sigs }, RecoveryId(recid))
 }

@@ -1,14 +1,14 @@
 #![feature(test)]
 
-extern crate test;
+extern crate rand;
 extern crate secp256k1;
 extern crate secp256k1_test;
-extern crate rand;
+extern crate test;
 
-use test::Bencher;
-use secp256k1::Signature;
-use secp256k1_test::{Secp256k1, Message as SecpMessage};
 use rand::thread_rng;
+use secp256k1::Signature;
+use secp256k1_test::{Message as SecpMessage, Secp256k1};
+use test::Bencher;
 
 #[bench]
 fn bench_signature_parse(b: &mut Bencher) {

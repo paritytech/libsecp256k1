@@ -1,6 +1,6 @@
 extern crate secp256k1;
 
-use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
+use secp256k1::curve::{Affine, AffineStorage, Field, Jacobian, AFFINE_G};
 
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());
@@ -65,7 +65,11 @@ fn main() {
     // Construct a group element with no known corresponding scalar (nothing up my sleeve).
     let mut nums_32 = [0u8; 32];
     debug_assert!("The scalar for this x is unknown".as_bytes().len() == 32);
-    for (i, v) in "The scalar for this x is unknown".as_bytes().iter().enumerate() {
+    for (i, v) in "The scalar for this x is unknown"
+        .as_bytes()
+        .iter()
+        .enumerate()
+    {
         nums_32[i] = *v;
     }
     let mut nums_x = Field::default();
@@ -84,9 +88,9 @@ fn main() {
     let mut gbase = gj.clone();
     let mut numsbase = nums_gej.clone();
     for j in 0..64 {
-        precj[j*16] = numsbase.clone();
+        precj[j * 16] = numsbase.clone();
         for i in 1..16 {
-            precj[j*16 + i] = precj[j*16 + i - 1].add_var(&gbase, None);
+            precj[j * 16 + i] = precj[j * 16 + i - 1].add_var(&gbase, None);
         }
         for _ in 0..4 {
             gbase = gbase.double_var(None);
@@ -102,7 +106,7 @@ fn main() {
     for j in 0..64 {
         println!("    [");
         for i in 0..16 {
-            let pg: AffineStorage = prec[j*16 + i].clone().into();
+            let pg: AffineStorage = prec[j * 16 + i].clone().into();
             println!("        affine_storage_const!(field_storage_const!({}, {}, {}, {}, {}, {}, {}, {}), field_storage_const!({}, {}, {}, {}, {}, {}, {}, {})),",
                      pg.x.0[7], pg.x.0[6], pg.x.0[5], pg.x.0[4], pg.x.0[3], pg.x.0[2], pg.x.0[1], pg.x.0[0],
                      pg.y.0[7], pg.y.0[6], pg.y.0[5], pg.y.0[4], pg.y.0[3], pg.y.0[2], pg.y.0[1], pg.y.0[0]);
