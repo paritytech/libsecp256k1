@@ -23,6 +23,7 @@ mod der;
 #[macro_use]
 extern crate alloc;
 
+use core::convert::TryFrom;
 use hmac_drbg::HmacDRBG;
 use sha2::Sha256;
 use typenum::U32;
@@ -293,8 +294,8 @@ impl Into<Affine> for PublicKey {
 impl SecretKey {
     pub fn parse(p: &[u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
-        if !bool::from(elem.set_b32(p)) && !elem.is_zero() {
-            Ok(SecretKey(elem))
+        if !bool::from(elem.set_b32(p)) {
+            Self::try_from(elem)
         } else {
             Err(Error::InvalidSecretKey)
         }
@@ -366,6 +367,18 @@ impl Default for SecretKey {
 impl Into<Scalar> for SecretKey {
     fn into(self) -> Scalar {
         self.0.clone()
+    }
+}
+
+impl TryFrom<Scalar> for SecretKey {
+    type Error = Error;
+
+    fn try_from(scalar: Scalar) -> Result<Self, Error> {
+        if scalar.is_zero() {
+            Err(Error::InvalidSecretKey)
+        } else {
+            Ok(Self(scalar))
+        }
     }
 }
 
