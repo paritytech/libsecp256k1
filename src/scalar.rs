@@ -935,3 +935,14 @@ impl<'a> Neg for &'a Scalar {
         -value
     }
 }
+
+impl core::fmt::LowerHex for Scalar {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        for word in &self.0[..] {
+            for byte in word.to_be_bytes().iter() {
+                write!(f, "{:02x}", byte)?;
+            }
+        }
+        Ok(())
+    }
+}
