@@ -24,8 +24,11 @@ mod der;
 extern crate alloc;
 
 use core::convert::TryFrom;
+#[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
+#[cfg(feature = "hmac")]
 use sha2::Sha256;
+#[cfg(feature = "hmac")]
 use typenum::U32;
 use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
@@ -617,6 +620,7 @@ pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryI
 }
 
 /// Sign a message using the secret key.
+#[cfg(feature = "hmac")]
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();
