@@ -384,3 +384,29 @@ fn test_pubkey_combine() {
 
     assert_eq!(PublicKey::combine(&[pk1, pk2]).unwrap(), cpk);
 }
+
+#[test]
+fn test_pubkey_equality() {
+    for _ in 0 .. 10 {
+        let secret = SecretKey::random(&mut rand::thread_rng());
+        let public = PublicKey::from_secret_key(&secret);
+
+        let public2 = PublicKey::parse(&public.serialize()).unwrap();
+        let public3 = PublicKey::parse_compressed(&public.serialize_compressed()).unwrap();
+
+        // Reflexivity
+        assert_eq!(public, public);
+        assert_eq!(public2, public2);
+        assert_eq!(public3, public3);
+
+        // Symmetry
+        assert_eq!(public2, public);
+        assert_eq!(public, public2);
+        assert_eq!(public2, public3);
+        assert_eq!(public3, public2);
+
+        // Transitivity
+        assert_eq!(public, public3);
+        assert_eq!(public3, public);
+    }
+}

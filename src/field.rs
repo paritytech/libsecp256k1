@@ -451,6 +451,8 @@ impl Field {
         debug_assert!(self.verify());
     }
 
+    /// Compute the additive inverse of this element. Takes the maximum
+    /// expected magnitude of this element as an argument.
     pub fn neg(&self, m: u32) -> Field {
         let mut ret = Field::default();
         ret.neg_in_place(self, m);
@@ -1461,7 +1463,7 @@ impl MulAssign<Field> for Field {
 
 impl PartialEq for Field {
     fn eq(&self, other: &Field) -> bool {
-        let mut na = self.neg(1);
+        let mut na = self.neg(self.magnitude);
         na += other;
         return na.normalizes_to_zero();
     }
