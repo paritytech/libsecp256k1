@@ -1,3 +1,4 @@
+use subtle::Choice;
 use crate::group::{Affine, Jacobian, AffineStorage, globalz_set_table_gej};
 use crate::field::Field;
 use crate::scalar::Scalar;
@@ -131,7 +132,7 @@ pub fn ecmult_wnaf(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     }
 
     if s.bits(255, 1) > 0 {
-        s = s.neg();
+        s = -s;
         sign = -1;
     }
 
@@ -192,7 +193,7 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
     let bit = flip ^ !s.is_even();
     /* We add 1 to even numbers, 2 to odd ones, noting that negation
      * flips parity */
-    let neg_s = s.neg();
+    let neg_s = -s.clone();
     let not_neg_one = !neg_s.is_one();
     s.cadd_bit(if bit { 1 } else { 0 }, not_neg_one);
     /* If we had negative one, flip == 1, s.d[0] == 0, bit == 1, so
@@ -201,7 +202,8 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
      * since skewing is required (in the sense that the skew must be 1
      * or 2, never zero) and flipping is not, we need to change our
      * flags to claim that we only skewed. */
-    let mut global_sign = s.cond_neg_mut(flip);
+    let mut global_sign = if flip { -1 } else { 1 };
+    s.cond_neg_assign(Choice::from(flip as u8));
     global_sign *= if not_neg_one { 1 } else { 0 } * 2 - 1;
     let skew = 1 << (if bit { 1 } else { 0 });
 
