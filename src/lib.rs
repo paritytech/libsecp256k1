@@ -300,9 +300,14 @@ impl Into<Affine> for PublicKey {
 
 impl Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
-        serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+        } else {
+            serializer.serialize_bytes(&self.serialize())
+        }
     }
 }
 
@@ -362,11 +367,16 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
     }
 }
 
-impl <'de> Deserialize<'de> for PublicKey {
+impl<'de> Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: de::Deserializer<'de>,
+    where
+        D: de::Deserializer<'de>,
     {
-        deserializer.deserialize_str(PublicKeyVisitor)
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(PublicKeyVisitor)
+        } else {
+            deserializer.deserialize_bytes(PublicKeyVisitor)
+        }
     }
 }
 
