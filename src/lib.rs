@@ -330,16 +330,10 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
             33 => PublicKeyFormat::Compressed,
             64 => PublicKeyFormat::Raw,
             65 => PublicKeyFormat::Full,
-            len @ _ => return Err(
-                E::custom(format!("Key is the wrong size! (size is {})", len))
-            ),
+            _ => return Err(E::custom(Error::InvalidInputLength)),
         };
-        let pkey = PublicKey::parse_slice(value, Some(key_format));
-        if pkey.is_err() {
-            Err(E::custom("Issue parsing raw public key"))
-        } else {
-            Ok(pkey.unwrap())
-        }
+        PublicKey::parse_slice(value, Some(key_format))
+            .map_err(|_e| E::custom(Error::InvalidPublicKey))
     }
 }
 
