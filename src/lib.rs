@@ -22,11 +22,20 @@ mod ecdh;
 mod error;
 mod der;
 
+#[macro_use]
+extern crate alloc;
+
+use core::convert::TryFrom;
+#[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
+#[cfg(feature = "hmac")]
 use sha2::Sha256;
+#[cfg(feature = "hmac")]
 use typenum::U32;
 use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
+use digest::generic_array::GenericArray;
+use digest::Digest;
 
 use serde::{Serialize, Deserialize, ser::Serializer, de};
 
@@ -91,7 +100,7 @@ pub struct RecoveryId(u8);
 pub struct Message(pub Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Shared secret using ECDH.
-pub struct SharedSecret([u8; 32]);
+pub struct SharedSecret<D: Digest>(GenericArray<u8, D::OutputSize>);
 
 /// Format for public key parsing.
 pub enum PublicKeyFormat {
@@ -364,8 +373,8 @@ impl <'de> Deserialize<'de> for PublicKey {
 impl SecretKey {
     pub fn parse(p: &[u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
-        if !elem.set_b32(p) && !elem.is_zero() {
-            Ok(SecretKey(elem))
+        if !bool::from(elem.set_b32(p)) {
+            Self::try_from(elem)
         } else {
             Err(Error::InvalidSecretKey)
         }
@@ -423,11 +432,11 @@ impl SecretKey {
 impl Default for SecretKey {
     fn default() -> SecretKey {
         let mut elem = Scalar::default();
-        let overflowed = elem.set_b32(
+        let overflowed = bool::from(elem.set_b32(
             &[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 		      0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
               0x00,0x00,0x00,0x00,0x00,0x01]
-        );
+        ));
         debug_assert!(!overflowed);
         debug_assert!(!elem.is_zero());
         SecretKey(elem)
@@ -440,9 +449,29 @@ impl Into<Scalar> for SecretKey {
     }
 }
 
+impl TryFrom<Scalar> for SecretKey {
+    type Error = Error;
+
+    fn try_from(scalar: Scalar) -> Result<Self, Error> {
+        if scalar.is_zero() {
+            Err(Error::InvalidSecretKey)
+        } else {
+            Ok(Self(scalar))
+        }
+    }
+}
+
 impl Drop for SecretKey {
     fn drop(&mut self) {
         self.0.clear();
+    }
+}
+
+impl core::fmt::LowerHex for SecretKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let scalar: Scalar = self.clone().into();
+
+        write!(f, "{:x}", scalar)
     }
 }
 
@@ -523,8 +552,7 @@ impl Signature {
     /// which ensures that the s value lies in the lower half of its range.
     pub fn normalize_s(&mut self) {
         if self.s.is_high() {
-            let s = self.s.clone();
-            self.s.neg_in_place(&s);
+            self.s = -self.s.clone();
         }
     }
 
@@ -638,9 +666,9 @@ impl Into<i32> for RecoveryId {
     }
 }
 
-impl SharedSecret {
-    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret, Error> {
-        let inner = match ECMULT_CONTEXT.ecdh_raw(&pubkey.0, &seckey.0) {
+impl<D: Digest + Default> SharedSecret<D> {
+    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
+        let inner = match ECMULT_CONTEXT.ecdh_raw::<D>(&pubkey.0, &seckey.0) {
             Some(val) => val,
             None => return Err(Error::InvalidSecretKey),
         };
@@ -650,16 +678,17 @@ impl SharedSecret {
 
 }
 
-impl AsRef<[u8]> for SharedSecret {
+impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
     fn as_ref(&self) -> &[u8] {
-        &self.0
+        &self.0.as_ref()
     }
 }
 
-impl Drop for SharedSecret {
+impl<D: Digest> Drop for SharedSecret<D> {
     fn drop(&mut self) {
+        let zero_array = GenericArray::clone_from_slice(&vec![0;D::output_size()]);
          unsafe {
-            core::ptr::write_volatile(&mut self.0, [0u8; 32]);
+            core::ptr::write_volatile(&mut self.0, zero_array);
         }
     }
 }
@@ -675,6 +704,7 @@ pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryI
 }
 
 /// Sign a message using the secret key.
+#[cfg(feature = "hmac")]
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();
@@ -686,7 +716,7 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let result;
     loop {
         let generated = drbg.generate::<U32>(None);
-        overflow = nonce.set_b32(array_ref!(generated, 0, 32));
+        overflow = bool::from(nonce.set_b32(array_ref!(generated, 0, 32)));
 
         if !overflow && !nonce.is_zero() {
             match ECMULT_GEN_CONTEXT.sign_raw(&seckey.0, &message.0, &nonce) {
@@ -709,4 +739,20 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
         r: sigr,
         s: sigs,
     }, RecoveryId(recid))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::SecretKey;
+    use hex_literal::hex;
+
+    #[test]
+    fn secret_key_inverse_is_sane() {
+        let sk = SecretKey::parse(&[1; 32]).unwrap();
+        let inv = sk.inv();
+        let invinv = inv.inv();
+        assert_eq!(sk, invinv);
+        // Check that the inverse of `[1; 32]` is same as rust-secp256k1
+        assert_eq!(inv, SecretKey::parse(&hex!("1536f1d756d1abf83aaf173bc5ee3fc487c93010f18624d80bd6d4038fadd59e")).unwrap())
+    }
 }
