@@ -326,43 +326,19 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
         where E: de::Error
     {
         let value: &[u8] = &base64::decode(value).unwrap();
-        match value.len() {
-            33 => {
-                let pkey = PublicKey::parse_slice(
-                    value,
-                    Some(PublicKeyFormat::Compressed),
-                );
-                if pkey.is_err() {
-                    Err(E::custom("Issue parsing compressed public key"))
-                } else {
-                    Ok(pkey.unwrap())
-                }
-            },
-            64 => {
-                let pkey = PublicKey::parse_slice(
-                    value,
-                    Some(PublicKeyFormat::Raw),
-                );
-                if pkey.is_err() {
-                    Err(E::custom("Issue parsing raw public key"))
-                } else {
-                    Ok(pkey.unwrap())
-                }
-            },
-            65 => {
-                let pkey = PublicKey::parse_slice(
-                    value,
-                    Some(PublicKeyFormat::Full),
-                );
-                if pkey.is_err() {
-                    Err(E::custom("Issue parsing full public key"))
-                } else {
-                    Ok(pkey.unwrap())
-                }
-            },
-            len @ _ => Err(
+        let key_format = match value.len() {
+            33 => PublicKeyFormat::Compressed,
+            64 => PublicKeyFormat::Raw,
+            65 => PublicKeyFormat::Full,
+            len @ _ => return Err(
                 E::custom(format!("Key is the wrong size! (size is {})", len))
             ),
+        };
+        let pkey = PublicKey::parse_slice(value, Some(key_format));
+        if pkey.is_err() {
+            Err(E::custom("Issue parsing raw public key"))
+        } else {
+            Ok(pkey.unwrap())
         }
     }
 }
