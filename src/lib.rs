@@ -9,7 +9,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use std::fmt;
+use core::fmt;
 
 #[macro_use]
 mod field;
