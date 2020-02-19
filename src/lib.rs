@@ -9,8 +9,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use core::fmt;
-
 #[macro_use]
 mod field;
 #[macro_use]
@@ -37,6 +35,9 @@ use rand::Rng;
 use digest::generic_array::GenericArray;
 use digest::Digest;
 
+#[cfg(feature = "std")]
+use core::fmt;
+#[cfg(feature = "std")]
 use serde::{Serialize, Deserialize, ser::Serializer, de};
 
 use crate::field::Field;
@@ -298,6 +299,7 @@ impl Into<Affine> for PublicKey {
     }
 }
 
+#[cfg(feature = "std")]
 impl Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -311,8 +313,10 @@ impl Serialize for PublicKey {
     }
 }
 
+#[cfg(feature = "std")]
 struct PublicKeyVisitor;
 
+#[cfg(feature = "std")]
 impl<'de> de::Visitor<'de> for PublicKeyVisitor {
     type Value = PublicKey;
 
@@ -337,6 +341,7 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
     }
 }
 
+#[cfg(feature = "std")]
 impl<'de> Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
