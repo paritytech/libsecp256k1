@@ -35,6 +35,11 @@ use rand::Rng;
 use digest::generic_array::GenericArray;
 use digest::Digest;
 
+#[cfg(feature = "std")]
+use core::fmt;
+#[cfg(feature = "std")]
+use serde::{Serialize, Deserialize, ser::Serializer, de};
+
 use crate::field::Field;
 use crate::group::{Affine, Jacobian};
 use crate::scalar::Scalar;
@@ -291,6 +296,62 @@ impl PublicKey {
 impl Into<Affine> for PublicKey {
     fn into(self) -> Affine {
         self.0
+    }
+}
+
+#[cfg(feature = "std")]
+impl Serialize for PublicKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+        } else {
+            serializer.serialize_bytes(&self.serialize())
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+struct PublicKeyVisitor;
+
+#[cfg(feature = "std")]
+impl<'de> de::Visitor<'de> for PublicKeyVisitor {
+    type Value = PublicKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str(
+            "a bytestring of either 33 (compressed), 64 (raw), or 65 bytes in length"
+        )
+    }
+
+    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where E: de::Error
+    {
+        let value: &[u8] = &base64::decode(value).unwrap();
+        let key_format = match value.len() {
+            33 => PublicKeyFormat::Compressed,
+            64 => PublicKeyFormat::Raw,
+            65 => PublicKeyFormat::Full,
+            _ => return Err(E::custom(Error::InvalidInputLength)),
+        };
+        PublicKey::parse_slice(value, Some(key_format))
+            .map_err(|_e| E::custom(Error::InvalidPublicKey))
+    }
+}
+
+#[cfg(feature = "std")]
+impl<'de> Deserialize<'de> for PublicKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            deserializer.deserialize_str(PublicKeyVisitor)
+        } else {
+            deserializer.deserialize_bytes(PublicKeyVisitor)
+        }
     }
 }
 
