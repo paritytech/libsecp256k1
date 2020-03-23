@@ -7,10 +7,11 @@ macro_rules! debug_assert_bits {
     }
 }
 
+#[macro_export]
 macro_rules! field_const_raw {
     ($d9: expr, $d8: expr, $d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr,
      $d1: expr, $d0: expr) => {
-        $crate::field::Field {
+        $crate::curve::Field {
             n: [$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9],
             magnitude: 1,
             normalized: false
@@ -18,9 +19,10 @@ macro_rules! field_const_raw {
     }
 }
 
+#[macro_export]
 macro_rules! field_const {
     ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
-        $crate::field::Field {
+        $crate::curve::Field {
             n: [
                 $d0 & 0x3ffffff,
                 ($d0 >> 26) | (($d1 & 0xfffff) << 6),
@@ -48,9 +50,9 @@ macro_rules! field_storage_const {
 #[derive(Debug, Clone)]
 /// Field element for secp256k1.
 pub struct Field {
-    pub(crate) n: [u32; 10],
-    pub(crate) magnitude: u32,
-    pub(crate) normalized: bool,
+    pub n: [u32; 10],
+    pub magnitude: u32,
+    pub normalized: bool,
 }
 
 impl Field {
