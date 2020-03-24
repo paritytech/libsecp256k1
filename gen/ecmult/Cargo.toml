@@ -4,4 +4,4 @@ version = "0.0.0"
 authors = ["Wei Tang <hi@that.world>"]
 
 [dependencies]
-libsecp256k1 = { path = "../.." }
+libsecp256k1 = { path = "../..", features = ["noconst"] }

@@ -4,11 +4,11 @@ use crate::scalar::Scalar;
 use crate::ecmult::{ECMultContext, ECMultGenContext};
 use crate::Error;
 
-const P_MINUS_ORDER: Field = field_const!(
+const P_MINUS_ORDER: Field = Field::new(
     0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE
 );
 
-const ORDER_AS_FE: Field = field_const!(
+const ORDER_AS_FE: Field = Field::new(
     0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE,
     0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141
 );

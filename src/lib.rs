@@ -14,21 +14,21 @@ mod field;
 #[macro_use]
 mod group;
 mod scalar;
+mod error;
+mod der;
 mod ecmult;
 mod ecdsa;
 mod ecdh;
-mod error;
-mod der;
 
 #[macro_use]
 extern crate alloc;
 
 use core::convert::TryFrom;
-#[cfg(feature = "hmac")]
+#[cfg(all(feature = "hmac", not(feature = "noconst")))]
 use hmac_drbg::HmacDRBG;
-#[cfg(feature = "hmac")]
+#[cfg(all(feature = "hmac", not(feature = "noconst")))]
 use sha2::Sha256;
-#[cfg(feature = "hmac")]
+#[cfg(all(feature = "hmac", not(feature = "noconst")))]
 use typenum::U32;
 use arrayref::{array_ref, array_mut_ref};
 use rand::Rng;
@@ -43,18 +43,20 @@ use serde::{Serialize, Deserialize, ser::Serializer, de};
 use crate::field::Field;
 use crate::group::{Affine, Jacobian};
 use crate::scalar::Scalar;
+#[cfg(not(feature = "noconst"))]
 use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 
 pub use crate::error::Error;
 
 /// Curve related structs.
 pub mod curve {
-    pub use crate::field::Field;
+    pub use crate::field::{Field, FieldStorage};
     pub use crate::group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
     pub use crate::scalar::Scalar;
 
-    pub use crate::ecmult::{ECMultContext, ECMultGenContext,
-                            ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+    pub use crate::ecmult::{ECMultContext, ECMultGenContext};
+    #[cfg(not(feature = "noconst"))]
+    pub use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
 }
 
 /// Utilities to manipulate the secp256k1 curve parameters.
@@ -114,6 +116,7 @@ pub enum PublicKeyFormat {
 }
 
 impl PublicKey {
+    #[cfg(not(feature = "noconst"))]
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
         ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
@@ -248,6 +251,7 @@ impl PublicKey {
         ret
     }
 
+    #[cfg(not(feature = "noconst"))]
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         let mut r = Jacobian::default();
         let a = Jacobian::from_ge(&self.0);
@@ -262,6 +266,7 @@ impl PublicKey {
         Ok(())
     }
 
+    #[cfg(not(feature = "noconst"))]
     pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         if tweak.0.is_zero() {
             return Err(Error::TweakOutOfRange);
@@ -652,6 +657,7 @@ impl Into<i32> for RecoveryId {
 }
 
 impl<D: Digest + Default> SharedSecret<D> {
+    #[cfg(not(feature = "noconst"))]
     pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
         let inner = match ECMULT_CONTEXT.ecdh_raw::<D>(&pubkey.0, &seckey.0) {
             Some(val) => val,
@@ -678,18 +684,20 @@ impl<D: Digest> Drop for SharedSecret<D> {
     }
 }
 
+#[cfg(not(feature = "noconst"))]
 /// Check signature is a valid message signed by public key.
 pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     ECMULT_CONTEXT.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
+#[cfg(not(feature = "noconst"))]
 /// Recover public key from a signed message.
 pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
 }
 
 /// Sign a message using the secret key.
-#[cfg(feature = "hmac")]
+#[cfg(all(feature = "hmac", not(feature = "noconst")))]
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();
