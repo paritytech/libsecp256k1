@@ -10,6 +10,6 @@ matrix:
       - nightly
       - beta
 script:
-  - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo build --verbose
+  - cargo test --verbose
   - cargo build --verbose --no-default-features
