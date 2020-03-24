@@ -10,6 +10,8 @@ macro_rules! debug_assert_bits {
 #[derive(Debug, Clone)]
 /// Field element for secp256k1.
 pub struct Field {
+    /// X = sum(i=0..9, n[i]*2^(i*26)) mod p
+    /// where p = 2^256 - 0x1000003D1
     n: [u32; 10],
     magnitude: u32,
     normalized: bool,
