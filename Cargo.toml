@@ -8,9 +8,6 @@ repository = "https://github.com/paritytech/libsecp256k1"
 keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
 edition = "2018"
 
-[lib]
-name = "secp256k1"
-
 [dependencies]
 rand = { version = "0.7", default-features = false }
 hmac-drbg = { version = "0.2", optional = true }
