@@ -28,6 +28,7 @@ hex-literal = "0.2.1"
 
 [build-dependencies]
 libsecp256k1-gen-ecmult = { version = "0.4.0", path = "gen/ecmult" }
+libsecp256k1-gen-genmult = { version = "0.4.0", path = "gen/genmult" }
 
 [features]
 default = ["std", "hmac"]

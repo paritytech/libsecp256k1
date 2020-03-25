@@ -23,12 +23,12 @@ use crate::{
 
 /// A static ECMult context.
 pub static ECMULT_CONTEXT: ECMultContext = ECMultContext::new(
-    include!(concat!(env!("OUT_DIR"), "/const.rs"))
+    include!(concat!(env!("OUT_DIR"), "/const.rs")),
 );
 
 /// A static ECMultGen context.
 pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext::new(
-    include!("const_gen.rs"),
+    include!(concat!(env!("OUT_DIR"), "/const_gen.rs")),
     Scalar([2217680822, 850875797, 1046150361, 1330484644,
             4015777837, 2466086288, 2052467175, 2084507480]),
     Jacobian {
