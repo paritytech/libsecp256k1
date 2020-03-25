@@ -2,6 +2,7 @@
 name = "libsecp256k1-gen-ecmult"
 version = "0.0.0"
 authors = ["Wei Tang <hi@that.world>"]
+edition = "2018"
 
 [dependencies]
 libsecp256k1-core = { path = "../../core" }

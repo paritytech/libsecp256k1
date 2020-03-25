@@ -1,6 +1,4 @@
-extern crate secp256k1;
-
-use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
+use libsecp256k1_core::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
 
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());

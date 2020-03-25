@@ -1,8 +1,8 @@
 use rand_test::thread_rng;
-use secp256k1::*;
-use secp256k1::curve::*;
-use secp256k1_test::{Secp256k1, Error as SecpError, Message as SecpMessage, Signature as SecpSignature};
-use secp256k1_test::key;
+use libsecp256k1::*;
+use secp256k1_test::{
+    key, Secp256k1, Error as SecpError, Message as SecpMessage, Signature as SecpSignature
+};
 
 #[cfg(feature = "hmac")]
 mod signatures {

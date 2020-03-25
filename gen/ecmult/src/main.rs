@@ -1,8 +1,6 @@
-extern crate secp256k1;
-
-use secp256k1::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
-use secp256k1::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
-                      set_table_gej_var};
+use libsecp256k1_core::curve::{Jacobian, Field, AffineStorage, Affine, AFFINE_G};
+use libsecp256k1_core::util::{odd_multiples_table, ECMULT_TABLE_SIZE_G,
+                              set_table_gej_var};
 
 fn odd_multiples_table_storage_var(pre: &mut [AffineStorage],
                                    a: &Jacobian) {

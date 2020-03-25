@@ -681,3 +681,19 @@ pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
         s: sigs,
     }, RecoveryId(recid))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::SecretKey;
+    use hex_literal::hex;
+
+    #[test]
+    fn secret_key_inverse_is_sane() {
+        let sk = SecretKey::parse(&[1; 32]).unwrap();
+        let inv = sk.inv();
+        let invinv = inv.inv();
+        assert_eq!(sk, invinv);
+        // Check that the inverse of `[1; 32]` is same as rust-secp256k1
+        assert_eq!(inv, SecretKey::parse(&hex!("1536f1d756d1abf83aaf173bc5ee3fc487c93010f18624d80bd6d4038fadd59e")).unwrap())
+    }
+}
