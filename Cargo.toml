@@ -26,6 +26,9 @@ rand-test = { package = "rand", version = "0.4" }
 serde_json = "1.0"
 hex-literal = "0.2.1"
 
+[build-dependencies]
+libsecp256k1-gen-ecmult = { version = "0.4.0", path = "gen/ecmult" }
+
 [features]
 default = ["std", "hmac"]
 std = ["libsecp256k1-core/std", "sha2/std", "rand/std", "serde/std", "base64/std"]

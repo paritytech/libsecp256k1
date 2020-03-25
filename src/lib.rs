@@ -22,7 +22,9 @@ use crate::{
 };
 
 /// A static ECMult context.
-pub static ECMULT_CONTEXT: ECMultContext = ECMultContext::new(include!("const.rs"));
+pub static ECMULT_CONTEXT: ECMultContext = ECMultContext::new(
+    include!(concat!(env!("OUT_DIR"), "/const.rs"))
+);
 
 /// A static ECMultGen context.
 pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext::new(
