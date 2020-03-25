@@ -9,7 +9,7 @@ keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
 edition = "2018"
 
 [dependencies]
-libsecp256k1-core = { version = "0.4.0", path = "core", default-features = false }
+libsecp256k1-core = { version = "0.1.0", path = "core", default-features = false }
 arrayref = "0.3"
 rand = { version = "0.7", default-features = false }
 digest = "0.8"
@@ -27,8 +27,8 @@ serde_json = "1.0"
 hex-literal = "0.2.1"
 
 [build-dependencies]
-libsecp256k1-gen-ecmult = { version = "0.4.0", path = "gen/ecmult" }
-libsecp256k1-gen-genmult = { version = "0.4.0", path = "gen/genmult" }
+libsecp256k1-gen-ecmult = { version = "0.1.0", path = "gen/ecmult" }
+libsecp256k1-gen-genmult = { version = "0.1.0", path = "gen/genmult" }
 
 [features]
 default = ["std", "hmac"]

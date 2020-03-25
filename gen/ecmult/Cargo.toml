@@ -5,4 +5,4 @@ authors = ["Wei Tang <hi@that.world>"]
 edition = "2018"
 
 [dependencies]
-libsecp256k1-core = { path = "../../core" }
+libsecp256k1-core = { version = "0.1.0", path = "../../core" }
