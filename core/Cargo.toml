@@ -5,7 +5,7 @@ license = "Apache-2.0"
 version = "0.1.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/paritytech/libsecp256k1"
-keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
+keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
 edition = "2018"
 
 [dependencies]
