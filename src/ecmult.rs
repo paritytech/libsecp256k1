@@ -14,6 +14,13 @@ pub struct ECMultContext {
     pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G],
 }
 
+impl ECMultContext {
+    /// Create a new `ECMultContext`.
+    pub const fn new(pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G]) -> Self {
+        Self { pre_g }
+    }
+}
+
 /// Context for accelerating the computation of a*G.
 pub struct ECMultGenContext {
     prec: [[AffineStorage; 16]; 64],
@@ -21,29 +28,22 @@ pub struct ECMultGenContext {
     initial: Jacobian,
 }
 
-#[cfg(not(feature = "noconst"))]
-/// A static ECMult context.
-pub static ECMULT_CONTEXT: ECMultContext = ECMultContext {
-    pre_g: include!("const.rs"),
-};
-
-#[cfg(not(feature = "noconst"))]
-/// A static ECMultGen context.
-pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext {
-    prec: include!("const_gen.rs"),
-    blind: Scalar([2217680822, 850875797, 1046150361, 1330484644,
-                   4015777837, 2466086288, 2052467175, 2084507480]),
-    initial: Jacobian {
-        x: Field::new_raw(586608, 43357028, 207667908, 262670128, 142222828, 38529388, 267186148, 45417712, 115291924, 13447464),
-        y: Field::new_raw(12696548, 208302564, 112025180, 191752716, 143238548, 145482948, 228906000, 69755164, 243572800, 210897016),
-        z: Field::new_raw(3685368, 75404844, 20246216, 5748944, 73206666, 107661790, 110806176, 73488774, 5707384, 104448710),
-        infinity: false,
+impl ECMultGenContext {
+    /// Create a new `ECMultGenContext`.
+    pub const fn new(
+        prec: [[AffineStorage; 16]; 64],
+        blind: Scalar,
+        initial: Jacobian
+    ) -> Self {
+        Self { prec, blind, initial }
     }
-};
+}
 
-pub fn odd_multiples_table(prej: &mut [Jacobian],
-                       zr: &mut [Field],
-                       a: &Jacobian) {
+pub fn odd_multiples_table(
+    prej: &mut [Jacobian],
+    zr: &mut [Field],
+    a: &Jacobian
+) {
     debug_assert!(prej.len() == zr.len());
     debug_assert!(prej.len() > 0);
     debug_assert!(!a.is_infinity());
