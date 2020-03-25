@@ -1,36 +1,5 @@
 use crate::field::{Field, FieldStorage};
 
-#[macro_export]
-/// Define an affine group element constant.
-macro_rules! affine_const {
-    ($x: expr, $y: expr) => {
-        $crate::curve::Affine {
-            x: $x, y: $y, infinity: false,
-        }
-    }
-}
-
-#[macro_export]
-/// Define a jacobian group element constant.
-macro_rules! jacobian_const {
-    ($x: expr, $y: expr) => {
-        $crate::curve::Jacobian {
-            x: $x, y: $y, infinity: false,
-            z: field_const!(0, 0, 0, 0, 0, 0, 0, 1),
-        }
-    }
-}
-
-#[macro_export]
-/// Define an affine group storage constant.
-macro_rules! affine_storage_const {
-    ($x: expr, $y: expr) => {
-        $crate::curve::AffineStorage {
-            x: $x, y: $y,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// A group element of the secp256k1 curve, in affine coordinates.
 pub struct Affine {
@@ -86,24 +55,24 @@ impl Default for AffineStorage {
 }
 
 pub static AFFINE_INFINITY: Affine = Affine {
-    x: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
-    y: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
+    x: Field::new(0, 0, 0, 0, 0, 0, 0, 0),
+    y: Field::new(0, 0, 0, 0, 0, 0, 0, 0),
     infinity: true,
 };
 
 pub static JACOBIAN_INFINITY: Jacobian = Jacobian {
-    x: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
-    y: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
-    z: field_const!(0, 0, 0, 0, 0, 0, 0, 0),
+    x: Field::new(0, 0, 0, 0, 0, 0, 0, 0),
+    y: Field::new(0, 0, 0, 0, 0, 0, 0, 0),
+    z: Field::new(0, 0, 0, 0, 0, 0, 0, 0),
     infinity: true,
 };
 
-pub static AFFINE_G: Affine = affine_const!(
-    field_const!(
+pub static AFFINE_G: Affine = Affine::new(
+    Field::new(
         0x79BE667E, 0xF9DCBBAC, 0x55A06295, 0xCE870B07,
         0x029BFCDB, 0x2DCE28D9, 0x59F2815B, 0x16F81798
     ),
-    field_const!(
+    Field::new(
         0x483ADA77, 0x26A3C465, 0x5DA4FBFC, 0x0E1108A8,
         0xFD17B448, 0xA6855419, 0x9C47D08F, 0xFB10D4B8
     )
@@ -112,6 +81,13 @@ pub static AFFINE_G: Affine = affine_const!(
 pub const CURVE_B: u32 = 7;
 
 impl Affine {
+    /// Create a new affine.
+    pub const fn new(x: Field, y: Field) -> Self {
+        Self {
+            x, y, infinity: false,
+        }
+    }
+
     /// Set a group element equal to the point with given X and Y
     /// coordinates.
     pub fn set_xy(&mut self, x: &Field, y: &Field) {
@@ -280,6 +256,14 @@ pub fn globalz_set_table_gej(
 }
 
 impl Jacobian {
+    /// Create a new jacobian.
+    pub const fn new(x: Field, y: Field) -> Self {
+        Self {
+            x, y, infinity: false,
+            z: Field::new(0, 0, 0, 0, 0, 0, 0, 1),
+        }
+    }
+
     /// Set a group element (jacobian) equal to the point at infinity.
     pub fn set_infinity(&mut self) {
         self.infinity = true;
@@ -459,7 +443,7 @@ impl Jacobian {
     /// Set r equal to the sum of a and b (with b given in affine
     /// coordinates, and not infinity).
     pub fn add_ge_in_place(&mut self, a: &Jacobian, b: &Affine) {
-        const FE1: Field = field_const!(0, 0, 0, 0, 0, 0, 0, 1);
+        const FE1: Field = Field::new(0, 0, 0, 0, 0, 0, 0, 1);
 
         debug_assert!(!b.infinity);
 
@@ -662,7 +646,7 @@ impl Jacobian {
 
 impl From<AffineStorage> for Affine {
     fn from(a: AffineStorage) -> Affine {
-        affine_const!(
+        Affine::new(
             a.x.into(),
             a.y.into()
         )
@@ -674,7 +658,7 @@ impl Into<AffineStorage> for Affine {
         debug_assert!(!self.is_infinity());
         self.x.normalize();
         self.y.normalize();
-        affine_storage_const!(
+        AffineStorage::new(
             self.x.into(),
             self.y.into()
         )
@@ -682,6 +666,11 @@ impl Into<AffineStorage> for Affine {
 }
 
 impl AffineStorage {
+    /// Create a new affine storage.
+    pub const fn new(x: FieldStorage, y: FieldStorage) -> Self {
+        Self { x, y }
+    }
+
     /// If flag is true, set *r equal to *a; otherwise leave
     /// it. Constant-time.
     pub fn cmov(&mut self, a: &AffineStorage, flag: bool) {

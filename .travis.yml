@@ -11,5 +11,5 @@ matrix:
       - beta
 script:
   - cargo build --verbose --all
-  - cargo test --verbose --all
+  - cargo test --verbose
   - cargo build --verbose --no-default-features

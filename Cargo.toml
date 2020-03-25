@@ -2,7 +2,7 @@
 name = "libsecp256k1"
 description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
-version = "0.3.5"
+version = "0.4.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/paritytech/libsecp256k1"
 keywords = [ "crypto", "ECDSA", "secp256k1", "bitcoin", "no_std" ]
@@ -34,6 +34,7 @@ hex-literal = "0.2.1"
 default = ["std", "hmac"]
 std = ["subtle/std", "rand/std", "sha2/std", "serde/std", "base64/std"]
 hmac = ["hmac-drbg", "sha2", "typenum"]
+noconst = []
 
 [workspace]
 members = [

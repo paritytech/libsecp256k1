@@ -7,59 +7,49 @@ macro_rules! debug_assert_bits {
     }
 }
 
-#[macro_export]
-macro_rules! field_const_raw {
-    ($d9: expr, $d8: expr, $d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr,
-     $d1: expr, $d0: expr) => {
-        $crate::curve::Field {
-            n: [$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7, $d8, $d9],
-            magnitude: 1,
-            normalized: false
-        }
-    }
+#[derive(Debug, Clone)]
+/// Field element for secp256k1.
+pub struct Field {
+    /// Store representation of X.
+    /// X = sum(i=0..9, n[i]*2^(i*26)) mod p
+    /// where p = 2^256 - 0x1000003D1
+    ///
+    /// The least signifiant byte is in the front.
+    n: [u32; 10],
+    magnitude: u32,
+    normalized: bool,
 }
 
-#[macro_export]
-macro_rules! field_const {
-    ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
-        $crate::curve::Field {
+impl Field {
+    pub const fn new_raw(
+        d9: u32, d8: u32, d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32,
+    ) -> Self {
+        Self {
+            n: [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9],
+            magnitude: 1,
+            normalized: false,
+        }
+    }
+
+    pub const fn new(
+        d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
+    ) -> Self {
+        Self {
             n: [
-                $d0 & 0x3ffffff,
-                ($d0 >> 26) | (($d1 & 0xfffff) << 6),
-                ($d1 >> 20) | (($d2 & 0x3fff) << 12),
-                ($d2 >> 14) | (($d3 & 0xff) << 18),
-                ($d3 >> 8)  | (($d4 & 0x3) << 24),
-                ($d4 >> 2) & 0x3ffffff,
-                ($d4 >> 28) | (($d5 & 0x3fffff) << 4),
-                ($d5 >> 22) | (($d6 & 0xffff) << 10),
-                ($d6 >> 16) | (($d7 & 0x3ff) << 16),
-                ($d7 >> 10)
+                d0 & 0x3ffffff,
+                (d0 >> 26) | ((d1 & 0xfffff) << 6),
+                (d1 >> 20) | ((d2 & 0x3fff) << 12),
+                (d2 >> 14) | ((d3 & 0xff) << 18),
+                (d3 >> 8)  | ((d4 & 0x3) << 24),
+                (d4 >> 2) & 0x3ffffff,
+                (d4 >> 28) | ((d5 & 0x3fffff) << 4),
+                (d5 >> 22) | ((d6 & 0xffff) << 10),
+                (d6 >> 16) | ((d7 & 0x3ff) << 16),
+                (d7 >> 10),
             ],
             magnitude: 1,
             normalized: true,
         }
-    }
-}
-
-macro_rules! field_storage_const {
-    ($d7: expr, $d6: expr, $d5: expr, $d4: expr, $d3: expr, $d2: expr, $d1: expr, $d0: expr) => {
-        $crate::field::FieldStorage([$d0, $d1, $d2, $d3, $d4, $d5, $d6, $d7])
-    }
-}
-
-#[derive(Debug, Clone)]
-/// Field element for secp256k1.
-pub struct Field {
-    pub n: [u32; 10],
-    pub magnitude: u32,
-    pub normalized: bool,
-}
-
-impl Field {
-    pub fn new(
-        d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
-    ) -> Self {
-        field_const!(d7, d6, d5, d4, d3, d2, d1, d0)
     }
 
     pub fn from_int(a: u32) -> Field {
@@ -1496,10 +1486,10 @@ impl Default for FieldStorage {
 }
 
 impl FieldStorage {
-    pub fn new(
+    pub const fn new(
         d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
     ) -> Self {
-        field_storage_const!(d7, d6, d5, d4, d3, d2, d1, d0)
+        Self([d0, d1, d2, d3, d4, d5, d6, d7])
     }
 
     pub fn cmov(&mut self, other: &FieldStorage, flag: bool) {
