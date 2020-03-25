@@ -1,87 +1,43 @@
-//! Pure Rust implementation of the secp256k1 curve and fast ECDSA
-//! signatures. The secp256k1 curve is used excusively in Bitcoin and
-//! Ethereum alike cryptocurrencies.
-
-#![deny(unused_import_braces, unused_imports,
-        unused_comparisons, unused_must_use,
-        unused_variables, non_shorthand_field_patterns,
-        unreachable_code, unused_parens)]
-
-#![cfg_attr(not(feature = "std"), no_std)]
-
-#[macro_use]
-mod field;
-#[macro_use]
-mod group;
-mod scalar;
-mod error;
-mod der;
-mod ecmult;
-mod ecdsa;
-mod ecdh;
-
-#[macro_use]
-extern crate alloc;
+pub use libsecp256k1_core::*;
 
 use core::convert::TryFrom;
-#[cfg(all(feature = "hmac", not(feature = "noconst")))]
-use hmac_drbg::HmacDRBG;
-#[cfg(all(feature = "hmac", not(feature = "noconst")))]
-use sha2::Sha256;
-#[cfg(all(feature = "hmac", not(feature = "noconst")))]
-use typenum::U32;
-use arrayref::{array_ref, array_mut_ref};
+use digest::{Digest, generic_array::GenericArray};
 use rand::Rng;
-use digest::generic_array::GenericArray;
-use digest::Digest;
+use arrayref::{array_ref, array_mut_ref};
 
 #[cfg(feature = "std")]
 use core::fmt;
+#[cfg(feature = "hmac")]
+use hmac_drbg::HmacDRBG;
+#[cfg(feature = "hmac")]
+use sha2::Sha256;
+#[cfg(feature = "hmac")]
+use typenum::U32;
 #[cfg(feature = "std")]
 use serde::{Serialize, Deserialize, ser::Serializer, de};
 
-use crate::field::Field;
-use crate::group::{Affine, Jacobian};
-use crate::scalar::Scalar;
-#[cfg(not(feature = "noconst"))]
-use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
+use crate::{
+    Error, curve::{Scalar, Field, Affine, Jacobian, ECMultContext, ECMultGenContext},
+    util::{self, Decoder, SignatureArray},
+};
 
-pub use crate::error::Error;
+/// A static ECMult context.
+pub static ECMULT_CONTEXT: ECMultContext = ECMultContext::new(
+    include!(concat!(env!("OUT_DIR"), "/const.rs")),
+);
 
-/// Curve related structs.
-pub mod curve {
-    pub use crate::field::{Field, FieldStorage};
-    pub use crate::group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
-    pub use crate::scalar::Scalar;
-
-    pub use crate::ecmult::{ECMultContext, ECMultGenContext};
-    #[cfg(not(feature = "noconst"))]
-    pub use crate::ecmult::{ECMULT_CONTEXT, ECMULT_GEN_CONTEXT};
-}
-
-/// Utilities to manipulate the secp256k1 curve parameters.
-pub mod util {
-    pub const TAG_PUBKEY_EVEN: u8 = 0x02;
-    pub const TAG_PUBKEY_ODD: u8 = 0x03;
-    pub const TAG_PUBKEY_FULL: u8 = 0x04;
-    pub const TAG_PUBKEY_HYBRID_EVEN: u8 = 0x06;
-    pub const TAG_PUBKEY_HYBRID_ODD: u8 = 0x07;
-
-    pub const MESSAGE_SIZE: usize = 32;
-    pub const SECRET_KEY_SIZE: usize = 32;
-    pub const RAW_PUBLIC_KEY_SIZE: usize = 64;
-    pub const FULL_PUBLIC_KEY_SIZE: usize = 65;
-    pub const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
-    pub const SIGNATURE_SIZE: usize = 64;
-    pub const DER_MAX_SIGNATURE_SIZE: usize = 72;
-
-    pub use crate::group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
-                           set_table_gej_var, globalz_set_table_gej};
-    pub use crate::ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
-                            odd_multiples_table};
-
-    pub use crate::der::SignatureArray;
-}
+/// A static ECMultGen context.
+pub static ECMULT_GEN_CONTEXT: ECMultGenContext = ECMultGenContext::new(
+    include!(concat!(env!("OUT_DIR"), "/const_gen.rs")),
+    Scalar([2217680822, 850875797, 1046150361, 1330484644,
+            4015777837, 2466086288, 2052467175, 2084507480]),
+    Jacobian {
+        x: Field::new_raw(586608, 43357028, 207667908, 262670128, 142222828, 38529388, 267186148, 45417712, 115291924, 13447464),
+        y: Field::new_raw(12696548, 208302564, 112025180, 191752716, 143238548, 145482948, 228906000, 69755164, 243572800, 210897016),
+        z: Field::new_raw(3685368, 75404844, 20246216, 5748944, 73206666, 107661790, 110806176, 73488774, 5707384, 104448710),
+        infinity: false,
+    }
+);
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
@@ -116,7 +72,6 @@ pub enum PublicKeyFormat {
 }
 
 impl PublicKey {
-    #[cfg(not(feature = "noconst"))]
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         let mut pj = Jacobian::default();
         ECMULT_GEN_CONTEXT.ecmult_gen(&mut pj, &seckey.0);
@@ -251,7 +206,6 @@ impl PublicKey {
         ret
     }
 
-    #[cfg(not(feature = "noconst"))]
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         let mut r = Jacobian::default();
         let a = Jacobian::from_ge(&self.0);
@@ -266,7 +220,6 @@ impl PublicKey {
         Ok(())
     }
 
-    #[cfg(not(feature = "noconst"))]
     pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         if tweak.0.is_zero() {
             return Err(Error::TweakOutOfRange);
@@ -488,7 +441,7 @@ impl Signature {
     }
 
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
-        let mut decoder = der::Decoder::new(p);
+        let mut decoder = Decoder::new(p);
 
         decoder.read_constructed_sequence()?;
         let rlen = decoder.read_len()?;
@@ -512,7 +465,7 @@ impl Signature {
     /// 2016. It should never be used in new applications. This library does not
     /// support serializing to this "format"
     pub fn parse_der_lax(p: &[u8]) -> Result<Signature, Error> {
-        let mut decoder = der::Decoder::new(p);
+        let mut decoder = Decoder::new(p);
 
         decoder.read_constructed_sequence()?;
         decoder.read_seq_len_lax()?;
@@ -554,7 +507,7 @@ impl Signature {
         ret
     }
 
-    pub fn serialize_der(&self) -> der::SignatureArray {
+    pub fn serialize_der(&self) -> SignatureArray {
         fn fill_scalar_with_leading_zero(scalar: &Scalar) -> [u8; 33] {
             let mut ret = [0u8; 33];
             scalar.fill_b32(array_mut_ref!(ret, 1, 32));
@@ -578,7 +531,7 @@ impl Signature {
         let r = integer_slice(&r_full);
         let s = integer_slice(&s_full);
 
-        let mut ret = der::SignatureArray::new(6 + r.len() + s.len());
+        let mut ret = SignatureArray::new(6 + r.len() + s.len());
         {
             let l = ret.as_mut();
             l[0] = 0x30;
@@ -657,7 +610,6 @@ impl Into<i32> for RecoveryId {
 }
 
 impl<D: Digest + Default> SharedSecret<D> {
-    #[cfg(not(feature = "noconst"))]
     pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
         let inner = match ECMULT_CONTEXT.ecdh_raw::<D>(&pubkey.0, &seckey.0) {
             Some(val) => val,
@@ -684,20 +636,18 @@ impl<D: Digest> Drop for SharedSecret<D> {
     }
 }
 
-#[cfg(not(feature = "noconst"))]
 /// Check signature is a valid message signed by public key.
 pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     ECMULT_CONTEXT.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
-#[cfg(not(feature = "noconst"))]
 /// Recover public key from a signed message.
 pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
     ECMULT_CONTEXT.recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0).map(|v| PublicKey(v))
 }
 
 /// Sign a message using the secret key.
-#[cfg(all(feature = "hmac", not(feature = "noconst")))]
+#[cfg(feature = "hmac")]
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     let seckey_b32 = seckey.0.b32();
     let message_b32 = message.0.b32();

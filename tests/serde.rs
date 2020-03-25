@@ -1,6 +1,6 @@
 #![cfg(feature = "std")]
 
-use secp256k1::*;
+use libsecp256k1::*;
 
 const DEBUG_SECRET_KEY: [u8; 32] = [1u8; 32];
 // Public key for debug secret key
