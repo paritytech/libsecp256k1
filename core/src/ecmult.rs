@@ -60,7 +60,7 @@ impl ECMultContext {
     }
 
     /// Generate a new `ECMultContext` in the heap. Note that this function is expensive.
-    pub fn new_box() -> Box<Self> {
+    pub fn new_boxed() -> Box<Self> {
         let mut this = unsafe {
             let ptr = alloc(Layout::new::<ECMultContext>()) as *mut ECMultContext;
             let mut this = Box::from_raw(ptr);
@@ -180,7 +180,7 @@ impl ECMultGenContext {
     }
 
     /// Generate a new `ECMultGenContext` in the heap. Note that this function is expensive.
-    pub fn new_box() -> Box<Self> {
+    pub fn new_boxed() -> Box<Self> {
         let mut this = unsafe {
             let ptr = alloc(Layout::new::<ECMultGenContext>()) as *mut ECMultGenContext;
             let mut this = Box::from_raw(ptr);

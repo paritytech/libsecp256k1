@@ -2,7 +2,7 @@ use std::{io::{Write, Error}, fs::File};
 use libsecp256k1_core::curve::{ECMultGenContext, AffineStorage};
 
 pub fn generate_to(file: &mut File) -> Result<(), Error> {
-    let context = ECMultGenContext::new_box();
+    let context = ECMultGenContext::new_boxed();
     let prec = context.inspect_raw().as_ref();
 
     file.write_fmt(format_args!("["))?;

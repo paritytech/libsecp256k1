@@ -2,7 +2,7 @@ use std::{io::{Write, Error}, fs::File};
 use libsecp256k1_core::curve::ECMultContext;
 
 pub fn generate_to(file: &mut File) -> Result<(), Error> {
-    let context = ECMultContext::new_box();
+    let context = ECMultContext::new_boxed();
     let pre_g = context.inspect_raw().as_ref();
 
     file.write_fmt(format_args!("["))?;
