@@ -114,7 +114,7 @@ pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
         return Vec::new();
     }
 
-    let mut ret = Vec::new();
+    let mut ret = Vec::with_capacity(fields.len());
     ret.push(fields[0].clone());
 
     for i in 1..fields.len() {
