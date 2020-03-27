@@ -61,6 +61,10 @@ impl ECMultContext {
 
     /// Generate a new `ECMultContext` in the heap. Note that this function is expensive.
     pub fn new_boxed() -> Box<Self> {
+        // This unsafe block allocates a new, unitialized ECMultContext and then
+        // fills in the value. This is to avoid allocating it on stack because
+        // the struct is big. All values in `ECMultContext` are manually
+        // initialized after allocation.
         let mut this = unsafe {
             let ptr = alloc(Layout::new::<ECMultContext>()) as *mut ECMultContext;
             let mut this = Box::from_raw(ptr);
