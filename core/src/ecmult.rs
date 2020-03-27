@@ -58,11 +58,6 @@ impl ECMultContext {
         &self.pre_g
     }
 
-    /// Deconstruct the `ECMultContext` into raw `AffineStorage`.
-    pub fn deconstruct_raw(self) -> [AffineStorage; ECMULT_TABLE_SIZE_G] {
-        self.pre_g
-    }
-
     /// Generate a new `ECMultContext` in the heap. Note that this function is expensive.
     pub fn new_boxed() -> Box<Self> {
         // This unsafe block allocates a new, unitialized `ECMultContext` and
@@ -183,11 +178,6 @@ impl ECMultGenContext {
     /// Inspect `ECMultGenContext` values.
     pub fn inspect_raw(&self) -> &[[AffineStorage; 16]; 64] {
         &self.prec
-    }
-
-    /// Deconstruct `ECMultGenContext` into raw values.
-    pub fn deconstruct_raw(self) -> [[AffineStorage; 16]; 64] {
-        self.prec
     }
 
     /// Generate a new `ECMultGenContext` in the heap. Note that this function is expensive.
