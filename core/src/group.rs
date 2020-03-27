@@ -8,7 +8,7 @@ pub struct Affine {
     pub infinity: bool,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 /// A group element of the secp256k1 curve, in jacobian coordinates.
 pub struct Jacobian {
     pub x: Field,
