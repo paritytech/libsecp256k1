@@ -1,4 +1,4 @@
-use alloc::alloc::{alloc, Layout};
+use alloc::{vec, alloc::{alloc, Layout}};
 use subtle::Choice;
 use crate::group::{
     Affine, Jacobian, AffineStorage, globalz_set_table_gej, set_table_gej_var,
@@ -94,10 +94,7 @@ pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     }
     let azi: Vec<Field> = inv_all_var(&az);
 
-    let mut ret = Vec::with_capacity(a.len());
-    for _ in 0..a.len() {
-        ret.push(Affine::default());
-    }
+    let mut ret = vec![Affine::default(); a.len()];
 
     let mut count = 0;
     for i in 0..a.len() {
