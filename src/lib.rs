@@ -1,5 +1,5 @@
 //! Pure Rust implementation of the secp256k1 curve and fast ECDSA
-//! signatures. The secp256k1 curve is used excusively in Bitcoin and
+//! signatures. The secp256k1 curve is used extensively in Bitcoin and
 //! Ethereum alike cryptocurrencies.
 
 #![deny(unused_import_braces, unused_imports,
