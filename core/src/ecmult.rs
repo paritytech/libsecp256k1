@@ -58,7 +58,7 @@ impl ECMultContext {
         &self.pre_g
     }
 
-    /// Generate a new `ECMultContext` in the heap. Note that this function is expensive.
+    /// Generate a new `ECMultContext` on the heap. Note that this function is expensive.
     pub fn new_boxed() -> Box<Self> {
         // This unsafe block allocates a new, unitialized `ECMultContext` and
         // then fills in the value. This is to avoid allocating it on stack
@@ -179,7 +179,7 @@ impl ECMultGenContext {
         &self.prec
     }
 
-    /// Generate a new `ECMultGenContext` in the heap. Note that this function is expensive.
+    /// Generate a new `ECMultGenContext` on the heap. Note that this function is expensive.
     pub fn new_boxed() -> Box<Self> {
         // This unsafe block allocates a new, unitialized `ECMultGenContext` and
         // then fills in the value. This is to avoid allocating it on stack
