@@ -45,7 +45,11 @@ pub struct ECMultContext {
 
 impl ECMultContext {
     /// Create a new `ECMultContext` from raw values.
-    pub const unsafe fn new_raw(pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G]) -> Self {
+    ///
+    /// The function is unsafe because incorrect value of `pre_g` can lead to
+    /// crypto logic failure. You most likely do not want to use this function,
+    /// but `ECMultContext::new_boxed`.
+    pub const unsafe fn new_from_raw(pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G]) -> Self {
         Self { pre_g }
     }
 
@@ -168,7 +172,11 @@ pub struct ECMultGenContext {
 
 impl ECMultGenContext {
     /// Create a new `ECMultGenContext` from raw values.
-    pub const unsafe fn new_raw(prec: [[AffineStorage; 16]; 64]) -> Self {
+    ///
+    /// The function is unsafe because incorrect value of `pre_g` can lead to
+    /// crypto logic failure. You most likely do not want to use this function,
+    /// but `ECMultGenContext::new_boxed`.
+    pub const unsafe fn new_from_raw(prec: [[AffineStorage; 16]; 64]) -> Self {
         Self { prec, blind: GEN_BLIND, initial: GEN_INITIAL }
     }
 
