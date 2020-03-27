@@ -1,6 +1,4 @@
-//! Pure Rust implementation of the secp256k1 curve and fast ECDSA
-//! signatures. The secp256k1 curve is used exclusively in Bitcoin and
-//! Ethereum alike cryptocurrencies.
+//! Core libraries for libsecp256k1.
 
 #![deny(unused_import_braces, unused_imports,
         unused_comparisons, unused_must_use,
@@ -8,6 +6,7 @@
         unreachable_code, unused_parens)]
 
 #![cfg_attr(not(feature = "std"), no_std)]
+extern crate alloc;
 
 #[macro_use]
 mod field;
@@ -19,8 +18,6 @@ mod der;
 mod ecmult;
 mod ecdsa;
 mod ecdh;
-
-extern crate alloc;
 
 pub use crate::error::Error;
 

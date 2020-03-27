@@ -1,5 +1,9 @@
+use alloc::{vec, alloc::{alloc, Layout}};
 use subtle::Choice;
-use crate::group::{Affine, Jacobian, AffineStorage, globalz_set_table_gej};
+use crate::group::{
+    Affine, Jacobian, AffineStorage, globalz_set_table_gej, set_table_gej_var,
+    AFFINE_G,
+};
 use crate::field::Field;
 use crate::scalar::Scalar;
 
@@ -9,17 +13,149 @@ pub const ECMULT_TABLE_SIZE_A: usize = 1 << (WINDOW_A - 2);
 pub const ECMULT_TABLE_SIZE_G: usize = 1 << (WINDOW_G - 2);
 pub const WNAF_BITS: usize = 256;
 
+fn odd_multiples_table_storage_var(
+    pre: &mut [AffineStorage],
+    a: &Jacobian
+) {
+    let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
+    for _ in 0..pre.len() {
+        prej.push(Jacobian::default());
+    }
+    let mut prea: Vec<Affine> = Vec::with_capacity(pre.len());
+    for _ in 0..pre.len() {
+        prea.push(Affine::default());
+    }
+    let mut zr: Vec<Field> = Vec::with_capacity(pre.len());
+    for _ in 0..pre.len() {
+        zr.push(Field::default());
+    }
+
+    odd_multiples_table(&mut prej, &mut zr, a);
+    set_table_gej_var(&mut prea, &prej, &zr);
+
+    for i in 0..pre.len() {
+        pre[i] = prea[i].clone().into();
+    }
+}
+
 /// Context for accelerating the computation of a*P + b*G.
 pub struct ECMultContext {
     pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G],
 }
 
 impl ECMultContext {
-    /// Create a new `ECMultContext`.
-    pub const fn new(pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G]) -> Self {
+    /// Create a new `ECMultContext` from raw values.
+    ///
+    /// The function is unsafe because incorrect value of `pre_g` can lead to
+    /// crypto logic failure. You most likely do not want to use this function,
+    /// but `ECMultContext::new_boxed`.
+    pub const unsafe fn new_from_raw(pre_g: [AffineStorage; ECMULT_TABLE_SIZE_G]) -> Self {
         Self { pre_g }
     }
+
+    /// Inspect raw values of `ECMultContext`.
+    pub fn inspect_raw(&self) -> &[AffineStorage; ECMULT_TABLE_SIZE_G] {
+        &self.pre_g
+    }
+
+    /// Generate a new `ECMultContext` on the heap. Note that this function is expensive.
+    pub fn new_boxed() -> Box<Self> {
+        // This unsafe block allocates a new, unitialized `ECMultContext` and
+        // then fills in the value. This is to avoid allocating it on stack
+        // because the struct is big. All values in `ECMultContext` are manually
+        // initialized after allocation.
+        let mut this = unsafe {
+            let ptr = alloc(Layout::new::<ECMultContext>()) as *mut ECMultContext;
+            let mut this = Box::from_raw(ptr);
+
+            for i in 0..ECMULT_TABLE_SIZE_G {
+                this.pre_g[i] = AffineStorage::default();
+            }
+
+            this
+        };
+
+        let mut gj = Jacobian::default();
+        gj.set_ge(&AFFINE_G);
+        odd_multiples_table_storage_var(&mut this.pre_g, &gj);
+
+        this
+    }
 }
+
+/// Set a batch of group elements equal to the inputs given in jacobian
+/// coordinates. Not constant time.
+pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
+    let mut az: Vec<Field> = Vec::with_capacity(a.len());
+    for i in 0..a.len() {
+        if !a[i].is_infinity() {
+            az.push(a[i].z.clone());
+        }
+    }
+    let azi: Vec<Field> = inv_all_var(&az);
+
+    let mut ret = vec![Affine::default(); a.len()];
+
+    let mut count = 0;
+    for i in 0..a.len() {
+        ret[i].infinity = a[i].infinity;
+        if !a[i].is_infinity() {
+            ret[i].set_gej_zinv(&a[i], &azi[count]);
+            count += 1;
+        }
+    }
+    ret
+}
+
+/// Calculate the (modular) inverses of a batch of field
+/// elements. Requires the inputs' magnitudes to be at most 8. The
+/// output magnitudes are 1 (but not guaranteed to be
+/// normalized).
+pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
+    if fields.len() == 0 {
+        return Vec::new();
+    }
+
+    let mut ret = Vec::with_capacity(fields.len());
+    ret.push(fields[0].clone());
+
+    for i in 1..fields.len() {
+        ret.push(Field::default());
+        ret[i] = &ret[i - 1] * &fields[i];
+    }
+
+    let mut u = ret[fields.len() - 1].inv_var();
+
+    for i in (1..fields.len()).rev() {
+        let j = i;
+        let i = i - 1;
+        ret[j] = &ret[i] * &u;
+        u = &u * &fields[j];
+    }
+
+    ret[0] = u;
+    ret
+}
+
+const GEN_BLIND: Scalar = Scalar(
+    [2217680822, 850875797, 1046150361, 1330484644,
+     4015777837, 2466086288, 2052467175, 2084507480]
+);
+const GEN_INITIAL: Jacobian = Jacobian {
+    x: Field::new_raw(
+        586608, 43357028, 207667908, 262670128, 142222828,
+        38529388, 267186148, 45417712, 115291924, 13447464
+    ),
+    y: Field::new_raw(
+        12696548, 208302564, 112025180, 191752716, 143238548,
+        145482948, 228906000, 69755164, 243572800, 210897016
+    ),
+    z: Field::new_raw(
+        3685368, 75404844, 20246216, 5748944, 73206666,
+        107661790, 110806176, 73488774, 5707384, 104448710
+    ),
+    infinity: false,
+};
 
 /// Context for accelerating the computation of a*G.
 pub struct ECMultGenContext {
@@ -29,13 +165,90 @@ pub struct ECMultGenContext {
 }
 
 impl ECMultGenContext {
-    /// Create a new `ECMultGenContext`.
-    pub const fn new(
-        prec: [[AffineStorage; 16]; 64],
-        blind: Scalar,
-        initial: Jacobian
-    ) -> Self {
-        Self { prec, blind, initial }
+    /// Create a new `ECMultGenContext` from raw values.
+    ///
+    /// The function is unsafe because incorrect value of `pre_g` can lead to
+    /// crypto logic failure. You most likely do not want to use this function,
+    /// but `ECMultGenContext::new_boxed`.
+    pub const unsafe fn new_from_raw(prec: [[AffineStorage; 16]; 64]) -> Self {
+        Self { prec, blind: GEN_BLIND, initial: GEN_INITIAL }
+    }
+
+    /// Inspect `ECMultGenContext` values.
+    pub fn inspect_raw(&self) -> &[[AffineStorage; 16]; 64] {
+        &self.prec
+    }
+
+    /// Generate a new `ECMultGenContext` on the heap. Note that this function is expensive.
+    pub fn new_boxed() -> Box<Self> {
+        // This unsafe block allocates a new, unitialized `ECMultGenContext` and
+        // then fills in the value. This is to avoid allocating it on stack
+        // because the struct is big. All values in `ECMultGenContext` are
+        // manually initialized after allocation.
+        let mut this = unsafe {
+            let ptr = alloc(Layout::new::<ECMultGenContext>()) as *mut ECMultGenContext;
+            let mut this = Box::from_raw(ptr);
+
+            for j in 0..64 {
+                for i in 0..16 {
+                    this.prec[j][i] = AffineStorage::default();
+                }
+            }
+
+            this.blind = GEN_BLIND;
+            this.initial = GEN_INITIAL;
+
+            this
+        };
+
+        let mut gj = Jacobian::default();
+        gj.set_ge(&AFFINE_G);
+
+        // Construct a group element with no known corresponding scalar (nothing up my sleeve).
+        let mut nums_32 = [0u8; 32];
+        debug_assert!("The scalar for this x is unknown".as_bytes().len() == 32);
+        for (i, v) in "The scalar for this x is unknown".as_bytes().iter().enumerate() {
+            nums_32[i] = *v;
+        }
+        let mut nums_x = Field::default();
+        debug_assert!(nums_x.set_b32(&nums_32));
+        let mut nums_ge = Affine::default();
+        debug_assert!(nums_ge.set_xo_var(&nums_x, false));
+        let mut nums_gej = Jacobian::default();
+        nums_gej.set_ge(&nums_ge);
+        nums_gej = nums_gej.add_ge_var(&AFFINE_G, None);
+
+        // Compute prec.
+        let mut precj: Vec<Jacobian> = Vec::with_capacity(1024);
+        for _ in 0..1024 {
+            precj.push(Jacobian::default());
+        }
+        let mut gbase = gj.clone();
+        let mut numsbase = nums_gej.clone();
+        for j in 0..64 {
+            precj[j*16] = numsbase.clone();
+            for i in 1..16 {
+                precj[j*16 + i] = precj[j*16 + i - 1].add_var(&gbase, None);
+            }
+            for _ in 0..4 {
+                gbase = gbase.double_var(None);
+            }
+            numsbase = numsbase.double_var(None);
+            if j == 62 {
+                numsbase = numsbase.neg();
+                numsbase = numsbase.add_var(&nums_gej, None);
+            }
+        }
+        let prec = set_all_gej_var(&precj);
+
+        for j in 0..64 {
+            for i in 0..16 {
+                let pg: AffineStorage = prec[j*16 + i].clone().into();
+                this.prec[j][i] = pg;
+            }
+        }
+
+        this
     }
 }
 
