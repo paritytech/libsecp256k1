@@ -83,6 +83,8 @@ impl ECMultContext {
     }
 }
 
+/// Set a batch of group elements equal to the inputs given in jacobian
+/// coordinates. Not constant time.
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());
     for i in 0..a.len() {
