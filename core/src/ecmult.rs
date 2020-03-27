@@ -108,8 +108,7 @@ pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
 /// Calculate the (modular) inverses of a batch of field
 /// elements. Requires the inputs' magnitudes to be at most 8. The
 /// output magnitudes are 1 (but not guaranteed to be
-/// normalized). The inputs and outputs must not overlap in
-/// memory.
+/// normalized).
 pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
     if fields.len() == 0 {
         return Vec::new();
