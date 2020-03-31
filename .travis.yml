@@ -14,4 +14,5 @@ script:
   - cargo test --verbose --all
   - cargo build --verbose --no-default-features
   - cargo build --verbose --no-default-features --features hmac
-  - cargo build --verbose --no-default-features --features static-context
+  - cargo build --verbose --no-default-features --features hmac,static-context
+  - cargo build --verbose --no-default-features --features hmac,lazy-static-context

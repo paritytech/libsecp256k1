@@ -20,19 +20,29 @@ use arrayref::{array_ref, array_mut_ref};
 
 #[cfg(feature = "std")]
 use core::fmt;
+#[cfg(feature = "std")]
+use serde::{Serialize, Deserialize, ser::Serializer, de};
 #[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
 #[cfg(feature = "hmac")]
 use sha2::Sha256;
 #[cfg(feature = "hmac")]
 use typenum::U32;
-#[cfg(feature = "std")]
-use serde::{Serialize, Deserialize, ser::Serializer, de};
 
 use crate::{
     Error, curve::{Scalar, Field, Affine, Jacobian, ECMultContext, ECMultGenContext},
     util::{self, Decoder, SignatureArray},
 };
+
+#[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+lazy_static::lazy_static! {
+    /// A static ECMult context.
+    pub static ref ECMULT_CONTEXT: Box<ECMultContext> = ECMultContext::new_boxed();
+
+    /// A static ECMultGen context.
+    pub static ref ECMULT_GEN_CONTEXT: Box<ECMultGenContext> = ECMultGenContext::new_boxed();
+}
+
 
 #[cfg(feature = "static-context")]
 /// A static ECMult context.
@@ -96,7 +106,7 @@ impl PublicKey {
         PublicKey(p)
     }
 
-    #[cfg(feature = "static-context")]
+    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         Self::from_secret_key_with_context(seckey, &ECMULT_GEN_CONTEXT)
     }
@@ -245,7 +255,7 @@ impl PublicKey {
         Ok(())
     }
 
-    #[cfg(feature = "static-context")]
+    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         self.tweak_add_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
@@ -268,7 +278,7 @@ impl PublicKey {
         Ok(())
     }
 
-    #[cfg(feature = "static-context")]
+    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
     pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         self.tweak_mul_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
@@ -662,7 +672,7 @@ impl<D: Digest + Default> SharedSecret<D> {
         Ok(SharedSecret(inner))
     }
 
-    #[cfg(feature = "static-context")]
+    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
     pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
         Self::new_with_context(pubkey, seckey, &ECMULT_CONTEXT)
     }
@@ -693,7 +703,7 @@ pub fn verify_with_context(
     context.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
-#[cfg(feature = "static-context")]
+#[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
 /// Check signature is a valid message signed by public key.
 pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     verify_with_context(message, signature, pubkey, &ECMULT_CONTEXT)
@@ -710,7 +720,7 @@ pub fn recover_with_context(
         .map(|v| PublicKey(v))
 }
 
-#[cfg(feature = "static-context")]
+#[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
 /// Recover public key from a signed message.
 pub fn recover(message: &Message, signature: &Signature, recovery_id: &RecoveryId) -> Result<PublicKey, Error> {
     recover_with_context(message, signature, recovery_id, &ECMULT_CONTEXT)
@@ -758,7 +768,7 @@ pub fn sign_with_context(
     }, RecoveryId(recid))
 }
 
-#[cfg(all(feature = "hmac", feature = "static-context"))]
+#[cfg(all(feature = "hmac", feature = "static-context", feature = "lazy-static-context"))]
 /// Sign a message using the secret key.
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     sign_with_context(message, seckey, &ECMULT_GEN_CONTEXT)
