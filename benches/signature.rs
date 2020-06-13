@@ -1,12 +1,9 @@
 #![feature(test)]
 
-extern crate rand;
-extern crate secp256k1;
-extern crate secp256k1_test;
 extern crate test;
 
-use rand::thread_rng;
-use secp256k1::Signature;
+use libsecp256k1::Signature;
+use rand_test::thread_rng;
 use secp256k1_test::{Message as SecpMessage, Secp256k1};
 use test::Bencher;
 
@@ -14,10 +11,10 @@ use test::Bencher;
 fn bench_signature_parse(b: &mut Bencher) {
     let secp256k1 = Secp256k1::new();
     let message_arr = [5u8; 32];
-    let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng());
     let message = SecpMessage::from_slice(&message_arr).unwrap();
-    let signature = secp256k1.sign(&message, &privkey).unwrap();
-    let signature_arr = signature.serialize_compact(&secp256k1);
+    let signature = secp256k1.sign(&message, &privkey);
+    let signature_arr = signature.serialize_compact();
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
     signature_a.copy_from_slice(&signature_arr[0..64]);
@@ -31,10 +28,10 @@ fn bench_signature_parse(b: &mut Bencher) {
 fn bench_signature_serialize(b: &mut Bencher) {
     let secp256k1 = Secp256k1::new();
     let message_arr = [5u8; 32];
-    let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng());
     let message = SecpMessage::from_slice(&message_arr).unwrap();
-    let signature = secp256k1.sign(&message, &privkey).unwrap();
-    let signature_arr = signature.serialize_compact(&secp256k1);
+    let signature = secp256k1.sign(&message, &privkey);
+    let signature_arr = signature.serialize_compact();
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
     signature_a.copy_from_slice(&signature_arr[0..64]);
