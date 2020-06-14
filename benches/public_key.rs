@@ -1,14 +1,14 @@
 #![feature(test)]
 
-extern crate test;
+extern crate rand;
 extern crate secp256k1;
 extern crate secp256k1_test;
-extern crate rand;
+extern crate test;
 
-use test::Bencher;
+use rand::thread_rng;
 use secp256k1::PublicKey;
 use secp256k1_test::Secp256k1;
-use rand::thread_rng;
+use test::Bencher;
 
 #[bench]
 fn bench_public_key_parse(b: &mut Bencher) {
@@ -47,6 +47,6 @@ fn bench_public_key_serialize_compressed(b: &mut Bencher) {
     pubkey_a[0..65].copy_from_slice(&pubkey_arr[0..65]);
     let pubkey = PublicKey::parse(&pubkey_a).unwrap();
     b.iter(|| {
-		let _serialized = pubkey.serialize_compressed();
+        let _serialized = pubkey.serialize_compressed();
     });
 }

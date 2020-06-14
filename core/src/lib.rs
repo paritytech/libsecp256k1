@@ -1,10 +1,15 @@
 //! Core libraries for libsecp256k1.
 
-#![deny(unused_import_braces, unused_imports,
-        unused_comparisons, unused_must_use,
-        unused_variables, non_shorthand_field_patterns,
-        unreachable_code, unused_parens)]
-
+#![deny(
+    unused_import_braces,
+    unused_imports,
+    unused_comparisons,
+    unused_must_use,
+    unused_variables,
+    non_shorthand_field_patterns,
+    unreachable_code,
+    unused_parens
+)]
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 
@@ -12,20 +17,22 @@ extern crate alloc;
 mod field;
 #[macro_use]
 mod group;
-mod scalar;
-mod error;
 mod der;
-mod ecmult;
-mod ecdsa;
 mod ecdh;
+mod ecdsa;
+mod ecmult;
+mod error;
+mod scalar;
 
 pub use crate::error::Error;
 
 /// Curve related structs.
 pub mod curve {
-    pub use crate::field::{Field, FieldStorage};
-    pub use crate::group::{Affine, Jacobian, AffineStorage, AFFINE_G, CURVE_B};
-    pub use crate::scalar::Scalar;
+    pub use crate::{
+        field::{Field, FieldStorage},
+        group::{Affine, AffineStorage, Jacobian, AFFINE_G, CURVE_B},
+        scalar::Scalar,
+    };
 
     pub use crate::ecmult::{ECMultContext, ECMultGenContext};
 }
@@ -46,10 +53,12 @@ pub mod util {
     pub const SIGNATURE_SIZE: usize = 64;
     pub const DER_MAX_SIGNATURE_SIZE: usize = 72;
 
-    pub use crate::group::{AFFINE_INFINITY, JACOBIAN_INFINITY,
-                           set_table_gej_var, globalz_set_table_gej};
-    pub use crate::ecmult::{WINDOW_A, WINDOW_G, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G,
-                            odd_multiples_table};
+    pub use crate::{
+        ecmult::{
+            odd_multiples_table, ECMULT_TABLE_SIZE_A, ECMULT_TABLE_SIZE_G, WINDOW_A, WINDOW_G,
+        },
+        group::{globalz_set_table_gej, set_table_gej_var, AFFINE_INFINITY, JACOBIAN_INFINITY},
+    };
 
     pub use crate::der::{Decoder, SignatureArray};
 }

@@ -1,13 +1,16 @@
-use digest::generic_array::GenericArray;
-use digest::Digest;
-use crate::group::{Affine, Jacobian};
-use crate::scalar::Scalar;
-use crate::ecmult::ECMultContext;
+use crate::{
+    ecmult::ECMultContext,
+    group::{Affine, Jacobian},
+    scalar::Scalar,
+};
+use digest::{generic_array::GenericArray, Digest};
 
 impl ECMultContext {
-    pub fn ecdh_raw<D: Digest + Default>(&self, point: &Affine, scalar: &Scalar) -> Option<GenericArray<u8, D::OutputSize>>
-    {
-
+    pub fn ecdh_raw<D: Digest + Default>(
+        &self,
+        point: &Affine,
+        scalar: &Scalar,
+    ) -> Option<GenericArray<u8, D::OutputSize>> {
         let mut digest: D = Default::default();
 
         let mut pt = point.clone();
@@ -26,7 +29,7 @@ impl ECMultContext {
 
         let x = pt.x.b32();
         let y = 0x02 | (if pt.y.is_odd() { 1 } else { 0 });
- 
+
         digest.input(&[y]);
         digest.input(&x);
         Some(digest.result_reset())

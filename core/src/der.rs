@@ -1,8 +1,9 @@
-use core::convert::{AsRef, AsMut};
-use core::mem;
+use core::{
+    convert::{AsMut, AsRef},
+    mem,
+};
 
-use crate::scalar::Scalar;
-use crate::error::Error;
+use crate::{error::Error, scalar::Scalar};
 
 pub struct SignatureArray([u8; 6 + 33 + 33], usize);
 
@@ -260,5 +261,4 @@ impl<'a> Decoder<'a> {
 
         Ok(int)
     }
-
 }

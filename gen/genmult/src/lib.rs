@@ -1,5 +1,8 @@
-use std::{io::{Write, Error}, fs::File};
-use libsecp256k1_core::curve::{ECMultGenContext, AffineStorage};
+use libsecp256k1_core::curve::{AffineStorage, ECMultGenContext};
+use std::{
+    fs::File,
+    io::{Error, Write},
+};
 
 pub fn generate_to(file: &mut File) -> Result<(), Error> {
     let context = ECMultGenContext::new_boxed();

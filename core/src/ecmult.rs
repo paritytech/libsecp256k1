@@ -1,11 +1,13 @@
-use alloc::{vec, alloc::{alloc, Layout}};
-use subtle::Choice;
-use crate::group::{
-    Affine, Jacobian, AffineStorage, globalz_set_table_gej, set_table_gej_var,
-    AFFINE_G,
+use crate::{
+    field::Field,
+    group::{globalz_set_table_gej, set_table_gej_var, Affine, AffineStorage, Jacobian, AFFINE_G},
+    scalar::Scalar,
 };
-use crate::field::Field;
-use crate::scalar::Scalar;
+use alloc::{
+    alloc::{alloc, Layout},
+    vec,
+};
+use subtle::Choice;
 
 pub const WINDOW_A: usize = 5;
 pub const WINDOW_G: usize = 16;
@@ -13,10 +15,7 @@ pub const ECMULT_TABLE_SIZE_A: usize = 1 << (WINDOW_A - 2);
 pub const ECMULT_TABLE_SIZE_G: usize = 1 << (WINDOW_G - 2);
 pub const WNAF_BITS: usize = 256;
 
-fn odd_multiples_table_storage_var(
-    pre: &mut [AffineStorage],
-    a: &Jacobian
-) {
+fn odd_multiples_table_storage_var(pre: &mut [AffineStorage], a: &Jacobian) {
     let mut prej: Vec<Jacobian> = Vec::with_capacity(pre.len());
     for _ in 0..pre.len() {
         prej.push(Jacobian::default());
@@ -137,22 +136,21 @@ pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
     ret
 }
 
-const GEN_BLIND: Scalar = Scalar(
-    [2217680822, 850875797, 1046150361, 1330484644,
-     4015777837, 2466086288, 2052467175, 2084507480]
-);
+const GEN_BLIND: Scalar = Scalar([
+    2217680822, 850875797, 1046150361, 1330484644, 4015777837, 2466086288, 2052467175, 2084507480,
+]);
 const GEN_INITIAL: Jacobian = Jacobian {
     x: Field::new_raw(
-        586608, 43357028, 207667908, 262670128, 142222828,
-        38529388, 267186148, 45417712, 115291924, 13447464
+        586608, 43357028, 207667908, 262670128, 142222828, 38529388, 267186148, 45417712,
+        115291924, 13447464,
     ),
     y: Field::new_raw(
-        12696548, 208302564, 112025180, 191752716, 143238548,
-        145482948, 228906000, 69755164, 243572800, 210897016
+        12696548, 208302564, 112025180, 191752716, 143238548, 145482948, 228906000, 69755164,
+        243572800, 210897016,
     ),
     z: Field::new_raw(
-        3685368, 75404844, 20246216, 5748944, 73206666,
-        107661790, 110806176, 73488774, 5707384, 104448710
+        3685368, 75404844, 20246216, 5748944, 73206666, 107661790, 110806176, 73488774, 5707384,
+        104448710,
     ),
     infinity: false,
 };
@@ -171,7 +169,11 @@ impl ECMultGenContext {
     /// crypto logic failure. You most likely do not want to use this function,
     /// but `ECMultGenContext::new_boxed`.
     pub const unsafe fn new_from_raw(prec: [[AffineStorage; 16]; 64]) -> Self {
-        Self { prec, blind: GEN_BLIND, initial: GEN_INITIAL }
+        Self {
+            prec,
+            blind: GEN_BLIND,
+            initial: GEN_INITIAL,
+        }
     }
 
     /// Inspect `ECMultGenContext` values.
@@ -207,7 +209,11 @@ impl ECMultGenContext {
         // Construct a group element with no known corresponding scalar (nothing up my sleeve).
         let mut nums_32 = [0u8; 32];
         debug_assert!("The scalar for this x is unknown".as_bytes().len() == 32);
-        for (i, v) in "The scalar for this x is unknown".as_bytes().iter().enumerate() {
+        for (i, v) in "The scalar for this x is unknown"
+            .as_bytes()
+            .iter()
+            .enumerate()
+        {
             nums_32[i] = *v;
         }
         let mut nums_x = Field::default();
@@ -226,9 +232,9 @@ impl ECMultGenContext {
         let mut gbase = gj.clone();
         let mut numsbase = nums_gej.clone();
         for j in 0..64 {
-            precj[j*16] = numsbase.clone();
+            precj[j * 16] = numsbase.clone();
             for i in 1..16 {
-                precj[j*16 + i] = precj[j*16 + i - 1].add_var(&gbase, None);
+                precj[j * 16 + i] = precj[j * 16 + i - 1].add_var(&gbase, None);
             }
             for _ in 0..4 {
                 gbase = gbase.double_var(None);
@@ -243,7 +249,7 @@ impl ECMultGenContext {
 
         for j in 0..64 {
             for i in 0..16 {
-                let pg: AffineStorage = prec[j*16 + i].clone().into();
+                let pg: AffineStorage = prec[j * 16 + i].clone().into();
                 this.prec[j][i] = pg;
             }
         }
@@ -252,11 +258,7 @@ impl ECMultGenContext {
     }
 }
 
-pub fn odd_multiples_table(
-    prej: &mut [Jacobian],
-    zr: &mut [Field],
-    a: &Jacobian
-) {
+pub fn odd_multiples_table(prej: &mut [Jacobian], zr: &mut [Field], a: &Jacobian) {
     debug_assert!(prej.len() == zr.len());
     debug_assert!(prej.len() > 0);
     debug_assert!(!a.is_infinity());
@@ -277,16 +279,18 @@ pub fn odd_multiples_table(
 
     zr[0] = d.z.clone();
     for i in 1..prej.len() {
-        prej[i] = prej[i-1].add_ge_var(&d_ge, Some(&mut zr[i]));
+        prej[i] = prej[i - 1].add_ge_var(&d_ge, Some(&mut zr[i]));
     }
 
     let l = &prej.last().unwrap().z * &d.z;
     prej.last_mut().unwrap().z = l;
 }
 
-fn odd_multiples_table_globalz_windowa(pre: &mut [Affine; ECMULT_TABLE_SIZE_A],
-                                       globalz: &mut Field,
-                                       a: &Jacobian) {
+fn odd_multiples_table_globalz_windowa(
+    pre: &mut [Affine; ECMULT_TABLE_SIZE_A],
+    globalz: &mut Field,
+    a: &Jacobian,
+) {
     let mut prej: [Jacobian; ECMULT_TABLE_SIZE_A] = Default::default();
     let mut zr: [Field; ECMULT_TABLE_SIZE_A] = Default::default();
 
@@ -296,12 +300,12 @@ fn odd_multiples_table_globalz_windowa(pre: &mut [Affine; ECMULT_TABLE_SIZE_A],
 
 fn table_get_ge(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
     debug_assert!(n & 1 == 1);
-    debug_assert!(n >= -((1 << (w-1)) - 1));
-    debug_assert!(n <=  ((1 << (w-1)) - 1));
+    debug_assert!(n >= -((1 << (w - 1)) - 1));
+    debug_assert!(n <= ((1 << (w - 1)) - 1));
     if n > 0 {
-        *r = pre[((n-1)/2) as usize].clone();
+        *r = pre[((n - 1) / 2) as usize].clone();
     } else {
-        *r = pre[((-n-1)/2) as usize].neg();
+        *r = pre[((-n - 1) / 2) as usize].neg();
     }
 }
 
@@ -309,8 +313,8 @@ fn table_get_ge_const(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
     let abs_n = n * (if n > 0 { 1 } else { 0 } * 2 - 1);
     let idx_n = abs_n / 2;
     debug_assert!(n & 1 == 1);
-    debug_assert!(n >= -((1 << (w-1)) - 1));
-    debug_assert!(n <=  ((1 << (w-1)) - 1));
+    debug_assert!(n >= -((1 << (w - 1)) - 1));
+    debug_assert!(n <= ((1 << (w - 1)) - 1));
     for m in 0..pre.len() {
         r.x.cmov(&pre[m].x, m == idx_n as usize);
         r.y.cmov(&pre[m].y, m == idx_n as usize);
@@ -322,12 +326,12 @@ fn table_get_ge_const(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
 
 fn table_get_ge_storage(r: &mut Affine, pre: &[AffineStorage], n: i32, w: usize) {
     debug_assert!(n & 1 == 1);
-    debug_assert!(n >= -((1 << (w-1)) - 1));
-    debug_assert!(n <=  ((1 << (w-1)) - 1));
+    debug_assert!(n >= -((1 << (w - 1)) - 1));
+    debug_assert!(n <= ((1 << (w - 1)) - 1));
     if n > 0 {
-        *r = pre[((n-1)/2) as usize].clone().into();
+        *r = pre[((n - 1) / 2) as usize].clone().into();
     } else {
-        *r = pre[((-n-1)/2) as usize].clone().into();
+        *r = pre[((-n - 1) / 2) as usize].clone().into();
         *r = r.neg();
     }
 }
@@ -366,7 +370,7 @@ pub fn ecmult_wnaf(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
 
         word = (s.bits_var(bit, now) as i32) + carry;
 
-        carry = (word >> (w-1)) & 1;
+        carry = (word >> (w - 1)) & 1;
         word -= carry << w;
 
         wnaf[bit] = sign * word;
@@ -446,9 +450,7 @@ pub fn ecmult_wnaf_const(wnaf: &mut [i32], a: &Scalar, w: usize) -> i32 {
 }
 
 impl ECMultContext {
-    pub fn ecmult(
-        &self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: &Scalar
-    ) {
+    pub fn ecmult(&self, r: &mut Jacobian, a: &Jacobian, na: &Scalar, ng: &Scalar) {
         let mut tmpa = Affine::default();
         let mut pre_a: [Affine; ECMULT_TABLE_SIZE_A] = Default::default();
         let mut z = Field::default();
@@ -485,9 +487,7 @@ impl ECMultContext {
         }
     }
 
-    pub fn ecmult_const(
-        &self, r: &mut Jacobian, a: &Affine, scalar: &Scalar
-    ) {
+    pub fn ecmult_const(&self, r: &mut Jacobian, a: &Affine, scalar: &Scalar) {
         const WNAF_SIZE: usize = (WNAF_BITS + (WINDOW_A - 1) - 1) / (WINDOW_A - 1);
 
         let mut tmpa = Affine::default();
@@ -556,9 +556,7 @@ impl ECMultContext {
 }
 
 impl ECMultGenContext {
-    pub fn ecmult_gen(
-        &self, r: &mut Jacobian, gn: &Scalar
-    ) {
+    pub fn ecmult_gen(&self, r: &mut Jacobian, gn: &Scalar) {
         let mut adds = AffineStorage::default();
         *r = self.initial.clone();
 
