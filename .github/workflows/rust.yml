@@ -26,7 +26,7 @@ jobs:
         with:
           command: fmt
           toolchain: stable
-          args: --all -- --check --config merge_imports=true
+          args: --all -- --check
   check:
     name:              Check
     strategy:
