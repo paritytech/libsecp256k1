@@ -11,22 +11,6 @@ on:
     paths-ignore:
       - 'README.md'
 jobs:
-  fmt:
-    name: Rustfmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - uses: actions-rs/toolchain@master
-        with:
-          profile: minimal
-          toolchain: stable
-          components: rustfmt
-          override: true
-      - uses: actions-rs/cargo@master
-        with:
-          command: fmt
-          toolchain: stable
-          args: --all -- --check
   check:
     name:              Check
     strategy:
