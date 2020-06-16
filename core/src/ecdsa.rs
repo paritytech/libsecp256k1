@@ -1,21 +1,24 @@
-use crate::field::Field;
-use crate::group::{Affine, Jacobian};
-use crate::scalar::Scalar;
-use crate::ecmult::{ECMultContext, ECMultGenContext};
-use crate::Error;
+use crate::{
+    ecmult::{ECMultContext, ECMultGenContext},
+    field::Field,
+    group::{Affine, Jacobian},
+    scalar::Scalar,
+    Error,
+};
 
-const P_MINUS_ORDER: Field = Field::new(
-    0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE
-);
+const P_MINUS_ORDER: Field = Field::new(0, 0, 0, 1, 0x45512319, 0x50B75FC4, 0x402DA172, 0x2FC9BAEE);
 
 const ORDER_AS_FE: Field = Field::new(
-    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE,
-    0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141
+    0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xBAAEDCE6, 0xAF48A03B, 0xBFD25E8C, 0xD0364141,
 );
 
 impl ECMultContext {
     pub fn verify_raw(
-        &self, sigr: &Scalar, sigs: &Scalar, pubkey: &Affine, message: &Scalar
+        &self,
+        sigr: &Scalar,
+        sigs: &Scalar,
+        pubkey: &Affine,
+        message: &Scalar,
     ) -> bool {
         let c;
         let (sn, u1, u2): (Scalar, Scalar, Scalar);
@@ -53,7 +56,11 @@ impl ECMultContext {
     }
 
     pub fn recover_raw(
-        &self, sigr: &Scalar, sigs: &Scalar, rec_id: u8, message: &Scalar
+        &self,
+        sigr: &Scalar,
+        sigs: &Scalar,
+        rec_id: u8,
+        message: &Scalar,
     ) -> Result<Affine, Error> {
         debug_assert!(rec_id < 4);
 
@@ -97,7 +104,12 @@ impl ECMultContext {
 }
 
 impl ECMultGenContext {
-    pub fn sign_raw(&self, seckey: &Scalar, message: &Scalar, nonce: &Scalar) -> Result<(Scalar, Scalar, u8), Error> {
+    pub fn sign_raw(
+        &self,
+        seckey: &Scalar,
+        message: &Scalar,
+        nonce: &Scalar,
+    ) -> Result<(Scalar, Scalar, u8), Error> {
         let mut rp = Jacobian::default();
         self.ecmult_gen(&mut rp, nonce);
         let mut r = Affine::default();

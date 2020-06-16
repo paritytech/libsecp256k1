@@ -1,10 +1,12 @@
-use core::cmp::Ordering;
-use core::ops::{Add, AddAssign, Mul, MulAssign};
+use core::{
+    cmp::Ordering,
+    ops::{Add, AddAssign, Mul, MulAssign},
+};
 
 macro_rules! debug_assert_bits {
     ($x: expr, $n: expr) => {
         debug_assert!($x >> $n == 0);
-    }
+    };
 }
 
 #[derive(Debug, Clone)]
@@ -22,7 +24,16 @@ pub struct Field {
 
 impl Field {
     pub const fn new_raw(
-        d9: u32, d8: u32, d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32,
+        d9: u32,
+        d8: u32,
+        d7: u32,
+        d6: u32,
+        d5: u32,
+        d4: u32,
+        d3: u32,
+        d2: u32,
+        d1: u32,
+        d0: u32,
     ) -> Self {
         Self {
             n: [d0, d1, d2, d3, d4, d5, d6, d7, d8, d9],
@@ -32,7 +43,14 @@ impl Field {
     }
 
     pub const fn new(
-        d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
+        d7: u32,
+        d6: u32,
+        d5: u32,
+        d4: u32,
+        d3: u32,
+        d2: u32,
+        d1: u32,
+        d0: u32,
     ) -> Self {
         Self {
             n: [
@@ -40,7 +58,7 @@ impl Field {
                 (d0 >> 26) | ((d1 & 0xfffff) << 6),
                 (d1 >> 20) | ((d2 & 0x3fff) << 12),
                 (d2 >> 14) | ((d3 & 0xff) << 18),
-                (d3 >> 8)  | ((d4 & 0x3) << 24),
+                (d3 >> 8) | ((d4 & 0x3) << 24),
                 (d4 >> 2) & 0x3ffffff,
                 (d4 >> 28) | ((d5 & 0x3fffff) << 4),
                 (d5 >> 22) | ((d6 & 0xffff) << 10),
@@ -75,7 +93,13 @@ impl Field {
         if self.normalized {
             r = r && self.magnitude <= 1;
             if r && (self.n[9] == 0x03fffff) {
-                let mid = self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2];
+                let mid = self.n[8]
+                    & self.n[7]
+                    & self.n[6]
+                    & self.n[5]
+                    & self.n[4]
+                    & self.n[3]
+                    & self.n[2];
                 if mid == 0x3ffffff {
                     r = r && ((self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) <= 0x3ffffff)
                 }
@@ -101,31 +125,65 @@ impl Field {
         let mut x = t9 >> 22;
         t9 &= 0x03fffff;
 
-        t0 += x * 0x3d1; t1 += x << 6;
-        t1 += t0 >> 26; t0 &= 0x3ffffff;
-        t2 += t1 >> 26; t1 &= 0x3ffffff;
-        t3 += t2 >> 26; t2 &= 0x3ffffff; m = t2;
-        t4 += t3 >> 26; t3 &= 0x3ffffff; m &= t3;
-        t5 += t4 >> 26; t4 &= 0x3ffffff; m &= t4;
-        t6 += t5 >> 26; t5 &= 0x3ffffff; m &= t5;
-        t7 += t6 >> 26; t6 &= 0x3ffffff; m &= t6;
-        t8 += t7 >> 26; t7 &= 0x3ffffff; m &= t7;
-        t9 += t8 >> 26; t8 &= 0x3ffffff; m &= t8;
+        t0 += x * 0x3d1;
+        t1 += x << 6;
+        t1 += t0 >> 26;
+        t0 &= 0x3ffffff;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        m = t2;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        m &= t3;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        m &= t4;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        m &= t5;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        m &= t6;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        m &= t7;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
+        m &= t8;
 
         debug_assert!(t9 >> 23 == 0);
 
-        x = (t9 >> 22) | (if t9 == 0x03fffff { 1 } else { 0 } & if m == 0x3ffffff { 1 } else { 0 } & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff { 1 } else { 0 }));
+        x = (t9 >> 22)
+            | (if t9 == 0x03fffff { 1 } else { 0 }
+                & if m == 0x3ffffff { 1 } else { 0 }
+                & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff {
+                    1
+                } else {
+                    0
+                }));
 
-        t0 += x * 0x3d1; t1 += x << 6;
-        t1 += t0 >> 26; t0 &= 0x3ffffff;
-        t2 += t1 >> 26; t1 &= 0x3ffffff;
-        t3 += t2 >> 26; t2 &= 0x3ffffff;
-        t4 += t3 >> 26; t3 &= 0x3ffffff;
-        t5 += t4 >> 26; t4 &= 0x3ffffff;
-        t6 += t5 >> 26; t5 &= 0x3ffffff;
-        t7 += t6 >> 26; t6 &= 0x3ffffff;
-        t8 += t7 >> 26; t7 &= 0x3ffffff;
-        t9 += t8 >> 26; t8 &= 0x3ffffff;
+        t0 += x * 0x3d1;
+        t1 += x << 6;
+        t1 += t0 >> 26;
+        t0 &= 0x3ffffff;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
 
         debug_assert!(t9 >> 22 == x);
 
@@ -151,18 +209,29 @@ impl Field {
         let mut t8 = self.n[8];
         let mut t9 = self.n[9];
 
-        let x = t9 >> 22; t9 &= 0x03fffff;
+        let x = t9 >> 22;
+        t9 &= 0x03fffff;
 
-        t0 += x * 0x3d1; t1 += x << 6;
-        t1 += t0 >> 26; t0 &= 0x3ffffff;
-        t2 += t1 >> 26; t1 &= 0x3ffffff;
-        t3 += t2 >> 26; t2 &= 0x3ffffff;
-        t4 += t3 >> 26; t3 &= 0x3ffffff;
-        t5 += t4 >> 26; t4 &= 0x3ffffff;
-        t6 += t5 >> 26; t5 &= 0x3ffffff;
-        t7 += t6 >> 26; t6 &= 0x3ffffff;
-        t8 += t7 >> 26; t7 &= 0x3ffffff;
-        t9 += t8 >> 26; t8 &= 0x3ffffff;
+        t0 += x * 0x3d1;
+        t1 += x << 6;
+        t1 += t0 >> 26;
+        t0 &= 0x3ffffff;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
 
         debug_assert!(t9 >> 23 == 0);
 
@@ -185,34 +254,69 @@ impl Field {
         let mut t9 = self.n[9];
 
         let mut m: u32;
-        let mut x = t9 >> 22; t9 &= 0x03fffff;
+        let mut x = t9 >> 22;
+        t9 &= 0x03fffff;
 
-        t0 += x * 0x3d1; t1 += x << 6;
-        t1 += t0 >> 26; t0 &= 0x3ffffff;
-        t2 += t1 >> 26; t1 &= 0x3ffffff;
-        t3 += t2 >> 26; t2 &= 0x3ffffff; m = t2;
-        t4 += t3 >> 26; t3 &= 0x3ffffff; m &= t3;
-        t5 += t4 >> 26; t4 &= 0x3ffffff; m &= t4;
-        t6 += t5 >> 26; t5 &= 0x3ffffff; m &= t5;
-        t7 += t6 >> 26; t6 &= 0x3ffffff; m &= t6;
-        t8 += t7 >> 26; t7 &= 0x3ffffff; m &= t7;
-        t9 += t8 >> 26; t8 &= 0x3ffffff; m &= t8;
+        t0 += x * 0x3d1;
+        t1 += x << 6;
+        t1 += t0 >> 26;
+        t0 &= 0x3ffffff;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        m = t2;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        m &= t3;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        m &= t4;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        m &= t5;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        m &= t6;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        m &= t7;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
+        m &= t8;
 
         debug_assert!(t9 >> 23 == 0);
 
-        x = (t9 >> 22) | (if t9 == 0x03fffff { 1 } else { 0 } & if m == 0x3ffffff { 1 } else { 0 } & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff { 1 } else { 0 }));
+        x = (t9 >> 22)
+            | (if t9 == 0x03fffff { 1 } else { 0 }
+                & if m == 0x3ffffff { 1 } else { 0 }
+                & (if (t1 + 0x40 + ((t0 + 0x3d1) >> 26)) > 0x3ffffff {
+                    1
+                } else {
+                    0
+                }));
 
         if x > 0 {
-            t0 += 0x3d1; t1 += x << 6;
-            t1 += t0 >> 26; t0 &= 0x3ffffff;
-            t2 += t1 >> 26; t1 &= 0x3ffffff;
-            t3 += t2 >> 26; t2 &= 0x3ffffff;
-            t4 += t3 >> 26; t3 &= 0x3ffffff;
-            t5 += t4 >> 26; t4 &= 0x3ffffff;
-            t6 += t5 >> 26; t5 &= 0x3ffffff;
-            t7 += t6 >> 26; t6 &= 0x3ffffff;
-            t8 += t7 >> 26; t7 &= 0x3ffffff;
-            t9 += t8 >> 26; t8 &= 0x3ffffff;
+            t0 += 0x3d1;
+            t1 += x << 6;
+            t1 += t0 >> 26;
+            t0 &= 0x3ffffff;
+            t2 += t1 >> 26;
+            t1 &= 0x3ffffff;
+            t3 += t2 >> 26;
+            t2 &= 0x3ffffff;
+            t4 += t3 >> 26;
+            t3 &= 0x3ffffff;
+            t5 += t4 >> 26;
+            t4 &= 0x3ffffff;
+            t6 += t5 >> 26;
+            t5 &= 0x3ffffff;
+            t7 += t6 >> 26;
+            t6 &= 0x3ffffff;
+            t8 += t7 >> 26;
+            t7 &= 0x3ffffff;
+            t9 += t8 >> 26;
+            t8 &= 0x3ffffff;
 
             debug_assert!(t9 >> 22 == x);
 
@@ -241,21 +345,52 @@ impl Field {
         let mut t8 = self.n[8];
         let mut t9 = self.n[9];
 
-        let mut z0: u32; let mut z1: u32;
+        let mut z0: u32;
+        let mut z1: u32;
 
-        let x = t9 >> 22; t9 &= 0x03fffff;
+        let x = t9 >> 22;
+        t9 &= 0x03fffff;
 
-        t0 += x * 0x3d1; t1 += x << 6;
-        t1 += t0 >> 26; t0 &= 0x3ffffff; z0  = t0; z1  = t0 ^ 0x3d0;
-        t2 += t1 >> 26; t1 &= 0x3ffffff; z0 |= t1; z1 &= t1 ^ 0x40;
-        t3 += t2 >> 26; t2 &= 0x3ffffff; z0 |= t2; z1 &= t2;
-        t4 += t3 >> 26; t3 &= 0x3ffffff; z0 |= t3; z1 &= t3;
-        t5 += t4 >> 26; t4 &= 0x3ffffff; z0 |= t4; z1 &= t4;
-        t6 += t5 >> 26; t5 &= 0x3ffffff; z0 |= t5; z1 &= t5;
-        t7 += t6 >> 26; t6 &= 0x3ffffff; z0 |= t6; z1 &= t6;
-        t8 += t7 >> 26; t7 &= 0x3ffffff; z0 |= t7; z1 &= t7;
-        t9 += t8 >> 26; t8 &= 0x3ffffff; z0 |= t8; z1 &= t8;
-        z0 |= t9; z1 &= t9 ^ 0x3c00000;
+        t0 += x * 0x3d1;
+        t1 += x << 6;
+        t1 += t0 >> 26;
+        t0 &= 0x3ffffff;
+        z0 = t0;
+        z1 = t0 ^ 0x3d0;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        z0 |= t1;
+        z1 &= t1 ^ 0x40;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        z0 |= t2;
+        z1 &= t2;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        z0 |= t3;
+        z1 &= t3;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        z0 |= t4;
+        z1 &= t4;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        z0 |= t5;
+        z1 &= t5;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        z0 |= t6;
+        z1 &= t6;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        z0 |= t7;
+        z1 &= t7;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
+        z0 |= t8;
+        z1 &= t8;
+        z0 |= t9;
+        z1 &= t9 ^ 0x3c00000;
 
         debug_assert!(t9 >> 23 == 0);
 
@@ -267,12 +402,18 @@ impl Field {
     /// optionally normalize the input, but this should not be relied
     /// upon.
     pub fn normalizes_to_zero_var(&self) -> bool {
-        let mut t0: u32; let mut t1: u32;
-        let mut t2: u32; let mut t3: u32;
-        let mut t4: u32; let mut t5: u32;
-        let mut t6: u32; let mut t7: u32;
-        let mut t8: u32; let mut t9: u32;
-        let mut z0: u32; let mut z1: u32;
+        let mut t0: u32;
+        let mut t1: u32;
+        let mut t2: u32;
+        let mut t3: u32;
+        let mut t4: u32;
+        let mut t5: u32;
+        let mut t6: u32;
+        let mut t7: u32;
+        let mut t8: u32;
+        let mut t9: u32;
+        let mut z0: u32;
+        let mut z1: u32;
         let x: u32;
 
         t0 = self.n[0];
@@ -301,15 +442,40 @@ impl Field {
         t1 += x << 6;
 
         t1 += t0 >> 26;
-        t2 += t1 >> 26; t1 &= 0x3ffffff; z0 |= t1; z1 &= t1 ^ 0x40;
-        t3 += t2 >> 26; t2 &= 0x3ffffff; z0 |= t2; z1 &= t2;
-        t4 += t3 >> 26; t3 &= 0x3ffffff; z0 |= t3; z1 &= t3;
-        t5 += t4 >> 26; t4 &= 0x3ffffff; z0 |= t4; z1 &= t4;
-        t6 += t5 >> 26; t5 &= 0x3ffffff; z0 |= t5; z1 &= t5;
-        t7 += t6 >> 26; t6 &= 0x3ffffff; z0 |= t6; z1 &= t6;
-        t8 += t7 >> 26; t7 &= 0x3ffffff; z0 |= t7; z1 &= t7;
-        t9 += t8 >> 26; t8 &= 0x3ffffff; z0 |= t8; z1 &= t8;
-        z0 |= t9; z1 &= t9 ^ 0x3c00000;
+        t2 += t1 >> 26;
+        t1 &= 0x3ffffff;
+        z0 |= t1;
+        z1 &= t1 ^ 0x40;
+        t3 += t2 >> 26;
+        t2 &= 0x3ffffff;
+        z0 |= t2;
+        z1 &= t2;
+        t4 += t3 >> 26;
+        t3 &= 0x3ffffff;
+        z0 |= t3;
+        z1 &= t3;
+        t5 += t4 >> 26;
+        t4 &= 0x3ffffff;
+        z0 |= t4;
+        z1 &= t4;
+        t6 += t5 >> 26;
+        t5 &= 0x3ffffff;
+        z0 |= t5;
+        z1 &= t5;
+        t7 += t6 >> 26;
+        t6 &= 0x3ffffff;
+        z0 |= t6;
+        z1 &= t6;
+        t8 += t7 >> 26;
+        t7 &= 0x3ffffff;
+        z0 |= t7;
+        z1 &= t7;
+        t9 += t8 >> 26;
+        t8 &= 0x3ffffff;
+        z0 |= t8;
+        z1 &= t8;
+        z0 |= t9;
+        z1 &= t9 ^ 0x3c00000;
 
         debug_assert!(t9 >> 23 == 0);
 
@@ -330,7 +496,17 @@ impl Field {
     pub fn is_zero(&self) -> bool {
         debug_assert!(self.normalized);
         debug_assert!(self.verify());
-        return (self.n[0] | self.n[1] | self.n[2] | self.n[3] | self.n[4] | self.n[5] | self.n[6] | self.n[7] | self.n[8] | self.n[9]) == 0;
+        return (self.n[0]
+            | self.n[1]
+            | self.n[2]
+            | self.n[3]
+            | self.n[4]
+            | self.n[5]
+            | self.n[6]
+            | self.n[7]
+            | self.n[8]
+            | self.n[9])
+            == 0;
     }
 
     /// Check the "oddness" of a field element. Requires the input to
@@ -352,18 +528,49 @@ impl Field {
     /// successful, the resulting field element is normalized.
     #[must_use]
     pub fn set_b32(&mut self, a: &[u8; 32]) -> bool {
-        self.n[0] = (a[31] as u32) | ((a[30] as u32) << 8) | ((a[29] as u32) << 16) | (((a[28] & 0x3) as u32) << 24);
-        self.n[1] = (((a[28] >> 2) & 0x3f) as u32) | ((a[27] as u32) << 6) | ((a[26] as u32) << 14) | (((a[25] & 0xf) as u32) << 22);
-        self.n[2] = (((a[25] >> 4) & 0xf) as u32) | ((a[24] as u32) << 4) | ((a[23] as u32) << 12) | (((a[22] as u32) & 0x3f) << 20);
-        self.n[3] = (((a[22] >> 6) & 0x3) as u32) | ((a[21] as u32) << 2) | ((a[20] as u32) << 10) | ((a[19] as u32) << 18);
-        self.n[4] = (a[18] as u32) | ((a[17] as u32) << 8) | ((a[16] as u32) << 16) | (((a[15] & 0x3) as u32) << 24);
-        self.n[5] = (((a[15] >> 2) & 0x3f) as u32) | ((a[14] as u32) << 6) | ((a[13] as u32) << 14) | (((a[12] as u32) & 0xf) << 22);
-        self.n[6] = (((a[12] >> 4) & 0xf) as u32) | ((a[11] as u32) << 4) | ((a[10] as u32) << 12) | (((a[9] & 0x3f) as u32) << 20);
-        self.n[7] = (((a[9] >> 6) & 0x3) as u32) | ((a[8] as u32) << 2) | ((a[7] as u32) << 10) | ((a[6] as u32) << 18);
-        self.n[8] = (a[5] as u32) | ((a[4] as u32) << 8) | ((a[3] as u32) << 16) | (((a[2] & 0x3) as u32) << 24);
+        self.n[0] = (a[31] as u32)
+            | ((a[30] as u32) << 8)
+            | ((a[29] as u32) << 16)
+            | (((a[28] & 0x3) as u32) << 24);
+        self.n[1] = (((a[28] >> 2) & 0x3f) as u32)
+            | ((a[27] as u32) << 6)
+            | ((a[26] as u32) << 14)
+            | (((a[25] & 0xf) as u32) << 22);
+        self.n[2] = (((a[25] >> 4) & 0xf) as u32)
+            | ((a[24] as u32) << 4)
+            | ((a[23] as u32) << 12)
+            | (((a[22] as u32) & 0x3f) << 20);
+        self.n[3] = (((a[22] >> 6) & 0x3) as u32)
+            | ((a[21] as u32) << 2)
+            | ((a[20] as u32) << 10)
+            | ((a[19] as u32) << 18);
+        self.n[4] = (a[18] as u32)
+            | ((a[17] as u32) << 8)
+            | ((a[16] as u32) << 16)
+            | (((a[15] & 0x3) as u32) << 24);
+        self.n[5] = (((a[15] >> 2) & 0x3f) as u32)
+            | ((a[14] as u32) << 6)
+            | ((a[13] as u32) << 14)
+            | (((a[12] as u32) & 0xf) << 22);
+        self.n[6] = (((a[12] >> 4) & 0xf) as u32)
+            | ((a[11] as u32) << 4)
+            | ((a[10] as u32) << 12)
+            | (((a[9] & 0x3f) as u32) << 20);
+        self.n[7] = (((a[9] >> 6) & 0x3) as u32)
+            | ((a[8] as u32) << 2)
+            | ((a[7] as u32) << 10)
+            | ((a[6] as u32) << 18);
+        self.n[8] = (a[5] as u32)
+            | ((a[4] as u32) << 8)
+            | ((a[3] as u32) << 16)
+            | (((a[2] & 0x3) as u32) << 24);
         self.n[9] = (((a[2] >> 2) & 0x3f) as u32) | ((a[1] as u32) << 6) | ((a[0] as u32) << 14);
 
-        if self.n[9] == 0x03fffff && (self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2]) == 0x3ffffff && (self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) > 0x3ffffff {
+        if self.n[9] == 0x03fffff
+            && (self.n[8] & self.n[7] & self.n[6] & self.n[5] & self.n[4] & self.n[3] & self.n[2])
+                == 0x3ffffff
+            && (self.n[1] + 0x40 + ((self.n[0] + 0x3d1) >> 26)) > 0x3ffffff
+        {
             return false;
         }
 
@@ -530,20 +737,21 @@ impl Field {
         // px is a shorthand for sum(a[i]*b[x-i], i=0..x).
         // Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
 
-        d = ((a.n[0] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[0] as u64));
+        d = ((a.n[0] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[0] as u64));
         // debug_assert_bits!(d, 64);
 
         /* [d 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
-        t9 = (d & M) as u32; d >>= 26;
+        t9 = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(t9, 26);
         debug_assert_bits!(d, 38);
         /* [d t9 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
@@ -552,238 +760,272 @@ impl Field {
         debug_assert_bits!(c, 60);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p9 0 0 0 0 0 0 0 0 p0] */
 
-        d = d.wrapping_add(
-            (a.n[1] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[1] as u64));
+        d = d
+            .wrapping_add((a.n[1] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[1] as u64));
         debug_assert_bits!(d, 63);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        v0 = d & M; d >>= 26; c += v0 * R0;
+        v0 = d & M;
+        d >>= 26;
+        c += v0 * R0;
         debug_assert_bits!(v0, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 61);
         /* [d u0 t9 0 0 0 0 0 0 0 0 c-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        t0 = (c & M) as u32; c >>= 26; c += v0 * R1;
+        t0 = (c & M) as u32;
+        c >>= 26;
+        c += v0 * R1;
 
         debug_assert_bits!(t0, 26);
         debug_assert_bits!(c, 37);
         /* [d u0 t9 0 0 0 0 0 0 0 c-u0*R1 t0-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[2] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[2] as u64));
+        d = d
+            .wrapping_add((a.n[2] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[2] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        v1 = d & M; d >>= 26; c += v1 * R0;
+        v1 = d & M;
+        d >>= 26;
+        c += v1 * R0;
         debug_assert_bits!(v1, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u1 0 t9 0 0 0 0 0 0 0 c-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        t1 = (c & M) as u32; c >>= 26; c += v1 * R1;
+        t1 = (c & M) as u32;
+        c >>= 26;
+        c += v1 * R1;
         debug_assert_bits!(t1, 26);
         debug_assert_bits!(c, 38);
         /* [d u1 0 t9 0 0 0 0 0 0 c-u1*R1 t1-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[3] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[3] as u64));
+        d = d
+            .wrapping_add((a.n[3] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[3] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        v2 = d & M; d >>= 26; c += v2 * R0;
+        v2 = d & M;
+        d >>= 26;
+        c += v2 * R0;
         debug_assert_bits!(v2, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u2 0 0 t9 0 0 0 0 0 0 c-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        t2 = (c & M) as u32; c >>= 26; c += v2 * R1;
+        t2 = (c & M) as u32;
+        c >>= 26;
+        c += v2 * R1;
         debug_assert_bits!(t2, 26);
         debug_assert_bits!(c, 38);
         /* [d u2 0 0 t9 0 0 0 0 0 c-u2*R1 t2-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[4] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[4] as u64));
+        d = d
+            .wrapping_add((a.n[4] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[4] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        v3 = d & M; d >>= 26; c += v3 * R0;
+        v3 = d & M;
+        d >>= 26;
+        c += v3 * R0;
         debug_assert_bits!(v3, 26);
         debug_assert_bits!(d, 37);
         // debug_assert_bits!(c, 64);
         /* [d u3 0 0 0 t9 0 0 0 0 0 c-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        t3 = (c & M) as u32; c >>= 26; c += v3 * R1;
+        t3 = (c & M) as u32;
+        c >>= 26;
+        c += v3 * R1;
         debug_assert_bits!(t3, 26);
         debug_assert_bits!(c, 39);
         /* [d u3 0 0 0 t9 0 0 0 0 c-u3*R1 t3-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[5] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[5] as u64));
+        d = d
+            .wrapping_add((a.n[5] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[5] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        v4 = d & M; d >>= 26; c += v4 * R0;
+        v4 = d & M;
+        d >>= 26;
+        c += v4 * R0;
         debug_assert_bits!(v4, 26);
         debug_assert_bits!(d, 36);
         // debug_assert_bits!(c, 64);
         /* [d u4 0 0 0 0 t9 0 0 0 0 c-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        t4 = (c & M) as u32; c >>= 26; c += v4 * R1;
+        t4 = (c & M) as u32;
+        c >>= 26;
+        c += v4 * R1;
         debug_assert_bits!(t4, 26);
         debug_assert_bits!(c, 39);
         /* [d u4 0 0 0 0 t9 0 0 0 c-u4*R1 t4-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[6] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[6] as u64));
+        d = d
+            .wrapping_add((a.n[6] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[6] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        v5 = d & M; d >>= 26; c += v5 * R0;
+        v5 = d & M;
+        d >>= 26;
+        c += v5 * R0;
         debug_assert_bits!(v5, 26);
         debug_assert_bits!(d, 36);
         // debug_assert_bits!(c, 64);
         /* [d u5 0 0 0 0 0 t9 0 0 0 c-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        t5 = (c & M) as u32; c >>= 26; c += v5 * R1;
+        t5 = (c & M) as u32;
+        c >>= 26;
+        c += v5 * R1;
         debug_assert_bits!(t5, 26);
         debug_assert_bits!(c, 39);
         /* [d u5 0 0 0 0 0 t9 0 0 c-u5*R1 t5-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[0] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[7] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[7] as u64));
+        d = d
+            .wrapping_add((a.n[7] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[7] as u64));
         debug_assert_bits!(d, 61);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        v6 = d & M; d >>= 26; c += v6 * R0;
+        v6 = d & M;
+        d >>= 26;
+        c += v6 * R0;
         debug_assert_bits!(v6, 26);
         debug_assert_bits!(d, 35);
         // debug_assert_bits!(c, 64);
         /* [d u6 0 0 0 0 0 0 t9 0 0 c-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        t6 = (c & M) as u32; c >>= 26; c += v6 * R1;
+        t6 = (c & M) as u32;
+        c >>= 26;
+        c += v6 * R1;
         debug_assert_bits!(t6, 26);
         debug_assert_bits!(c, 39);
         /* [d u6 0 0 0 0 0 0 t9 0 c-u6*R1 t6-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[0] as u64));
         // debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x8000007c00000007);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[8] as u64) * (b.n[9] as u64)).wrapping_add(
-            (a.n[9] as u64) * (b.n[8] as u64));
+        d = d
+            .wrapping_add((a.n[8] as u64) * (b.n[9] as u64))
+            .wrapping_add((a.n[9] as u64) * (b.n[8] as u64));
         debug_assert_bits!(d, 58);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        v7 = d & M; d >>= 26; c += v7 * R0;
+        v7 = d & M;
+        d >>= 26;
+        c += v7 * R0;
         debug_assert_bits!(v7, 26);
         debug_assert_bits!(d, 32);
         // debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x800001703fffc2f7);
         /* [d u7 0 0 0 0 0 0 0 t9 0 c-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        t7 = (c & M) as u32; c >>= 26; c += v7 * R1;
+        t7 = (c & M) as u32;
+        c >>= 26;
+        c += v7 * R1;
         debug_assert_bits!(t7, 26);
         debug_assert_bits!(c, 38);
         /* [d u7 0 0 0 0 0 0 0 t9 c-u7*R1 t7-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            (a.n[0] as u64) * (b.n[8] as u64)).wrapping_add(
-            (a.n[1] as u64) * (b.n[7] as u64)).wrapping_add(
-            (a.n[2] as u64) * (b.n[6] as u64)).wrapping_add(
-            (a.n[3] as u64) * (b.n[5] as u64)).wrapping_add(
-            (a.n[4] as u64) * (b.n[4] as u64)).wrapping_add(
-            (a.n[5] as u64) * (b.n[3] as u64)).wrapping_add(
-            (a.n[6] as u64) * (b.n[2] as u64)).wrapping_add(
-            (a.n[7] as u64) * (b.n[1] as u64)).wrapping_add(
-            (a.n[8] as u64) * (b.n[0] as u64));
+        c = c
+            .wrapping_add((a.n[0] as u64) * (b.n[8] as u64))
+            .wrapping_add((a.n[1] as u64) * (b.n[7] as u64))
+            .wrapping_add((a.n[2] as u64) * (b.n[6] as u64))
+            .wrapping_add((a.n[3] as u64) * (b.n[5] as u64))
+            .wrapping_add((a.n[4] as u64) * (b.n[4] as u64))
+            .wrapping_add((a.n[5] as u64) * (b.n[3] as u64))
+            .wrapping_add((a.n[6] as u64) * (b.n[2] as u64))
+            .wrapping_add((a.n[7] as u64) * (b.n[1] as u64))
+            .wrapping_add((a.n[8] as u64) * (b.n[0] as u64));
         // debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x9000007b80000008);
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         d = d.wrapping_add((a.n[9] as u64) * (b.n[9] as u64));
         debug_assert_bits!(d, 57);
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        v8 = d & M; d >>= 26; c += v8 * R0;
+        v8 = d & M;
+        d >>= 26;
+        c += v8 * R0;
         debug_assert_bits!(v8, 26);
         debug_assert_bits!(d, 31);
         // debug_assert_bits!(c, 64);
@@ -806,7 +1048,9 @@ impl Field {
         debug_assert_bits!(self.n[7], 26);
         /* [d u8 0 0 0 0 0 0 0 0 t9 c-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        self.n[8] = (c & M) as u32; c >>= 26; c += v8 * R1;
+        self.n[8] = (c & M) as u32;
+        c >>= 26;
+        c += v8 * R1;
         debug_assert_bits!(self.n[8], 26);
         debug_assert_bits!(c, 39);
         /* [d u8 0 0 0 0 0 0 0 0 t9+c-u8*R1 r8-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
@@ -814,31 +1058,35 @@ impl Field {
         c += d * R0 + t9 as u64;
         debug_assert_bits!(c, 45);
         /* [d 0 0 0 0 0 0 0 0 0 c-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[9] = (c & (M >> 4)) as u32; c >>= 22; c += d * (R1 << 4);
+        self.n[9] = (c & (M >> 4)) as u32;
+        c >>= 22;
+        c += d * (R1 << 4);
         debug_assert_bits!(self.n[9], 22);
         debug_assert_bits!(c, 46);
         /* [d 0 0 0 0 0 0 0 0 r9+((c-d*R1<<4)<<22)-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 -d*R1 r9+(c<<22)-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        d    = c * (R0 >> 4) + t0 as u64;
+        d = c * (R0 >> 4) + t0 as u64;
         debug_assert_bits!(d, 56);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1 d-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[0] = (d & M) as u32; d >>= 26;
+        self.n[0] = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(self.n[0], 26);
         debug_assert_bits!(d, 30);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1+d r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d   += c * (R1 >> 4) + t1 as u64;
+        d += c * (R1 >> 4) + t1 as u64;
         debug_assert_bits!(d, 53);
         debug_assert!(d <= 0x10000003ffffbf);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 d-c*R1>>4 r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [r9 r8 r7 r6 r5 r4 r3 t2 d r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[1] = (d & M) as u32; d >>= 26;
+        self.n[1] = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(self.n[1], 26);
         debug_assert_bits!(d, 27);
         debug_assert!(d <= 0x4000000);
         /* [r9 r8 r7 r6 r5 r4 r3 t2+d r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d   += t2 as u64;
+        d += t2 as u64;
         debug_assert_bits!(d, 27);
         /* [r9 r8 r7 r6 r5 r4 r3 d r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         self.n[2] = d as u32;
@@ -870,14 +1118,15 @@ impl Field {
         // px is a shorthand for sum(a.n[i]*a.n[x-i], i=0..x).
         // Note that [x 0 0 0 0 0 0 0 0 0 0] = [x*R1 x*R0].
 
-        d = (((a.n[0]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[6] as u64)).wrapping_add(
-            ((a.n[4]*2) as u64) * (a.n[5] as u64));
+        d = (((a.n[0] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[6] as u64))
+            .wrapping_add(((a.n[4] * 2) as u64) * (a.n[5] as u64));
         // debug_assert_bits!(d, 64);
         /* [d 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
-        t9 = (d & M) as u32; d >>= 26;
+        t9 = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(t9, 26);
         debug_assert_bits!(d, 38);
         /* [d t9 0 0 0 0 0 0 0 0 0] = [p9 0 0 0 0 0 0 0 0 0] */
@@ -885,198 +1134,229 @@ impl Field {
         c = (a.n[0] as u64) * (a.n[0] as u64);
         debug_assert_bits!(c, 60);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p9 0 0 0 0 0 0 0 0 p0] */
-        d = d.wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            ((a.n[4]*2) as u64) * (a.n[6] as u64)).wrapping_add(
-            (a.n[5] as u64) * (a.n[5] as u64));
+        d = d
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add(((a.n[4] * 2) as u64) * (a.n[6] as u64))
+            .wrapping_add((a.n[5] as u64) * (a.n[5] as u64));
         debug_assert_bits!(d, 63);
         /* [d t9 0 0 0 0 0 0 0 0 c] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        v0 = d & M; d >>= 26; c += v0 * R0;
+        v0 = d & M;
+        d >>= 26;
+        c += v0 * R0;
         debug_assert_bits!(v0, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 61);
         /* [d u0 t9 0 0 0 0 0 0 0 0 c-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
-        t0 = (c & M) as u32; c >>= 26; c += v0 * R1;
+        t0 = (c & M) as u32;
+        c >>= 26;
+        c += v0 * R1;
         debug_assert_bits!(t0, 26);
         debug_assert_bits!(c, 37);
         /* [d u0 t9 0 0 0 0 0 0 0 c-u0*R1 t0-u0*R0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 0 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[1] as u64));
+        c = c.wrapping_add(((a.n[0] * 2) as u64) * (a.n[1] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[4]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            ((a.n[5]*2) as u64) * (a.n[6] as u64));
+        d = d
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[4] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add(((a.n[5] * 2) as u64) * (a.n[6] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 t9 0 0 0 0 0 0 0 c t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        v1 = d & M; d >>= 26; c += v1 * R0;
+        v1 = d & M;
+        d >>= 26;
+        c += v1 * R0;
         debug_assert_bits!(v1, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u1 0 t9 0 0 0 0 0 0 0 c-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
-        t1 = (c & M) as u32; c >>= 26; c += v1 * R1;
+        t1 = (c & M) as u32;
+        c >>= 26;
+        c += v1 * R1;
         debug_assert_bits!(t1, 26);
         debug_assert_bits!(c, 38);
         /* [d u1 0 t9 0 0 0 0 0 0 c-u1*R1 t1-u1*R0 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 0 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[2] as u64)).wrapping_add(
-            (a.n[1] as u64) * (a.n[1] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[2] as u64))
+            .wrapping_add((a.n[1] as u64) * (a.n[1] as u64));
         debug_assert_bits!(c, 62);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[4]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[5]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            (a.n[6] as u64) * (a.n[6] as u64));
+        d = d
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[4] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[5] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add((a.n[6] as u64) * (a.n[6] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 t9 0 0 0 0 0 0 c t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        v2 = d & M; d >>= 26; c += v2 * R0;
+        v2 = d & M;
+        d >>= 26;
+        c += v2 * R0;
         debug_assert_bits!(v2, 26);
         debug_assert_bits!(d, 37);
         debug_assert_bits!(c, 63);
         /* [d u2 0 0 t9 0 0 0 0 0 0 c-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
-        t2 = (c & M) as u32; c >>= 26; c += v2 * R1;
+        t2 = (c & M) as u32;
+        c >>= 26;
+        c += v2 * R1;
         debug_assert_bits!(t2, 26);
         debug_assert_bits!(c, 38);
         /* [d u2 0 0 t9 0 0 0 0 0 c-u2*R1 t2-u2*R0 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 0 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[3] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[2] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[3] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[2] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[4]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[5]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[6]*2) as u64) * (a.n[7] as u64));
+        d = d
+            .wrapping_add(((a.n[4] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[5] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[6] * 2) as u64) * (a.n[7] as u64));
         debug_assert_bits!(d, 63);
         /* [d 0 0 0 t9 0 0 0 0 0 c t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        v3 = d & M; d >>= 26; c += v3 * R0;
+        v3 = d & M;
+        d >>= 26;
+        c += v3 * R0;
         debug_assert_bits!(v3, 26);
         debug_assert_bits!(d, 37);
         // debug_assert_bits!(c, 64);
         /* [d u3 0 0 0 t9 0 0 0 0 0 c-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
-        t3 = (c & M) as u32; c >>= 26; c += v3 * R1;
+        t3 = (c & M) as u32;
+        c >>= 26;
+        c += v3 * R1;
         debug_assert_bits!(t3, 26);
         debug_assert_bits!(c, 39);
         /* [d u3 0 0 0 t9 0 0 0 0 c-u3*R1 t3-u3*R0 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 0 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[4] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[3] as u64)).wrapping_add(
-            (a.n[2] as u64) * (a.n[2] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[4] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[3] as u64))
+            .wrapping_add((a.n[2] as u64) * (a.n[2] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[5]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[6]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            (a.n[7] as u64) * (a.n[7] as u64));
+        d = d
+            .wrapping_add(((a.n[5] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[6] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add((a.n[7] as u64) * (a.n[7] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 t9 0 0 0 0 c t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        v4 = d & M; d >>= 26; c += v4 * R0;
+        v4 = d & M;
+        d >>= 26;
+        c += v4 * R0;
         debug_assert_bits!(v4, 26);
         debug_assert_bits!(d, 36);
         // debug_assert_bits!(c, 64);
         /* [d u4 0 0 0 0 t9 0 0 0 0 c-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
-        t4 = (c & M) as u32; c >>= 26; c += v4 * R1;
+        t4 = (c & M) as u32;
+        c >>= 26;
+        c += v4 * R1;
         debug_assert_bits!(t4, 26);
         debug_assert_bits!(c, 39);
         /* [d u4 0 0 0 0 t9 0 0 0 c-u4*R1 t4-u4*R0 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 0 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[5] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[4] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[3] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[5] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[4] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[3] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[6]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            ((a.n[7]*2) as u64) * (a.n[8] as u64));
+        d = d
+            .wrapping_add(((a.n[6] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add(((a.n[7] * 2) as u64) * (a.n[8] as u64));
         debug_assert_bits!(d, 62);
         /* [d 0 0 0 0 0 t9 0 0 0 c t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        v5 = d & M; d >>= 26; c += v5 * R0;
+        v5 = d & M;
+        d >>= 26;
+        c += v5 * R0;
         debug_assert_bits!(v5, 26);
         debug_assert_bits!(d, 36);
         // debug_assert_bits!(c, 64);
         /* [d u5 0 0 0 0 0 t9 0 0 0 c-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
-        t5 = (c & M) as u32; c >>= 26; c += v5 * R1;
+        t5 = (c & M) as u32;
+        c >>= 26;
+        c += v5 * R1;
         debug_assert_bits!(t5, 26);
         debug_assert_bits!(c, 39);
         /* [d u5 0 0 0 0 0 t9 0 0 c-u5*R1 t5-u5*R0 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 0 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[6] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[5] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[4] as u64)).wrapping_add(
-            (a.n[3] as u64) * (a.n[3] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[6] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[5] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[4] as u64))
+            .wrapping_add((a.n[3] as u64) * (a.n[3] as u64));
         debug_assert_bits!(c, 63);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[7]*2) as u64) * (a.n[9] as u64)).wrapping_add(
-            (a.n[8] as u64) * (a.n[8] as u64));
+        d = d
+            .wrapping_add(((a.n[7] * 2) as u64) * (a.n[9] as u64))
+            .wrapping_add((a.n[8] as u64) * (a.n[8] as u64));
         debug_assert_bits!(d, 61);
         /* [d 0 0 0 0 0 0 t9 0 0 c t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        v6 = d & M; d >>= 26; c += v6 * R0;
+        v6 = d & M;
+        d >>= 26;
+        c += v6 * R0;
         debug_assert_bits!(v6, 26);
         debug_assert_bits!(d, 35);
         // debug_assert_bits!(c, 64);
         /* [d u6 0 0 0 0 0 0 t9 0 0 c-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
-        t6 = (c & M) as u32; c >>= 26; c += v6 * R1;
+        t6 = (c & M) as u32;
+        c >>= 26;
+        c += v6 * R1;
         debug_assert_bits!(t6, 26);
         debug_assert_bits!(c, 39);
         /* [d u6 0 0 0 0 0 0 t9 0 c-u6*R1 t6-u6*R0 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 0 p6 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[6] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[5] as u64)).wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[4] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[6] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[5] as u64))
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[4] as u64));
         // debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x8000007C00000007);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            ((a.n[8]*2) as u64) * (a.n[9] as u64));
+        d = d.wrapping_add(((a.n[8] * 2) as u64) * (a.n[9] as u64));
         debug_assert_bits!(d, 58);
         /* [d 0 0 0 0 0 0 0 t9 0 c t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        v7 = d & M; d >>= 26; c += v7 * R0;
+        v7 = d & M;
+        d >>= 26;
+        c += v7 * R0;
         debug_assert_bits!(v7, 26);
         debug_assert_bits!(d, 32);
         /* debug_assert_bits!(c, 64); */
         debug_assert!(c <= 0x800001703FFFC2F7);
         /* [d u7 0 0 0 0 0 0 0 t9 0 c-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
-        t7 = (c & M) as u32; c >>= 26; c += v7 * R1;
+        t7 = (c & M) as u32;
+        c >>= 26;
+        c += v7 * R1;
         debug_assert_bits!(t7, 26);
         debug_assert_bits!(c, 38);
         /* [d u7 0 0 0 0 0 0 0 t9 c-u7*R1 t7-u7*R0 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 0 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        c = c.wrapping_add(
-            ((a.n[0]*2) as u64) * (a.n[8] as u64)).wrapping_add(
-            ((a.n[1]*2) as u64) * (a.n[7] as u64)).wrapping_add(
-            ((a.n[2]*2) as u64) * (a.n[6] as u64)).wrapping_add(
-            ((a.n[3]*2) as u64) * (a.n[5] as u64)).wrapping_add(
-            (a.n[4] as u64) * (a.n[4] as u64));
+        c = c
+            .wrapping_add(((a.n[0] * 2) as u64) * (a.n[8] as u64))
+            .wrapping_add(((a.n[1] * 2) as u64) * (a.n[7] as u64))
+            .wrapping_add(((a.n[2] * 2) as u64) * (a.n[6] as u64))
+            .wrapping_add(((a.n[3] * 2) as u64) * (a.n[5] as u64))
+            .wrapping_add((a.n[4] as u64) * (a.n[4] as u64));
         // debug_assert_bits!(c, 64);
         debug_assert!(c <= 0x9000007B80000008);
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d = d.wrapping_add(
-            (a.n[9] as u64) * (a.n[9] as u64));
+        d = d.wrapping_add((a.n[9] as u64) * (a.n[9] as u64));
         debug_assert_bits!(d, 57);
         /* [d 0 0 0 0 0 0 0 0 t9 c t7 t6 t5 t4 t3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        v8 = d & M; d >>= 26; c += v8 * R0;
+        v8 = d & M;
+        d >>= 26;
+        c += v8 * R0;
         debug_assert_bits!(v8, 26);
         debug_assert_bits!(d, 31);
         /* debug_assert_bits!(c, 64); */
@@ -1099,39 +1379,45 @@ impl Field {
         debug_assert_bits!(self.n[7], 26);
         /* [d u8 0 0 0 0 0 0 0 0 t9 c-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        self.n[8] = (c & M) as u32; c >>= 26; c += v8 * R1;
+        self.n[8] = (c & M) as u32;
+        c >>= 26;
+        c += v8 * R1;
         debug_assert_bits!(self.n[8], 26);
         debug_assert_bits!(c, 39);
         /* [d u8 0 0 0 0 0 0 0 0 t9+c-u8*R1 r8-u8*R0 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-    /* [d 0 0 0 0 0 0 0 0 0 t9+c r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        c   += d * R0 + t9 as u64;
+        /* [d 0 0 0 0 0 0 0 0 0 t9+c r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
+        c += d * R0 + t9 as u64;
         debug_assert_bits!(c, 45);
         /* [d 0 0 0 0 0 0 0 0 0 c-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[9] = (c & (M >> 4)) as u32; c >>= 22; c += d * (R1 << 4);
+        self.n[9] = (c & (M >> 4)) as u32;
+        c >>= 22;
+        c += d * (R1 << 4);
         debug_assert_bits!(self.n[9], 22);
         debug_assert_bits!(c, 46);
         /* [d 0 0 0 0 0 0 0 0 r9+((c-d*R1<<4)<<22)-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [d 0 0 0 0 0 0 0 -d*R1 r9+(c<<22)-d*R0 r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1 t0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 
-        d    = c * (R0 >> 4) + t0 as u64;
+        d = c * (R0 >> 4) + t0 as u64;
         debug_assert_bits!(d, 56);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1 d-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[0] = (d & M) as u32; d >>= 26;
+        self.n[0] = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(self.n[0], 26);
         debug_assert_bits!(d, 30);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 t1+d r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d   += c * (R1 >> 4) + t1 as u64;
+        d += c * (R1 >> 4) + t1 as u64;
         debug_assert_bits!(d, 53);
         debug_assert!(d <= 0x10000003FFFFBF);
         /* [r9+(c<<22) r8 r7 r6 r5 r4 r3 t2 d-c*R1>>4 r0-c*R0>>4] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         /* [r9 r8 r7 r6 r5 r4 r3 t2 d r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        self.n[1] = (d & M) as u32; d >>= 26;
+        self.n[1] = (d & M) as u32;
+        d >>= 26;
         debug_assert_bits!(self.n[1], 26);
         debug_assert_bits!(d, 27);
         debug_assert!(d <= 0x4000000);
         /* [r9 r8 r7 r6 r5 r4 r3 t2+d r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
-        d   += t2 as u64;
+        d += t2 as u64;
         debug_assert_bits!(d, 27);
         /* [r9 r8 r7 r6 r5 r4 r3 d r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
         self.n[2] = d as u32;
@@ -1363,8 +1649,16 @@ impl Field {
         self.n[7] = if flag { other.n[7] } else { self.n[7] };
         self.n[8] = if flag { other.n[8] } else { self.n[8] };
         self.n[9] = if flag { other.n[9] } else { self.n[9] };
-        self.magnitude = if flag { other.magnitude } else { self.magnitude };
-        self.normalized = if flag { other.normalized } else { self.normalized };
+        self.magnitude = if flag {
+            other.magnitude
+        } else {
+            self.magnitude
+        };
+        self.normalized = if flag {
+            other.normalized
+        } else {
+            self.normalized
+        };
     }
 }
 
@@ -1461,7 +1755,7 @@ impl PartialEq for Field {
     }
 }
 
-impl Eq for Field { }
+impl Eq for Field {}
 
 impl Ord for Field {
     fn cmp(&self, other: &Field) -> Ordering {
@@ -1487,7 +1781,14 @@ impl Default for FieldStorage {
 
 impl FieldStorage {
     pub const fn new(
-        d7: u32, d6: u32, d5: u32, d4: u32, d3: u32, d2: u32, d1: u32, d0: u32
+        d7: u32,
+        d6: u32,
+        d5: u32,
+        d4: u32,
+        d3: u32,
+        d2: u32,
+        d1: u32,
+        d0: u32,
     ) -> Self {
         Self([d0, d1, d2, d3, d4, d5, d6, d7])
     }
