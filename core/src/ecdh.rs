@@ -30,8 +30,8 @@ impl ECMultContext {
         let x = pt.x.b32();
         let y = 0x02 | (if pt.y.is_odd() { 1 } else { 0 });
 
-        digest.input(&[y]);
-        digest.input(&x);
-        Some(digest.result_reset())
+        digest.update(&[y]);
+        digest.update(&x);
+        Some(digest.finalize_reset())
     }
 }

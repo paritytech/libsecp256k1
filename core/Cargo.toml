@@ -11,7 +11,7 @@ edition = "2018"
 [dependencies]
 subtle = { version = "2.2", default-features = false }
 crunchy = "0.2"
-digest = "0.8"
+digest = "0.9"
 
 [features]
 default = ["std"]

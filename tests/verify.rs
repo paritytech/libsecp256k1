@@ -9,15 +9,20 @@ mod signatures {
     use crate::{recover, sign, verify, Message, PublicKey, SecretKey, SharedSecret, Signature};
     use rand_test::thread_rng;
     use secp256k1_test::{
-        ecdh::SharedSecret as SecpSharedSecret, key, Message as SecpMessage,
-        RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId, Secp256k1,
-        Signature as SecpSignature,
+        ecdh::SharedSecret as SecpSharedSecret,
+        key,
+        recovery::{
+            RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId,
+        },
+        All, Message as SecpMessage, Secp256k1, Signature as SecpSignature,
     };
     use sha2::Sha256;
 
-    fn genkey(secp256k1: &Secp256k1) -> (key::PublicKey, key::SecretKey, PublicKey, SecretKey) {
-        let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
-        let pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
+    fn genkey(
+        secp256k1: &Secp256k1<All>,
+    ) -> (key::PublicKey, key::SecretKey, PublicKey, SecretKey) {
+        let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng());
+        let pubkey_arr = secp_pubkey.serialize_uncompressed();
         assert_eq!(pubkey_arr.len(), 65);
         let mut pubkey_a = [0u8; 65];
         for i in 0..65 {
@@ -38,7 +43,7 @@ mod signatures {
         let secp256k1 = Secp256k1::new();
 
         let message_arr = [5u8; 32];
-        let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+        let (privkey, _) = secp256k1.generate_keypair(&mut thread_rng());
 
         assert!(privkey[..].len() == 32);
         let mut privkey_a = [0u8; 32];
@@ -59,10 +64,10 @@ mod signatures {
         let secp256k1 = Secp256k1::new();
 
         let message_arr = [6u8; 32];
-        let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+        let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng());
 
         let secp_message = SecpMessage::from_slice(&message_arr).unwrap();
-        let pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
+        let pubkey_arr = secp_pubkey.serialize_uncompressed();
         assert_eq!(pubkey_arr.len(), 65);
         let mut pubkey_a = [0u8; 65];
         for i in 0..65 {
@@ -92,8 +97,8 @@ mod signatures {
         let signature_a = sig.serialize();
         let secp_recid = SecpRecoveryId::from_i32(recid.into()).unwrap();
         let secp_rec_signature =
-            SecpRecoverableSignature::from_compact(&secp256k1, &signature_a, secp_recid).unwrap();
-        let secp_signature = SecpSignature::from_compact(&secp256k1, &signature_a).unwrap();
+            SecpRecoverableSignature::from_compact(&signature_a, secp_recid).unwrap();
+        let secp_signature = SecpSignature::from_compact(&signature_a).unwrap();
 
         // External verify
         secp256k1
@@ -104,7 +109,7 @@ mod signatures {
         let recovered_pubkey = secp256k1
             .recover(&secp_message, &secp_rec_signature)
             .unwrap();
-        let rpa = recovered_pubkey.serialize_vec(&secp256k1, false);
+        let rpa = recovered_pubkey.serialize_uncompressed();
         let rpr: &[u8] = &rpa;
         assert_eq!(rpr, opr);
     }
@@ -142,8 +147,8 @@ mod signatures {
         let shared1 = SharedSecret::<Sha256>::new(&pub1, &sec2).unwrap();
         let shared2 = SharedSecret::<Sha256>::new(&pub2, &sec1).unwrap();
 
-        let secp_shared1 = SecpSharedSecret::new(&secp256k1, &spub1, &ssec2);
-        let secp_shared2 = SecpSharedSecret::new(&secp256k1, &spub2, &ssec1);
+        let secp_shared1 = SecpSharedSecret::new(&spub1, &ssec2);
+        let secp_shared2 = SecpSharedSecret::new(&spub2, &ssec1);
 
         assert_eq!(shared1.as_ref(), shared2.as_ref());
 
@@ -162,11 +167,11 @@ fn test_verify() {
     let secp256k1 = Secp256k1::new();
 
     let message_arr = [5u8; 32];
-    let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng());
     let message = SecpMessage::from_slice(&message_arr).unwrap();
-    let signature = secp256k1.sign(&message, &privkey).unwrap();
+    let signature = secp256k1.sign(&message, &privkey);
 
-    let pubkey_arr = pubkey.serialize_vec(&secp256k1, false);
+    let pubkey_arr = pubkey.serialize_uncompressed();
     assert_eq!(pubkey_arr.len(), 65);
     let mut pubkey_a = [0u8; 65];
     for i in 0..65 {
@@ -175,7 +180,7 @@ fn test_verify() {
 
     let ctx_pubkey = PublicKey::parse(&pubkey_a).unwrap();
     let ctx_message = Message::parse(&message_arr);
-    let signature_arr = signature.serialize_compact(&secp256k1);
+    let signature_arr = signature.serialize_compact();
     assert_eq!(signature_arr.len(), 64);
     let mut signature_a = [0u8; 64];
     for i in 0..64 {
@@ -220,11 +225,11 @@ fn test_recover() {
     let secp256k1 = Secp256k1::new();
 
     let message_arr = [5u8; 32];
-    let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let (privkey, pubkey) = secp256k1.generate_keypair(&mut thread_rng());
     let message = SecpMessage::from_slice(&message_arr).unwrap();
-    let signature = secp256k1.sign_recoverable(&message, &privkey).unwrap();
+    let signature = secp256k1.sign_recoverable(&message, &privkey);
 
-    let pubkey_arr = pubkey.serialize_vec(&secp256k1, false);
+    let pubkey_arr = pubkey.serialize_uncompressed();
     assert_eq!(pubkey_arr.len(), 65);
     let mut pubkey_a = [0u8; 65];
     for i in 0..65 {
@@ -232,7 +237,7 @@ fn test_recover() {
     }
 
     let ctx_message = Message::parse(&message_arr);
-    let (rec_id, signature_arr) = signature.serialize_compact(&secp256k1);
+    let (rec_id, signature_arr) = signature.serialize_compact();
     assert_eq!(signature_arr.len(), 64);
     let mut signature_a = [0u8; 64];
     for i in 0..64 {
@@ -315,14 +320,14 @@ fn test_low_s() {
 
     let secp = Secp256k1::new();
     let mut sig = Signature::parse_der(&sig[..]).unwrap();
-    let pk = key::PublicKey::from_slice(&secp, &pk[..]).unwrap();
+    let pk = key::PublicKey::from_slice(&pk[..]).unwrap();
     let msg = SecpMessage::from_slice(&msg[..]).unwrap();
 
     // without normalization we expect this will fail
     assert_eq!(
         secp.verify(
             &msg,
-            &SecpSignature::from_compact(&secp, &sig.serialize()).unwrap(),
+            &SecpSignature::from_compact(&sig.serialize()).unwrap(),
             &pk
         ),
         Err(SecpError::IncorrectSignature)
@@ -332,7 +337,7 @@ fn test_low_s() {
     assert_eq!(
         secp.verify(
             &msg,
-            &SecpSignature::from_compact(&secp, &sig.serialize()).unwrap(),
+            &SecpSignature::from_compact(&sig.serialize()).unwrap(),
             &pk
         ),
         Ok(())
@@ -384,7 +389,7 @@ fn test_convert_key2() {
 #[test]
 fn test_convert_anykey() {
     let secp256k1 = Secp256k1::new();
-    let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng()).unwrap();
+    let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng());
 
     let mut secret = [0u8; 32];
     for i in 0..32 {
@@ -398,9 +403,9 @@ fn test_convert_anykey() {
     let pubkey_r: &[u8] = &public;
     let pubkey_compressed_r: &[u8] = &public_compressed;
 
-    let secp_pubkey_arr = secp_pubkey.serialize_vec(&secp256k1, false);
+    let secp_pubkey_arr = secp_pubkey.serialize_uncompressed();
     assert_eq!(secp_pubkey_arr.len(), 65);
-    let secp_pubkey_compressed_arr = secp_pubkey.serialize_vec(&secp256k1, true);
+    let secp_pubkey_compressed_arr = secp_pubkey.serialize();
     assert_eq!(secp_pubkey_compressed_arr.len(), 33);
     let mut secp_pubkey_a = [0u8; 65];
     for i in 0..65 {
