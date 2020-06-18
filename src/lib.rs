@@ -37,7 +37,6 @@ use typenum::U32;
 use crate::{
     curve::{Affine, ECMultContext, ECMultGenContext, Field, Jacobian, Scalar},
     util::{self, Decoder, SignatureArray},
-    Error,
 };
 
 #[cfg(feature = "static-context")]
