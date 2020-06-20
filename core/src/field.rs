@@ -9,7 +9,7 @@ macro_rules! debug_assert_bits {
     };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 /// Field element for secp256k1.
 pub struct Field {
     /// Store representation of X.
@@ -1470,55 +1470,55 @@ impl Field {
         let mut x3 = x2.sqr();
         x3 *= self;
 
-        let mut x6 = x3.clone();
+        let mut x6 = x3;
         for _ in 0..3 {
             x6 = x6.sqr();
         }
         x6 *= &x3;
 
-        let mut x9 = x6.clone();
+        let mut x9 = x6;
         for _ in 0..3 {
             x9 = x9.sqr();
         }
         x9 *= &x3;
 
-        let mut x11 = x9.clone();
+        let mut x11 = x9;
         for _ in 0..2 {
             x11 = x11.sqr();
         }
         x11 *= &x2;
 
-        let mut x22 = x11.clone();
+        let mut x22 = x11;
         for _ in 0..11 {
             x22 = x22.sqr();
         }
         x22 *= &x11;
 
-        let mut x44 = x22.clone();
+        let mut x44 = x22;
         for _ in 0..22 {
             x44 = x44.sqr();
         }
         x44 *= &x22;
 
-        let mut x88 = x44.clone();
+        let mut x88 = x44;
         for _ in 0..44 {
             x88 = x88.sqr();
         }
         x88 *= &x44;
 
-        let mut x176 = x88.clone();
+        let mut x176 = x88;
         for _ in 0..88 {
             x176 = x176.sqr();
         }
         x176 *= &x88;
 
-        let mut x220 = x176.clone();
+        let mut x220 = x176;
         for _ in 0..44 {
             x220 = x220.sqr();
         }
         x220 *= &x44;
 
-        let mut x223 = x220.clone();
+        let mut x223 = x220;
         for _ in 0..3 {
             x223 = x223.sqr();
         }
@@ -1550,61 +1550,61 @@ impl Field {
         let mut x3 = x2.sqr();
         x3 *= self;
 
-        let mut x6 = x3.clone();
+        let mut x6 = x3;
         for _ in 0..3 {
             x6 = x6.sqr();
         }
         x6 *= &x3;
 
-        let mut x9 = x6.clone();
+        let mut x9 = x6;
         for _ in 0..3 {
             x9 = x9.sqr();
         }
         x9 *= &x3;
 
-        let mut x11 = x9.clone();
+        let mut x11 = x9;
         for _ in 0..2 {
             x11 = x11.sqr();
         }
         x11 *= &x2;
 
-        let mut x22 = x11.clone();
+        let mut x22 = x11;
         for _ in 0..11 {
             x22 = x22.sqr();
         }
         x22 *= &x11;
 
-        let mut x44 = x22.clone();
+        let mut x44 = x22;
         for _ in 0..22 {
             x44 = x44.sqr();
         }
         x44 *= &x22;
 
-        let mut x88 = x44.clone();
+        let mut x88 = x44;
         for _ in 0..44 {
             x88 = x88.sqr();
         }
         x88 *= &x44;
 
-        let mut x176 = x88.clone();
+        let mut x176 = x88;
         for _ in 0..88 {
             x176 = x176.sqr();
         }
         x176 *= &x88;
 
-        let mut x220 = x176.clone();
+        let mut x220 = x176;
         for _ in 0..44 {
             x220 = x220.sqr();
         }
         x220 *= &x44;
 
-        let mut x223 = x220.clone();
+        let mut x223 = x220;
         for _ in 0..3 {
             x223 = x223.sqr();
         }
         x223 *= &x3;
 
-        let mut t1 = x223.clone();
+        let mut t1 = x223;
         for _ in 0..23 {
             t1 = t1.sqr();
         }
@@ -1675,7 +1675,7 @@ impl Default for Field {
 impl Add<Field> for Field {
     type Output = Field;
     fn add(self, other: Field) -> Field {
-        let mut ret = self.clone();
+        let mut ret = self;
         ret.add_assign(&other);
         ret
     }
@@ -1684,7 +1684,7 @@ impl Add<Field> for Field {
 impl<'a, 'b> Add<&'a Field> for &'b Field {
     type Output = Field;
     fn add(self, other: &'a Field) -> Field {
-        let mut ret = self.clone();
+        let mut ret = *self;
         ret.add_assign(other);
         ret
     }
@@ -1769,7 +1769,7 @@ impl PartialOrd for Field {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Compact field element storage.
 pub struct FieldStorage(pub [u32; 8]);
 

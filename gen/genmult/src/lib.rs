@@ -12,7 +12,7 @@ pub fn generate_to(file: &mut File) -> Result<(), Error> {
     for j in 0..64 {
         file.write_fmt(format_args!("    ["))?;
         for i in 0..16 {
-            let pg: AffineStorage = prec[j][i].clone().into();
+            let pg: AffineStorage = prec[j][i].into();
             file.write_fmt(format_args!(
                 "        crate::curve::AffineStorage::new(crate::curve::FieldStorage::new({}, {}, {}, {}, {}, {}, {}, {}), crate::curve::FieldStorage::new({}, {}, {}, {}, {}, {}, {}, {})),",
                 pg.x.0[7], pg.x.0[6], pg.x.0[5], pg.x.0[4], pg.x.0[3], pg.x.0[2], pg.x.0[1], pg.x.0[0],

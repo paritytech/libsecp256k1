@@ -13,8 +13,8 @@ impl ECMultContext {
     ) -> Option<GenericArray<u8, D::OutputSize>> {
         let mut digest: D = Default::default();
 
-        let mut pt = point.clone();
-        let s = scalar.clone();
+        let mut pt = *point;
+        let s = *scalar;
 
         if s.is_zero() {
             return None;
