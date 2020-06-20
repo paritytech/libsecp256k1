@@ -1,16 +1,16 @@
 use libsecp256k1::*;
-use rand_test::thread_rng;
 use secp256k1_test::{
-    key, Error as SecpError, Message as SecpMessage, Secp256k1, Signature as SecpSignature,
+    key, rand::thread_rng, Error as SecpError, Message as SecpMessage, Secp256k1,
+    Signature as SecpSignature,
 };
 
 #[cfg(feature = "hmac")]
 mod signatures {
     use crate::{recover, sign, verify, Message, PublicKey, SecretKey, SharedSecret, Signature};
-    use rand_test::thread_rng;
     use secp256k1_test::{
         ecdh::SharedSecret as SecpSharedSecret,
         key,
+        rand::thread_rng,
         recovery::{
             RecoverableSignature as SecpRecoverableSignature, RecoveryId as SecpRecoveryId,
         },

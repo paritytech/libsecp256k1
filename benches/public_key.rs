@@ -3,8 +3,7 @@
 extern crate test;
 
 use libsecp256k1::PublicKey;
-use rand_test::thread_rng;
-use secp256k1_test::Secp256k1;
+use secp256k1_test::{rand::thread_rng, Secp256k1};
 use test::Bencher;
 
 #[bench]
