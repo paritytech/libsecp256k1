@@ -12,12 +12,9 @@
     unreachable_code,
     unused_parens
 )]
-#![cfg_attr(not(feature = "std"), no_std)]
-extern crate alloc;
 
 pub use libsecp256k1_core::*;
 
-use alloc::vec;
 use arrayref::{array_mut_ref, array_ref};
 use core::convert::TryFrom;
 use digest::{generic_array::GenericArray, Digest};
@@ -51,13 +48,13 @@ pub static ECMULT_CONTEXT: ECMultContext =
 pub static ECMULT_GEN_CONTEXT: ECMultGenContext =
     unsafe { ECMultGenContext::new_from_raw(include!(concat!(env!("OUT_DIR"), "/const_gen.rs"))) };
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Secret key (256-bit) on a secp256k1 curve.
 pub struct SecretKey(Scalar);
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
@@ -66,12 +63,19 @@ pub struct Signature {
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
 pub struct RecoveryId(u8);
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Shared secret using ECDH.
 pub struct SharedSecret<D: Digest>(GenericArray<u8, D::OutputSize>);
+
+impl<D> Copy for SharedSecret<D>
+where
+    D: Copy + Digest,
+    GenericArray<u8, D::OutputSize>: Copy,
+{
+}
 
 /// Format for public key parsing.
 pub enum PublicKeyFormat {
@@ -199,7 +203,7 @@ impl PublicKey {
         debug_assert!(!self.0.is_infinity());
 
         let mut ret = [0u8; 65];
-        let mut elem = self.0.clone();
+        let mut elem = self.0;
 
         elem.x.normalize_var();
         elem.y.normalize_var();
@@ -216,7 +220,7 @@ impl PublicKey {
         debug_assert!(!self.0.is_infinity());
 
         let mut ret = [0u8; 33];
-        let mut elem = self.0.clone();
+        let mut elem = self.0;
 
         elem.x.normalize_var();
         elem.y.normalize_var();
@@ -430,7 +434,7 @@ impl Default for SecretKey {
 
 impl Into<Scalar> for SecretKey {
     fn into(self) -> Scalar {
-        self.0.clone()
+        self.0
     }
 }
 
@@ -446,15 +450,9 @@ impl TryFrom<Scalar> for SecretKey {
     }
 }
 
-impl Drop for SecretKey {
-    fn drop(&mut self) {
-        self.0.clear();
-    }
-}
-
 impl core::fmt::LowerHex for SecretKey {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let scalar: Scalar = self.clone().into();
+        let scalar = self.0;
 
         write!(f, "{:x}", scalar)
     }
@@ -537,7 +535,7 @@ impl Signature {
     /// which ensures that the s value lies in the lower half of its range.
     pub fn normalize_s(&mut self) {
         if self.s.is_high() {
-            self.s = -self.s.clone();
+            self.s = -self.s;
         }
     }
 
@@ -670,15 +668,6 @@ impl<D: Digest + Default> SharedSecret<D> {
 impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
     fn as_ref(&self) -> &[u8] {
         &self.0.as_ref()
-    }
-}
-
-impl<D: Digest> Drop for SharedSecret<D> {
-    fn drop(&mut self) {
-        let zero_array = GenericArray::clone_from_slice(&vec![0; D::output_size()]);
-        unsafe {
-            core::ptr::write_volatile(&mut self.0, zero_array);
-        }
     }
 }
 

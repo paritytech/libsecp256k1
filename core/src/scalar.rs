@@ -21,15 +21,9 @@ const SECP256K1_N_H_5: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_6: u32 = 0xFFFFFFFF;
 const SECP256K1_N_H_7: u32 = 0x7FFFFFFF;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// A 256-bit scalar value.
 pub struct Scalar(pub [u32; 8]);
-
-impl Drop for Scalar {
-    fn drop(&mut self) {
-        self.clear();
-    }
-}
 
 impl Scalar {
     /// Clear a scalar to prevent the leak of sensitive data.
@@ -773,12 +767,12 @@ impl Scalar {
 
     pub fn inv_in_place(&mut self, x: &Scalar) {
         let u2 = x.sqr();
-        let x2 = &u2 * x;
-        let u5 = &u2 * &x2;
-        let x3 = &u5 * &u2;
-        let u9 = &x3 * &u2;
-        let u11 = &u9 * &u2;
-        let u13 = &u11 * &u2;
+        let x2 = u2 * *x;
+        let u5 = u2 * x2;
+        let x3 = u5 * u2;
+        let u9 = x3 * u2;
+        let u11 = u9 * u2;
+        let u13 = u11 * u2;
 
         let mut x6 = u13.sqr();
         x6 = x6.sqr();
@@ -914,7 +908,7 @@ impl Scalar {
         for _ in 0..8 {
             t = t.sqr();
         }
-        *self = &t * &x6;
+        *self = t * x6;
     }
 
     pub fn inv(&self) -> Scalar {
@@ -949,7 +943,7 @@ impl Add<Scalar> for Scalar {
 impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
     type Output = Scalar;
     fn add(self, other: &'a Scalar) -> Scalar {
-        let mut ret = self.clone();
+        let mut ret = *self;
         ret.add_assign(other);
         ret
     }
@@ -1021,7 +1015,7 @@ impl Neg for Scalar {
 impl<'a> Neg for &'a Scalar {
     type Output = Scalar;
     fn neg(self) -> Scalar {
-        let value = self.clone();
+        let value = *self;
         -value
     }
 }
