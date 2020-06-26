@@ -45,6 +45,7 @@ pub struct ECMultContext {
 impl ECMultContext {
     /// Create a new `ECMultContext` from raw values.
     ///
+    /// # Safety
     /// The function is unsafe because incorrect value of `pre_g` can lead to
     /// crypto logic failure. You most likely do not want to use this function,
     /// but `ECMultContext::new_boxed`.
@@ -86,9 +87,9 @@ impl ECMultContext {
 /// coordinates. Not constant time.
 pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
     let mut az: Vec<Field> = Vec::with_capacity(a.len());
-    for i in 0..a.len() {
-        if !a[i].is_infinity() {
-            az.push(a[i].z);
+    for point in a {
+        if !point.is_infinity() {
+            az.push(point.z);
         }
     }
     let azi: Vec<Field> = inv_all_var(&az);
@@ -111,7 +112,7 @@ pub fn set_all_gej_var(a: &[Jacobian]) -> Vec<Affine> {
 /// output magnitudes are 1 (but not guaranteed to be
 /// normalized).
 pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
-    if fields.len() == 0 {
+    if fields.is_empty() {
         return Vec::new();
     }
 
@@ -129,7 +130,7 @@ pub fn inv_all_var(fields: &[Field]) -> Vec<Field> {
         let j = i;
         let i = i - 1;
         ret[j] = ret[i] * u;
-        u = u * fields[j];
+        u *= fields[j];
     }
 
     ret[0] = u;
@@ -165,6 +166,7 @@ pub struct ECMultGenContext {
 impl ECMultGenContext {
     /// Create a new `ECMultGenContext` from raw values.
     ///
+    /// # Safety
     /// The function is unsafe because incorrect value of `pre_g` can lead to
     /// crypto logic failure. You most likely do not want to use this function,
     /// but `ECMultGenContext::new_boxed`.
@@ -208,12 +210,8 @@ impl ECMultGenContext {
 
         // Construct a group element with no known corresponding scalar (nothing up my sleeve).
         let mut nums_32 = [0u8; 32];
-        debug_assert!("The scalar for this x is unknown".as_bytes().len() == 32);
-        for (i, v) in "The scalar for this x is unknown"
-            .as_bytes()
-            .iter()
-            .enumerate()
-        {
+        debug_assert!(b"The scalar for this x is unknown".len() == 32);
+        for (i, v) in b"The scalar for this x is unknown".iter().enumerate() {
             nums_32[i] = *v;
         }
         let mut nums_x = Field::default();
@@ -260,7 +258,7 @@ impl ECMultGenContext {
 
 pub fn odd_multiples_table(prej: &mut [Jacobian], zr: &mut [Field], a: &Jacobian) {
     debug_assert!(prej.len() == zr.len());
-    debug_assert!(prej.len() > 0);
+    debug_assert!(!prej.is_empty());
     debug_assert!(!a.is_infinity());
 
     let d = a.double_var(None);
@@ -316,8 +314,9 @@ fn table_get_ge_const(r: &mut Affine, pre: &[Affine], n: i32, w: usize) {
     debug_assert!(n >= -((1 << (w - 1)) - 1));
     debug_assert!(n <= ((1 << (w - 1)) - 1));
     for m in 0..pre.len() {
-        r.x.cmov(&pre[m].x, m == idx_n as usize);
-        r.y.cmov(&pre[m].y, m == idx_n as usize);
+        let flag = m == idx_n as usize;
+        r.x.cmov(&pre[m].x, flag);
+        r.y.cmov(&pre[m].y, flag);
     }
     r.infinity = false;
     let neg_y = r.y.neg(1);

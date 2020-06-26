@@ -57,12 +57,12 @@ impl Scalar {
         debug_assert!(count < 32);
         debug_assert!(offset + count <= 256);
         if (offset + count - 1) >> 5 == offset >> 5 {
-            return self.bits(offset, count);
+            self.bits(offset, count)
         } else {
             debug_assert!((offset >> 5) + 1 < 8);
-            return ((self.0[offset >> 5] >> (offset & 0x1f))
+            ((self.0[offset >> 5] >> (offset & 0x1f))
                 | (self.0[(offset >> 5) + 1] << (32 - (offset & 0x1f))))
-                & ((1 << count) - 1);
+                & ((1 << count) - 1)
         }
     }
 
@@ -283,7 +283,7 @@ impl Scalar {
         no |= Choice::from((self.0[1] < SECP256K1_N_H_1) as u8) & !yes;
         yes |= Choice::from((self.0[1] > SECP256K1_N_H_1) as u8) & !no;
         yes |= Choice::from((self.0[0] >= SECP256K1_N_H_0) as u8) & !no;
-        return yes.into();
+        yes.into()
     }
 
     /// Conditionally negate a number, in constant time.
@@ -749,8 +749,8 @@ impl Scalar {
         self.0[4] = (self.0[4] >> n) + (self.0[5] << (32 - n));
         self.0[5] = (self.0[5] >> n) + (self.0[6] << (32 - n));
         self.0[6] = (self.0[6] >> n) + (self.0[7] << (32 - n));
-        self.0[7] = self.0[7] >> n;
-        return ret;
+        self.0[7] >>= n;
+        ret
     }
 
     pub fn sqr_in_place(&mut self, a: &Scalar) {
@@ -922,7 +922,7 @@ impl Scalar {
     }
 
     pub fn is_even(&self) -> bool {
-        return self.0[0] & 1 == 0;
+        self.0[0] & 1 == 0
     }
 }
 

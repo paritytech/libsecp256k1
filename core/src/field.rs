@@ -394,7 +394,7 @@ impl Field {
 
         debug_assert!(t9 >> 23 == 0);
 
-        return z0 == 0 || z1 == 0x3ffffff;
+        z0 == 0 || z1 == 0x3ffffff
     }
 
     /// Verify whether a field element represents zero i.e. would
@@ -479,7 +479,7 @@ impl Field {
 
         debug_assert!(t9 >> 23 == 0);
 
-        return z0 == 0 || z1 == 0x3ffffff;
+        z0 == 0 || z1 == 0x3ffffff
     }
 
     /// Set a field element equal to a small integer. Resulting field
@@ -496,7 +496,7 @@ impl Field {
     pub fn is_zero(&self) -> bool {
         debug_assert!(self.normalized);
         debug_assert!(self.verify());
-        return (self.n[0]
+        (self.n[0]
             | self.n[1]
             | self.n[2]
             | self.n[3]
@@ -506,7 +506,7 @@ impl Field {
             | self.n[7]
             | self.n[8]
             | self.n[9])
-            == 0;
+            == 0
     }
 
     /// Check the "oddness" of a field element. Requires the input to
@@ -514,7 +514,7 @@ impl Field {
     pub fn is_odd(&self) -> bool {
         debug_assert!(self.normalized);
         debug_assert!(self.verify());
-        return self.n[0] & 1 != 0;
+        self.n[0] & 1 != 0
     }
 
     /// Sets a field element equal to zero, initializing all fields.
@@ -578,7 +578,7 @@ impl Field {
         self.normalized = true;
         debug_assert!(self.verify());
 
-        return true;
+        true
     }
 
     pub fn fill_b32(&self, r: &mut [u8; 32]) {
@@ -694,13 +694,13 @@ impl Field {
                 return Ordering::Less;
             }
         }
-        return Ordering::Equal;
+        Ordering::Equal
     }
 
     pub fn eq_var(&self, other: &Field) -> bool {
         let mut na = self.neg(1);
         na += other;
-        return na.normalizes_to_zero_var();
+        na.normalizes_to_zero_var()
     }
 
     fn mul_inner(&mut self, a: &Field, b: &Field) {
@@ -1620,8 +1620,7 @@ impl Field {
         for _ in 0..2 {
             t1 = t1.sqr();
         }
-        let r = self * &t1;
-        r
+        self * &t1
     }
 
     /// Potentially faster version of secp256k1_fe_inv, without
@@ -1751,7 +1750,7 @@ impl PartialEq for Field {
     fn eq(&self, other: &Field) -> bool {
         let mut na = self.neg(self.magnitude);
         na += other;
-        return na.normalizes_to_zero();
+        na.normalizes_to_zero()
     }
 }
 

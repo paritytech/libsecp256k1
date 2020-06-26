@@ -126,7 +126,7 @@ impl Affine {
         if self.y.is_odd() != odd {
             self.y = self.y.neg(1);
         }
-        return true;
+        true
     }
 
     /// Check whether a group element is the point at infinity.
@@ -220,7 +220,7 @@ pub fn set_table_gej_var(r: &mut [Affine], a: &[Jacobian], zr: &[Field]) {
     let mut i = r.len() - 1;
     let mut zi: Field;
 
-    if r.len() > 0 {
+    if !r.is_empty() {
         zi = a[i].z.inv();
         r[i].set_gej_zinv(&a[i], &zi);
 
@@ -238,7 +238,7 @@ pub fn globalz_set_table_gej(r: &mut [Affine], globalz: &mut Field, a: &[Jacobia
     let mut i = r.len() - 1;
     let mut zs: Field;
 
-    if r.len() > 0 {
+    if !r.is_empty() {
         r[i].x = a[i].x;
         r[i].y = a[i].y;
         *globalz = a[i].z;
@@ -296,7 +296,7 @@ impl Jacobian {
         r *= x;
         let mut r2 = self.x;
         r2.normalize_weak();
-        return r.eq_var(&r2);
+        r.eq_var(&r2)
     }
 
     /// Set r equal to the inverse of a (i.e., mirrored around the X
@@ -328,7 +328,7 @@ impl Jacobian {
         }
 
         let yz = self.y * self.z;
-        return yz.is_quad_var();
+        yz.is_quad_var()
     }
 
     /// Set r equal to the double of a. If rzr is not-NULL, r->z =
