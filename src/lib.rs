@@ -167,9 +167,9 @@ impl PublicKey {
             return Err(Error::InvalidPublicKey);
         }
         if elem.is_valid_var() {
-            return Ok(PublicKey(elem));
+            Ok(PublicKey(elem))
         } else {
-            return Err(Error::InvalidPublicKey);
+            Err(Error::InvalidPublicKey)
         }
     }
 
@@ -191,9 +191,9 @@ impl PublicKey {
             return Err(Error::InvalidPublicKey);
         }
         if elem.is_valid_var() {
-            return Ok(PublicKey(elem));
+            Ok(PublicKey(elem))
         } else {
-            return Err(Error::InvalidPublicKey);
+            Err(Error::InvalidPublicKey)
         }
     }
 
@@ -384,9 +384,8 @@ impl SecretKey {
             let mut ret = [0u8; util::SECRET_KEY_SIZE];
             rng.fill_bytes(&mut ret);
 
-            match Self::parse(&ret) {
-                Ok(key) => return key,
-                Err(_) => (),
+            if let Ok(key) = Self::parse(&ret) {
+                return key;
             }
         }
     }
@@ -396,7 +395,7 @@ impl SecretKey {
     }
 
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
-        let v = &self.0 + &tweak.0;
+        let v = self.0 + tweak.0;
         if v.is_zero() {
             return Err(Error::TweakOutOfRange);
         }
@@ -696,7 +695,7 @@ pub fn recover_with_context(
 ) -> Result<PublicKey, Error> {
     context
         .recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0)
-        .map(|v| PublicKey(v))
+        .map(PublicKey)
 }
 
 #[cfg(feature = "static-context")]
@@ -729,12 +728,9 @@ pub fn sign_with_context(
         overflow = bool::from(nonce.set_b32(array_ref!(generated, 0, 32)));
 
         if !overflow && !nonce.is_zero() {
-            match context.sign_raw(&seckey.0, &message.0, &nonce) {
-                Ok(val) => {
-                    result = val;
-                    break;
-                }
-                Err(_) => (),
+            if let Ok(val) = context.sign_raw(&seckey.0, &message.0, &nonce) {
+                result = val;
+                break;
             }
         }
     }

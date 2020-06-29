@@ -1,5 +1,14 @@
 //! Core libraries for libsecp256k1.
 
+#![allow(
+    clippy::cast_ptr_alignment,
+    clippy::identity_op,
+    clippy::many_single_char_names,
+    clippy::needless_range_loop,
+    clippy::suspicious_op_assign_impl,
+    clippy::too_many_arguments,
+    clippy::type_complexity
+)]
 #![deny(
     unused_import_braces,
     unused_imports,

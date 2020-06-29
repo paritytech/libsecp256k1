@@ -52,7 +52,7 @@ impl ECMultContext {
         if pr.eq_x_var(&xr) {
             return true;
         }
-        return false;
+        false
     }
 
     pub fn recover_raw(
@@ -96,9 +96,9 @@ impl ECMultContext {
         pubkey.set_gej_var(&qj);
 
         if pubkey.is_infinity() {
-            return Err(Error::InvalidSignature);
+            Err(Error::InvalidSignature)
         } else {
-            return Ok(pubkey);
+            Ok(pubkey)
         }
     }
 }
@@ -135,8 +135,8 @@ impl ECMultGenContext {
         }
         if sigs.is_high() {
             sigs = -sigs;
-            recid = recid ^ 1;
+            recid ^= 1;
         }
-        return Ok((sigr, sigs, recid));
+        Ok((sigr, sigs, recid))
     }
 }

@@ -22,12 +22,8 @@ mod signatures {
         secp256k1: &Secp256k1<All>,
     ) -> (key::PublicKey, key::SecretKey, PublicKey, SecretKey) {
         let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng());
-        let pubkey_arr = secp_pubkey.serialize_uncompressed();
-        assert_eq!(pubkey_arr.len(), 65);
-        let mut pubkey_a = [0u8; 65];
-        for i in 0..65 {
-            pubkey_a[i] = pubkey_arr[i];
-        }
+        let pubkey_a = secp_pubkey.serialize_uncompressed();
+        assert_eq!(pubkey_a.len(), 65);
         let pubkey = PublicKey::parse(&pubkey_a).unwrap();
         let mut seckey_a = [0u8; 32];
         for i in 0..32 {
@@ -67,12 +63,8 @@ mod signatures {
         let (secp_privkey, secp_pubkey) = secp256k1.generate_keypair(&mut thread_rng());
 
         let secp_message = SecpMessage::from_slice(&message_arr).unwrap();
-        let pubkey_arr = secp_pubkey.serialize_uncompressed();
-        assert_eq!(pubkey_arr.len(), 65);
-        let mut pubkey_a = [0u8; 65];
-        for i in 0..65 {
-            pubkey_a[i] = pubkey_arr[i];
-        }
+        let pubkey_a = secp_pubkey.serialize_uncompressed();
+        assert_eq!(pubkey_a.len(), 65);
         let pubkey = PublicKey::parse(&pubkey_a).unwrap();
         let mut seckey_a = [0u8; 32];
         for i in 0..32 {
@@ -171,21 +163,13 @@ fn test_verify() {
     let message = SecpMessage::from_slice(&message_arr).unwrap();
     let signature = secp256k1.sign(&message, &privkey);
 
-    let pubkey_arr = pubkey.serialize_uncompressed();
-    assert_eq!(pubkey_arr.len(), 65);
-    let mut pubkey_a = [0u8; 65];
-    for i in 0..65 {
-        pubkey_a[i] = pubkey_arr[i];
-    }
+    let pubkey_a = pubkey.serialize_uncompressed();
+    assert_eq!(pubkey_a.len(), 65);
 
     let ctx_pubkey = PublicKey::parse(&pubkey_a).unwrap();
     let ctx_message = Message::parse(&message_arr);
-    let signature_arr = signature.serialize_compact();
-    assert_eq!(signature_arr.len(), 64);
-    let mut signature_a = [0u8; 64];
-    for i in 0..64 {
-        signature_a[i] = signature_arr[i];
-    }
+    let signature_a = signature.serialize_compact();
+    assert_eq!(signature_a.len(), 64);
     let ctx_sig = Signature::parse(&signature_a);
 
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
@@ -229,20 +213,12 @@ fn test_recover() {
     let message = SecpMessage::from_slice(&message_arr).unwrap();
     let signature = secp256k1.sign_recoverable(&message, &privkey);
 
-    let pubkey_arr = pubkey.serialize_uncompressed();
-    assert_eq!(pubkey_arr.len(), 65);
-    let mut pubkey_a = [0u8; 65];
-    for i in 0..65 {
-        pubkey_a[i] = pubkey_arr[i];
-    }
+    let pubkey_a = pubkey.serialize_uncompressed();
+    assert_eq!(pubkey_a.len(), 65);
 
     let ctx_message = Message::parse(&message_arr);
-    let (rec_id, signature_arr) = signature.serialize_compact();
-    assert_eq!(signature_arr.len(), 64);
-    let mut signature_a = [0u8; 64];
-    for i in 0..64 {
-        signature_a[i] = signature_arr[i];
-    }
+    let (rec_id, signature_a) = signature.serialize_compact();
+    assert_eq!(signature_a.len(), 64);
     let ctx_sig = Signature::parse(&signature_a);
 
     // secp256k1.recover(&message, &signature).unwrap();
@@ -403,18 +379,10 @@ fn test_convert_anykey() {
     let pubkey_r: &[u8] = &public;
     let pubkey_compressed_r: &[u8] = &public_compressed;
 
-    let secp_pubkey_arr = secp_pubkey.serialize_uncompressed();
-    assert_eq!(secp_pubkey_arr.len(), 65);
-    let secp_pubkey_compressed_arr = secp_pubkey.serialize();
-    assert_eq!(secp_pubkey_compressed_arr.len(), 33);
-    let mut secp_pubkey_a = [0u8; 65];
-    for i in 0..65 {
-        secp_pubkey_a[i] = secp_pubkey_arr[i];
-    }
-    let mut secp_pubkey_compressed_a = [0u8; 33];
-    for i in 0..33 {
-        secp_pubkey_compressed_a[i] = secp_pubkey_compressed_arr[i];
-    }
+    let secp_pubkey_a = secp_pubkey.serialize_uncompressed();
+    assert_eq!(secp_pubkey_a.len(), 65);
+    let secp_pubkey_compressed_a = secp_pubkey.serialize();
+    assert_eq!(secp_pubkey_compressed_a.len(), 33);
     let secp_pubkey_r: &[u8] = &secp_pubkey_a;
     let secp_pubkey_compressed_r: &[u8] = &secp_pubkey_compressed_a;
 

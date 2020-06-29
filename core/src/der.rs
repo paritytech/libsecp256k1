@@ -15,6 +15,10 @@ impl SignatureArray {
     pub fn len(&self) -> usize {
         self.1
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }
 
 impl AsRef<[u8]> for SignatureArray {
