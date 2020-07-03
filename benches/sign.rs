@@ -10,11 +10,11 @@ use test::Bencher;
 #[bench]
 fn bench_sign_message(b: &mut Bencher) {
     let secp256k1 = Secp256k1::new();
-    let message = Message::parse(&[5u8; 32]);
+    let message = Message::parse([5u8; 32]);
     let (secp_privkey, _) = secp256k1.generate_keypair(&mut thread_rng());
-    let seckey = SecretKey::parse(array_ref!(secp_privkey, 0, 32)).unwrap();
+    let seckey = SecretKey::parse(*array_ref!(secp_privkey, 0, 32)).unwrap();
 
     b.iter(|| {
-        let _ = sign(&message, &seckey);
+        let _ = sign(message, seckey);
     });
 }

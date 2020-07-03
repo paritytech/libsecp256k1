@@ -89,18 +89,18 @@ pub enum PublicKeyFormat {
 
 impl PublicKey {
     pub fn from_secret_key_with_context(
-        seckey: &SecretKey,
+        seckey: SecretKey,
         context: &ECMultGenContext,
     ) -> PublicKey {
         let mut pj = Jacobian::default();
-        context.ecmult_gen(&mut pj, &seckey.0);
+        context.ecmult_gen(&mut pj, seckey.0);
         let mut p = Affine::default();
-        p.set_gej(&pj);
+        p.set_gej(pj);
         PublicKey(p)
     }
 
     #[cfg(feature = "static-context")]
-    pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
+    pub fn from_secret_key(seckey: SecretKey) -> PublicKey {
         Self::from_secret_key_with_context(seckey, &ECMULT_GEN_CONTEXT)
     }
 
@@ -121,7 +121,7 @@ impl PublicKey {
             PublicKeyFormat::Full => {
                 let mut a = [0; util::FULL_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
-                Self::parse(&a)
+                Self::parse(a)
             }
             PublicKeyFormat::Raw => {
                 use util::TAG_PUBKEY_FULL;
@@ -129,17 +129,17 @@ impl PublicKey {
                 let mut a = [0; util::FULL_PUBLIC_KEY_SIZE];
                 a[0] = TAG_PUBKEY_FULL;
                 a[1..].copy_from_slice(p);
-                Self::parse(&a)
+                Self::parse(a)
             }
             PublicKeyFormat::Compressed => {
                 let mut a = [0; util::COMPRESSED_PUBLIC_KEY_SIZE];
                 a.copy_from_slice(p);
-                Self::parse_compressed(&a)
+                Self::parse_compressed(a)
             }
         }
     }
 
-    pub fn parse(p: &[u8; util::FULL_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
+    pub fn parse(p: [u8; util::FULL_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_FULL, TAG_PUBKEY_HYBRID_EVEN, TAG_PUBKEY_HYBRID_ODD};
 
         if !(p[0] == TAG_PUBKEY_FULL
@@ -150,14 +150,14 @@ impl PublicKey {
         }
         let mut x = Field::default();
         let mut y = Field::default();
-        if !x.set_b32(array_ref!(p, 1, 32)) {
+        if !x.set_b32(*array_ref!(p, 1, 32)) {
             return Err(Error::InvalidPublicKey);
         }
-        if !y.set_b32(array_ref!(p, 33, 32)) {
+        if !y.set_b32(*array_ref!(p, 33, 32)) {
             return Err(Error::InvalidPublicKey);
         }
         let mut elem = Affine::default();
-        elem.set_xy(&x, &y);
+        elem.set_xy(x, y);
         if (p[0] == TAG_PUBKEY_HYBRID_EVEN || p[0] == TAG_PUBKEY_HYBRID_ODD)
             && (y.is_odd() != (p[0] == TAG_PUBKEY_HYBRID_ODD))
         {
@@ -173,20 +173,18 @@ impl PublicKey {
         }
     }
 
-    pub fn parse_compressed(
-        p: &[u8; util::COMPRESSED_PUBLIC_KEY_SIZE],
-    ) -> Result<PublicKey, Error> {
+    pub fn parse_compressed(p: [u8; util::COMPRESSED_PUBLIC_KEY_SIZE]) -> Result<PublicKey, Error> {
         use util::{TAG_PUBKEY_EVEN, TAG_PUBKEY_ODD};
 
         if !(p[0] == TAG_PUBKEY_EVEN || p[0] == TAG_PUBKEY_ODD) {
             return Err(Error::InvalidPublicKey);
         }
         let mut x = Field::default();
-        if !x.set_b32(array_ref!(p, 1, 32)) {
+        if !x.set_b32(*array_ref!(p, 1, 32)) {
             return Err(Error::InvalidPublicKey);
         }
         let mut elem = Affine::default();
-        elem.set_xo_var(&x, p[0] == TAG_PUBKEY_ODD);
+        elem.set_xo_var(x, p[0] == TAG_PUBKEY_ODD);
         if elem.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
@@ -236,30 +234,30 @@ impl PublicKey {
 
     pub fn tweak_add_assign_with_context(
         &mut self,
-        tweak: &SecretKey,
+        tweak: SecretKey,
         context: &ECMultContext,
     ) -> Result<(), Error> {
         let mut r = Jacobian::default();
-        let a = Jacobian::from_ge(&self.0);
+        let a = Jacobian::from_ge(self.0);
         let one = Scalar::from_int(1);
-        context.ecmult(&mut r, &a, &one, &tweak.0);
+        context.ecmult(&mut r, a, one, tweak.0);
 
         if r.is_infinity() {
             return Err(Error::TweakOutOfRange);
         }
 
-        self.0.set_gej(&r);
+        self.0.set_gej(r);
         Ok(())
     }
 
     #[cfg(feature = "static-context")]
-    pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+    pub fn tweak_add_assign(&mut self, tweak: SecretKey) -> Result<(), Error> {
         self.tweak_add_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
 
     pub fn tweak_mul_assign_with_context(
         &mut self,
-        tweak: &SecretKey,
+        tweak: SecretKey,
         context: &ECMultContext,
     ) -> Result<(), Error> {
         if tweak.0.is_zero() {
@@ -268,15 +266,15 @@ impl PublicKey {
 
         let mut r = Jacobian::default();
         let zero = Scalar::from_int(0);
-        let pt = Jacobian::from_ge(&self.0);
-        context.ecmult(&mut r, &pt, &tweak.0, &zero);
+        let pt = Jacobian::from_ge(self.0);
+        context.ecmult(&mut r, pt, tweak.0, zero);
 
-        self.0.set_gej(&r);
+        self.0.set_gej(r);
         Ok(())
     }
 
     #[cfg(feature = "static-context")]
-    pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+    pub fn tweak_mul_assign(&mut self, tweak: SecretKey) -> Result<(), Error> {
         self.tweak_mul_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
 
@@ -285,14 +283,14 @@ impl PublicKey {
         qj.set_infinity();
 
         for key in keys {
-            qj = qj.add_ge(&key.0);
+            qj = qj.add_ge(key.0);
         }
 
         if qj.is_infinity() {
             return Err(Error::InvalidPublicKey);
         }
 
-        let q = Affine::from_gej(&qj);
+        let q = Affine::from_gej(qj);
         Ok(PublicKey(q))
     }
 }
@@ -360,7 +358,7 @@ impl<'de> Deserialize<'de> for PublicKey {
 }
 
 impl SecretKey {
-    pub fn parse(p: &[u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
+    pub fn parse(p: [u8; util::SECRET_KEY_SIZE]) -> Result<SecretKey, Error> {
         let mut elem = Scalar::default();
         if !bool::from(elem.set_b32(p)) {
             Self::try_from(elem)
@@ -376,7 +374,7 @@ impl SecretKey {
 
         let mut a = [0; 32];
         a.copy_from_slice(p);
-        Self::parse(&a)
+        Self::parse(a)
     }
 
     pub fn random<R: Rng>(rng: &mut R) -> SecretKey {
@@ -384,7 +382,7 @@ impl SecretKey {
             let mut ret = [0u8; util::SECRET_KEY_SIZE];
             rng.fill_bytes(&mut ret);
 
-            if let Ok(key) = Self::parse(&ret) {
+            if let Ok(key) = Self::parse(ret) {
                 return key;
             }
         }
@@ -394,7 +392,7 @@ impl SecretKey {
         self.0.b32()
     }
 
-    pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+    pub fn tweak_add_assign(&mut self, tweak: SecretKey) -> Result<(), Error> {
         let v = self.0 + tweak.0;
         if v.is_zero() {
             return Err(Error::TweakOutOfRange);
@@ -403,7 +401,7 @@ impl SecretKey {
         Ok(())
     }
 
-    pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
+    pub fn tweak_mul_assign(&mut self, tweak: SecretKey) -> Result<(), Error> {
         if tweak.0.is_zero() {
             return Err(Error::TweakOutOfRange);
         }
@@ -420,7 +418,7 @@ impl SecretKey {
 impl Default for SecretKey {
     fn default() -> SecretKey {
         let mut elem = Scalar::default();
-        let overflowed = bool::from(elem.set_b32(&[
+        let overflowed = bool::from(elem.set_b32([
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x01,
@@ -458,13 +456,13 @@ impl core::fmt::LowerHex for SecretKey {
 }
 
 impl Signature {
-    pub fn parse(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
+    pub fn parse(p: [u8; util::SIGNATURE_SIZE]) -> Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
         // Okay for signature to overflow
-        let _ = r.set_b32(array_ref!(p, 0, 32));
-        let _ = s.set_b32(array_ref!(p, 32, 32));
+        let _ = r.set_b32(*array_ref!(p, 0, 32));
+        let _ = s.set_b32(*array_ref!(p, 32, 32));
 
         Signature { r, s }
     }
@@ -476,7 +474,7 @@ impl Signature {
 
         let mut a = [0; util::SIGNATURE_SIZE];
         a.copy_from_slice(p);
-        Ok(Self::parse(&a))
+        Ok(Self::parse(a))
     }
 
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
@@ -584,7 +582,7 @@ impl Signature {
 }
 
 impl Message {
-    pub fn parse(p: &[u8; util::MESSAGE_SIZE]) -> Message {
+    pub fn parse(p: [u8; util::MESSAGE_SIZE]) -> Message {
         let mut m = Scalar::default();
 
         // Okay for message to overflow.
@@ -600,7 +598,7 @@ impl Message {
 
         let mut a = [0; util::MESSAGE_SIZE];
         a.copy_from_slice(p);
-        Ok(Self::parse(&a))
+        Ok(Self::parse(a))
     }
 
     pub fn serialize(&self) -> [u8; util::MESSAGE_SIZE] {
@@ -646,11 +644,11 @@ impl Into<i32> for RecoveryId {
 
 impl<D: Digest + Default> SharedSecret<D> {
     pub fn new_with_context(
-        pubkey: &PublicKey,
-        seckey: &SecretKey,
+        pubkey: PublicKey,
+        seckey: SecretKey,
         context: &ECMultContext,
     ) -> Result<SharedSecret<D>, Error> {
-        let inner = match context.ecdh_raw::<D>(&pubkey.0, &seckey.0) {
+        let inner = match context.ecdh_raw::<D>(pubkey.0, seckey.0) {
             Some(val) => val,
             None => return Err(Error::InvalidSecretKey),
         };
@@ -659,7 +657,7 @@ impl<D: Digest + Default> SharedSecret<D> {
     }
 
     #[cfg(feature = "static-context")]
-    pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
+    pub fn new(pubkey: PublicKey, seckey: SecretKey) -> Result<SharedSecret<D>, Error> {
         Self::new_with_context(pubkey, seckey, &ECMULT_CONTEXT)
     }
 }
@@ -672,38 +670,38 @@ impl<D: Digest> AsRef<[u8]> for SharedSecret<D> {
 
 /// Check signature is a valid message signed by public key, using the given context.
 pub fn verify_with_context(
-    message: &Message,
-    signature: &Signature,
-    pubkey: &PublicKey,
+    message: Message,
+    signature: Signature,
+    pubkey: PublicKey,
     context: &ECMultContext,
 ) -> bool {
-    context.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
+    context.verify_raw(signature.r, signature.s, pubkey.0, message.0)
 }
 
 #[cfg(feature = "static-context")]
 /// Check signature is a valid message signed by public key.
-pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
+pub fn verify(message: Message, signature: Signature, pubkey: PublicKey) -> bool {
     verify_with_context(message, signature, pubkey, &ECMULT_CONTEXT)
 }
 
 /// Recover public key from a signed message, using the given context.
 pub fn recover_with_context(
-    message: &Message,
-    signature: &Signature,
-    recovery_id: &RecoveryId,
+    message: Message,
+    signature: Signature,
+    recovery_id: RecoveryId,
     context: &ECMultContext,
 ) -> Result<PublicKey, Error> {
     context
-        .recover_raw(&signature.r, &signature.s, recovery_id.0, &message.0)
+        .recover_raw(signature.r, signature.s, recovery_id.0, message.0)
         .map(PublicKey)
 }
 
 #[cfg(feature = "static-context")]
 /// Recover public key from a signed message.
 pub fn recover(
-    message: &Message,
-    signature: &Signature,
-    recovery_id: &RecoveryId,
+    message: Message,
+    signature: Signature,
+    recovery_id: RecoveryId,
 ) -> Result<PublicKey, Error> {
     recover_with_context(message, signature, recovery_id, &ECMULT_CONTEXT)
 }
@@ -711,8 +709,8 @@ pub fn recover(
 #[cfg(feature = "hmac")]
 /// Sign a message using the secret key, with the given context.
 pub fn sign_with_context(
-    message: &Message,
-    seckey: &SecretKey,
+    message: Message,
+    seckey: SecretKey,
     context: &ECMultGenContext,
 ) -> (Signature, RecoveryId) {
     let seckey_b32 = seckey.0.b32();
@@ -725,10 +723,10 @@ pub fn sign_with_context(
     let result;
     loop {
         let generated = drbg.generate::<U32>(None);
-        overflow = bool::from(nonce.set_b32(array_ref!(generated, 0, 32)));
+        overflow = bool::from(nonce.set_b32(*array_ref!(generated, 0, 32)));
 
         if !overflow && !nonce.is_zero() {
-            if let Ok(val) = context.sign_raw(&seckey.0, &message.0, &nonce) {
+            if let Ok(val) = context.sign_raw(seckey.0, message.0, nonce) {
                 result = val;
                 break;
             }
@@ -746,7 +744,7 @@ pub fn sign_with_context(
 
 #[cfg(all(feature = "hmac", feature = "static-context"))]
 /// Sign a message using the secret key.
-pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
+pub fn sign(message: Message, seckey: SecretKey) -> (Signature, RecoveryId) {
     sign_with_context(message, seckey, &ECMULT_GEN_CONTEXT)
 }
 
@@ -757,14 +755,14 @@ mod tests {
 
     #[test]
     fn secret_key_inverse_is_sane() {
-        let sk = SecretKey::parse(&[1; 32]).unwrap();
+        let sk = SecretKey::parse([1; 32]).unwrap();
         let inv = sk.inv();
         let invinv = inv.inv();
         assert_eq!(sk, invinv);
         // Check that the inverse of `[1; 32]` is same as rust-secp256k1
         assert_eq!(
             inv,
-            SecretKey::parse(&hex!(
+            SecretKey::parse(hex!(
                 "1536f1d756d1abf83aaf173bc5ee3fc487c93010f18624d80bd6d4038fadd59e"
             ))
             .unwrap()

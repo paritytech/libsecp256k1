@@ -8,21 +8,18 @@ use digest::{generic_array::GenericArray, Digest};
 impl ECMultContext {
     pub fn ecdh_raw<D: Digest + Default>(
         &self,
-        point: &Affine,
-        scalar: &Scalar,
+        mut pt: Affine,
+        s: Scalar,
     ) -> Option<GenericArray<u8, D::OutputSize>> {
         let mut digest: D = Default::default();
-
-        let mut pt = *point;
-        let s = *scalar;
 
         if s.is_zero() {
             return None;
         }
 
         let mut res = Jacobian::default();
-        self.ecmult_const(&mut res, &pt, &s);
-        pt.set_gej(&res);
+        self.ecmult_const(&mut res, pt, s);
+        pt.set_gej(res);
 
         pt.x.normalize();
         pt.y.normalize();

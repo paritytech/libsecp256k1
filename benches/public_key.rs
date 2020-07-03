@@ -15,7 +15,7 @@ fn bench_public_key_parse(b: &mut Bencher) {
     let mut pubkey_a = [0u8; 65];
     pubkey_a[0..65].copy_from_slice(&pubkey_arr[0..65]);
     b.iter(|| {
-        let _pubkey = PublicKey::parse(&pubkey_a).unwrap();
+        let _pubkey = PublicKey::parse(pubkey_a).unwrap();
     });
 }
 
@@ -27,7 +27,7 @@ fn bench_public_key_serialize(b: &mut Bencher) {
     assert!(pubkey_arr.len() == 65);
     let mut pubkey_a = [0u8; 65];
     pubkey_a[0..65].copy_from_slice(&pubkey_arr[0..65]);
-    let pubkey = PublicKey::parse(&pubkey_a).unwrap();
+    let pubkey = PublicKey::parse(pubkey_a).unwrap();
     b.iter(|| {
         let _serialized = pubkey.serialize();
     });
@@ -41,7 +41,7 @@ fn bench_public_key_serialize_compressed(b: &mut Bencher) {
     assert!(pubkey_arr.len() == 65);
     let mut pubkey_a = [0u8; 65];
     pubkey_a[0..65].copy_from_slice(&pubkey_arr[0..65]);
-    let pubkey = PublicKey::parse(&pubkey_a).unwrap();
+    let pubkey = PublicKey::parse(pubkey_a).unwrap();
     b.iter(|| {
         let _serialized = pubkey.serialize_compressed();
     });

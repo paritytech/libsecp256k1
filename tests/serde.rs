@@ -8,8 +8,8 @@ const SERIALIZED_DEBUG_PUBLIC_KEY: &str =
     "\"BBuExVZ7EmRAmV0+1aq6BWXXHhg0YEgZ/5wX9enV3QePcL6vj1iLVBUH/tamQsWrQt/fgSCn9jneUSLUemmo6NE=\"";
 
 fn debug_public_key() -> PublicKey {
-    let skey = SecretKey::parse(&DEBUG_SECRET_KEY).unwrap();
-    PublicKey::from_secret_key(&skey)
+    let skey = SecretKey::parse(DEBUG_SECRET_KEY).unwrap();
+    PublicKey::from_secret_key(skey)
 }
 
 #[test]

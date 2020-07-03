@@ -1,3 +1,4 @@
+use super::{forward_ref_binop, forward_ref_op_assign};
 use core::ops::{Add, AddAssign, Mul, MulAssign, Neg};
 use crunchy::unroll;
 use subtle::Choice;
@@ -157,7 +158,7 @@ impl Scalar {
 
     /// Set a scalar from a big endian byte array, return whether it overflowed.
     #[must_use]
-    pub fn set_b32(&mut self, b32: &[u8; 32]) -> Choice {
+    pub fn set_b32(&mut self, b32: [u8; 32]) -> Choice {
         self.0[0] = (b32[31] as u32)
             | ((b32[30] as u32) << 8)
             | ((b32[29] as u32) << 16)
@@ -414,7 +415,7 @@ macro_rules! define_ops {
 }
 
 impl Scalar {
-    fn reduce_512(&mut self, l: &[u32; 16]) {
+    fn reduce_512(&mut self, l: [u32; 16]) {
         let (mut c0, mut c1, mut c2): (u32, u32, u32);
         define_ops!(c0, c1, c2);
 
@@ -581,7 +582,7 @@ impl Scalar {
         self.reduce(Choice::from(c as u8) | overflow);
     }
 
-    fn mul_512(&self, b: &Scalar, l: &mut [u32; 16]) {
+    fn mul_512(&self, b: Scalar, l: &mut [u32; 16]) {
         let (mut c0, mut c1, mut c2): (u32, u32, u32) = (0, 0, 0);
         define_ops!(c0, c1, c2);
 
@@ -729,10 +730,10 @@ impl Scalar {
         l[15] = c0;
     }
 
-    pub fn mul_in_place(&mut self, a: &Scalar, b: &Scalar) {
+    pub fn mul_in_place(&mut self, a: Scalar, b: Scalar) {
         let mut l = [0u32; 16];
         a.mul_512(b, &mut l);
-        self.reduce_512(&l);
+        self.reduce_512(l);
     }
 
     /// Shift a scalar right by some amount strictly between 0 and 16,
@@ -753,21 +754,21 @@ impl Scalar {
         ret
     }
 
-    pub fn sqr_in_place(&mut self, a: &Scalar) {
+    pub fn sqr_in_place(&mut self, a: Scalar) {
         let mut l = [0u32; 16];
         a.sqr_512(&mut l);
-        self.reduce_512(&l);
+        self.reduce_512(l);
     }
 
     pub fn sqr(&self) -> Scalar {
         let mut ret = Scalar::default();
-        ret.sqr_in_place(self);
+        ret.sqr_in_place(*self);
         ret
     }
 
-    pub fn inv_in_place(&mut self, x: &Scalar) {
+    pub fn inv_in_place(&mut self, x: Scalar) {
         let u2 = x.sqr();
-        let x2 = u2 * *x;
+        let x2 = u2 * x;
         let u5 = u2 * x2;
         let x3 = u5 * u2;
         let u9 = x3 * u2;
@@ -913,7 +914,7 @@ impl Scalar {
 
     pub fn inv(&self) -> Scalar {
         let mut ret = Scalar::default();
-        ret.inv_in_place(self);
+        ret.inv_in_place(*self);
         ret
     }
 
@@ -935,22 +936,15 @@ impl Default for Scalar {
 impl Add<Scalar> for Scalar {
     type Output = Scalar;
     fn add(mut self, other: Scalar) -> Scalar {
-        self.add_assign(&other);
+        self.add_assign(other);
         self
     }
 }
 
-impl<'a, 'b> Add<&'a Scalar> for &'b Scalar {
-    type Output = Scalar;
-    fn add(self, other: &'a Scalar) -> Scalar {
-        let mut ret = *self;
-        ret.add_assign(other);
-        ret
-    }
-}
+forward_ref_binop! { impl Add, add for Scalar, Scalar }
 
-impl<'a> AddAssign<&'a Scalar> for Scalar {
-    fn add_assign(&mut self, other: &'a Scalar) {
+impl AddAssign<Scalar> for Scalar {
+    fn add_assign(&mut self, other: Scalar) {
         let mut t = 0u64;
 
         unroll! {
@@ -966,43 +960,28 @@ impl<'a> AddAssign<&'a Scalar> for Scalar {
     }
 }
 
-impl AddAssign<Scalar> for Scalar {
-    fn add_assign(&mut self, other: Scalar) {
-        self.add_assign(&other)
-    }
-}
+forward_ref_op_assign! { impl AddAssign, add_assign for Scalar, Scalar }
 
 impl Mul<Scalar> for Scalar {
     type Output = Scalar;
     fn mul(self, other: Scalar) -> Scalar {
         let mut ret = Scalar::default();
-        ret.mul_in_place(&self, &other);
-        ret
-    }
-}
-
-impl<'a, 'b> Mul<&'a Scalar> for &'b Scalar {
-    type Output = Scalar;
-    fn mul(self, other: &'a Scalar) -> Scalar {
-        let mut ret = Scalar::default();
         ret.mul_in_place(self, other);
         ret
     }
 }
 
-impl<'a> MulAssign<&'a Scalar> for Scalar {
-    fn mul_assign(&mut self, other: &'a Scalar) {
+forward_ref_binop! { impl Mul, mul for Scalar, Scalar }
+
+impl MulAssign<Scalar> for Scalar {
+    fn mul_assign(&mut self, other: Scalar) {
         let mut ret = Scalar::default();
-        ret.mul_in_place(self, other);
+        ret.mul_in_place(*self, other);
         *self = ret;
     }
 }
 
-impl MulAssign<Scalar> for Scalar {
-    fn mul_assign(&mut self, other: Scalar) {
-        self.mul_assign(&other)
-    }
-}
+forward_ref_op_assign! { impl MulAssign, mul_assign for Scalar, Scalar }
 
 impl Neg for Scalar {
     type Output = Scalar;
@@ -1012,13 +991,7 @@ impl Neg for Scalar {
     }
 }
 
-impl<'a> Neg for &'a Scalar {
-    type Output = Scalar;
-    fn neg(self) -> Scalar {
-        let value = *self;
-        -value
-    }
-}
+forward_ref_unop! { impl Neg, neg for Scalar }
 
 impl core::fmt::LowerHex for Scalar {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {

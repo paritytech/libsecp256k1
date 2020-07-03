@@ -177,7 +177,7 @@ impl<'a> Decoder<'a> {
             b32[32 - rlen..].copy_from_slice(self.peek_slice(rlen)?);
             self.skip(rlen)?;
 
-            overflow |= bool::from(int.set_b32(&b32));
+            overflow |= bool::from(int.set_b32(b32));
         }
 
         if overflow {
@@ -256,7 +256,7 @@ impl<'a> Decoder<'a> {
             b32[32 - len..].copy_from_slice(&self.peek_slice(len)?);
             self.skip(len)?;
 
-            overflow |= bool::from(int.set_b32(&b32));
+            overflow |= bool::from(int.set_b32(b32));
         }
 
         if overflow {

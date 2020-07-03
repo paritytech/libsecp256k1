@@ -31,6 +31,8 @@ mod ecdh;
 mod ecdsa;
 mod ecmult;
 mod error;
+#[macro_use]
+mod macros;
 mod scalar;
 
 pub use crate::error::Error;

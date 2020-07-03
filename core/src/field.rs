@@ -1,3 +1,4 @@
+use super::{forward_ref_binop, forward_ref_op_assign};
 use core::{
     cmp::Ordering,
     ops::{Add, AddAssign, Mul, MulAssign},
@@ -527,7 +528,7 @@ impl Field {
     /// Set a field element equal to 32-byte big endian value. If
     /// successful, the resulting field element is normalized.
     #[must_use]
-    pub fn set_b32(&mut self, a: &[u8; 32]) -> bool {
+    pub fn set_b32(&mut self, a: [u8; 32]) -> bool {
         self.n[0] = (a[31] as u32)
             | ((a[30] as u32) << 8)
             | ((a[29] as u32) << 16)
@@ -630,7 +631,7 @@ impl Field {
     /// Set a field element equal to the additive inverse of
     /// another. Takes a maximum magnitude of the input as an
     /// argument. The magnitude of the output is one higher.
-    pub fn neg_in_place(&mut self, other: &Field, m: u32) {
+    pub fn neg_in_place(&mut self, other: Field, m: u32) {
         debug_assert!(other.magnitude <= m);
         debug_assert!(other.verify());
 
@@ -654,7 +655,7 @@ impl Field {
     /// expected magnitude of this element as an argument.
     pub fn neg(&self, m: u32) -> Field {
         let mut ret = Field::default();
-        ret.neg_in_place(self, m);
+        ret.neg_in_place(*self, m);
         ret
     }
 
@@ -679,7 +680,7 @@ impl Field {
 
     /// Compare two field elements. Requires both inputs to be
     /// normalized.
-    pub fn cmp_var(&self, other: &Field) -> Ordering {
+    pub fn cmp_var(&self, other: Field) -> Ordering {
         // Variable time compare implementation.
         debug_assert!(self.normalized);
         debug_assert!(other.normalized);
@@ -697,13 +698,13 @@ impl Field {
         Ordering::Equal
     }
 
-    pub fn eq_var(&self, other: &Field) -> bool {
+    pub fn eq_var(&self, other: Field) -> bool {
         let mut na = self.neg(1);
         na += other;
         na.normalizes_to_zero_var()
     }
 
-    fn mul_inner(&mut self, a: &Field, b: &Field) {
+    fn mul_inner(&mut self, a: Field, b: Field) {
         const M: u64 = 0x3ffffff;
         const R0: u64 = 0x3d10;
         const R1: u64 = 0x400;
@@ -1094,7 +1095,7 @@ impl Field {
         /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
     }
 
-    fn sqr_inner(&mut self, a: &Field) {
+    fn sqr_inner(&mut self, a: Field) {
         const M: u64 = 0x3ffffff;
         const R0: u64 = 0x3d10;
         const R1: u64 = 0x400;
@@ -1428,7 +1429,7 @@ impl Field {
     /// Sets a field element to be the product of two others. Requires
     /// the inputs' magnitudes to be at most 8. The output magnitude
     /// is 1 (but not guaranteed to be normalized).
-    pub fn mul_in_place(&mut self, a: &Field, b: &Field) {
+    pub fn mul_in_place(&mut self, a: Field, b: Field) {
         debug_assert!(a.magnitude <= 8);
         debug_assert!(b.magnitude <= 8);
         debug_assert!(a.verify());
@@ -1442,7 +1443,7 @@ impl Field {
     /// Sets a field element to be the square of another. Requires the
     /// input's magnitude to be at most 8. The output magnitude is 1
     /// (but not guaranteed to be normalized).
-    pub fn sqr_in_place(&mut self, a: &Field) {
+    pub fn sqr_in_place(&mut self, a: Field) {
         debug_assert!(a.magnitude <= 8);
         debug_assert!(a.verify());
         self.sqr_inner(a);
@@ -1453,7 +1454,7 @@ impl Field {
 
     pub fn sqr(&self) -> Field {
         let mut ret = Field::default();
-        ret.sqr_in_place(self);
+        ret.sqr_in_place(*self);
         ret
     }
 
@@ -1620,7 +1621,7 @@ impl Field {
         for _ in 0..2 {
             t1 = t1.sqr();
         }
-        self * &t1
+        self * t1
     }
 
     /// Potentially faster version of secp256k1_fe_inv, without
@@ -1637,7 +1638,7 @@ impl Field {
 
     /// If flag is true, set *r equal to *a; otherwise leave
     /// it. Constant-time.
-    pub fn cmov(&mut self, other: &Field, flag: bool) {
+    pub fn cmov(&mut self, other: Field, flag: bool) {
         self.n[0] = if flag { other.n[0] } else { self.n[0] };
         self.n[1] = if flag { other.n[1] } else { self.n[1] };
         self.n[2] = if flag { other.n[2] } else { self.n[2] };
@@ -1680,17 +1681,10 @@ impl Add<Field> for Field {
     }
 }
 
-impl<'a, 'b> Add<&'a Field> for &'b Field {
-    type Output = Field;
-    fn add(self, other: &'a Field) -> Field {
-        let mut ret = *self;
-        ret.add_assign(other);
-        ret
-    }
-}
+forward_ref_binop! { impl Add, add for Field, Field }
 
-impl<'a> AddAssign<&'a Field> for Field {
-    fn add_assign(&mut self, other: &'a Field) {
+impl AddAssign<Field> for Field {
+    fn add_assign(&mut self, other: Field) {
         self.n[0] += other.n[0];
         self.n[1] += other.n[1];
         self.n[2] += other.n[2];
@@ -1708,43 +1702,28 @@ impl<'a> AddAssign<&'a Field> for Field {
     }
 }
 
-impl AddAssign<Field> for Field {
-    fn add_assign(&mut self, other: Field) {
-        self.add_assign(&other)
-    }
-}
+forward_ref_op_assign! { impl AddAssign, add_assign for Field, Field }
 
 impl Mul<Field> for Field {
     type Output = Field;
     fn mul(self, other: Field) -> Field {
         let mut ret = Field::default();
-        ret.mul_in_place(&self, &other);
-        ret
-    }
-}
-
-impl<'a, 'b> Mul<&'a Field> for &'b Field {
-    type Output = Field;
-    fn mul(self, other: &'a Field) -> Field {
-        let mut ret = Field::default();
         ret.mul_in_place(self, other);
         ret
     }
 }
 
-impl<'a> MulAssign<&'a Field> for Field {
-    fn mul_assign(&mut self, other: &'a Field) {
+forward_ref_binop! { impl Mul, mul for Field, Field }
+
+impl MulAssign<Field> for Field {
+    fn mul_assign(&mut self, other: Field) {
         let mut ret = Field::default();
-        ret.mul_in_place(self, other);
+        ret.mul_in_place(*self, other);
         *self = ret;
     }
 }
 
-impl MulAssign<Field> for Field {
-    fn mul_assign(&mut self, other: Field) {
-        self.mul_assign(&other)
-    }
-}
+forward_ref_op_assign! { impl MulAssign, mul_assign for Field, Field }
 
 impl PartialEq for Field {
     fn eq(&self, other: &Field) -> bool {
@@ -1758,7 +1737,7 @@ impl Eq for Field {}
 
 impl Ord for Field {
     fn cmp(&self, other: &Field) -> Ordering {
-        self.cmp_var(other)
+        self.cmp_var(*other)
     }
 }
 
@@ -1792,7 +1771,7 @@ impl FieldStorage {
         Self([d0, d1, d2, d3, d4, d5, d6, d7])
     }
 
-    pub fn cmov(&mut self, other: &FieldStorage, flag: bool) {
+    pub fn cmov(&mut self, other: FieldStorage, flag: bool) {
         self.0[0] = if flag { other.0[0] } else { self.0[0] };
         self.0[1] = if flag { other.0[1] } else { self.0[1] };
         self.0[2] = if flag { other.0[2] } else { self.0[2] };
