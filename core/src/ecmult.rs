@@ -215,9 +215,9 @@ impl ECMultGenContext {
             nums_32[i] = *v;
         }
         let mut nums_x = Field::default();
-        debug_assert!(nums_x.set_b32(&nums_32));
+        assert!(nums_x.set_b32(&nums_32));
         let mut nums_ge = Affine::default();
-        debug_assert!(nums_ge.set_xo_var(&nums_x, false));
+        assert!(nums_ge.set_xo_var(&nums_x, false));
         let mut nums_gej = Jacobian::default();
         nums_gej.set_ge(&nums_ge);
         nums_gej = nums_gej.add_ge_var(&AFFINE_G, None);
