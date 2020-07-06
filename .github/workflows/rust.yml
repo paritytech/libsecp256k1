@@ -175,12 +175,18 @@ jobs:
         run:           pwsh .github/workflows/sccache.ps1 ${{ runner.os}}
       - name:          Sccache statistics
         run:           sccache --show-stats
-      - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }}
+      - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (debug build)
         uses:          actions-rs/cargo@master
         with:
           command:     test
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --verbose
+      - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (release build)
+        uses:          actions-rs/cargo@master
+        with:
+          command:     test
+          toolchain:   ${{ matrix.toolchain }}
+          args:        --all --release --verbose
       - name:          Stop sccache
         if:            always()
         run:           sccache --stop-server
