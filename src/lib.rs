@@ -33,7 +33,7 @@ use typenum::U32;
 
 use crate::{
     curve::{Affine, ECMultContext, ECMultGenContext, Field, Jacobian, Scalar},
-    util::{self, Decoder, SignatureArray},
+    util::{Decoder, SignatureArray},
 };
 
 #[cfg(feature = "static-context")]
@@ -458,7 +458,17 @@ impl core::fmt::LowerHex for SecretKey {
 }
 
 impl Signature {
-    pub fn parse(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
+    /// Parse an possibly overflowing signature.
+    ///
+    /// A SECP256K1 signature is usually required to be within 0 and curve
+    /// order. This function, however, allows signatures larger than curve order
+    /// by taking the signature and minus curve order.
+    ///
+    /// Note that while this function is technically safe, it is non-standard,
+    /// meaning you will have compatibility issues if you also use other
+    /// SECP256K1 libraries. It's not recommended to use this function. Please
+    /// use `parse_standard` instead.
+    pub fn parse_overflowing(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
@@ -469,16 +479,50 @@ impl Signature {
         Signature { r, s }
     }
 
-    pub fn parse_slice(p: &[u8]) -> Result<Signature, Error> {
+    /// Parse a standard SECP256K1 signature. The signature is required to be
+    /// within 0 and curve order. Returns error if it overflows.
+    pub fn parse_standard(p: &[u8; util::SIGNATURE_SIZE]) -> Result<Signature, Error> {
+        let mut r = Scalar::default();
+        let mut s = Scalar::default();
+
+        // It's okay for the signature to overflow here, it's checked below.
+        let overflowed_r = r.set_b32(array_ref!(p, 0, 32));
+        let overflowed_s = s.set_b32(array_ref!(p, 32, 32));
+
+        if bool::from(overflowed_r | overflowed_s) {
+            return Err(Error::InvalidSignature);
+        }
+
+        Ok(Signature { r, s })
+    }
+
+    /// Parse a possibly overflowing signature slice. See also
+    /// `parse_overflowing`.
+    ///
+    /// It's not recommended to use this function. Please use
+    /// `parse_standard_slice` instead.
+    pub fn parse_overflowing_slice(p: &[u8]) -> Result<Signature, Error> {
         if p.len() != util::SIGNATURE_SIZE {
             return Err(Error::InvalidInputLength);
         }
 
         let mut a = [0; util::SIGNATURE_SIZE];
         a.copy_from_slice(p);
-        Ok(Self::parse(&a))
+        Ok(Self::parse_overflowing(&a))
     }
 
+    /// Parse a standard signature slice. See also `parse_standard`.
+    pub fn parse_standard_slice(p: &[u8]) -> Result<Signature, Error> {
+        if p.len() != util::SIGNATURE_SIZE {
+            return Err(Error::InvalidInputLength);
+        }
+
+        let mut a = [0; util::SIGNATURE_SIZE];
+        a.copy_from_slice(p);
+        Ok(Self::parse_standard(&a)?)
+    }
+
+    /// Parse a DER-encoded byte slice to a signature.
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
         let mut decoder = Decoder::new(p);
 
@@ -538,6 +582,8 @@ impl Signature {
         }
     }
 
+    /// Serialize a signature to a standard byte representation. This is the
+    /// reverse of `parse_standard`.
     pub fn serialize(&self) -> [u8; util::SIGNATURE_SIZE] {
         let mut ret = [0u8; 64];
         self.r.fill_b32(array_mut_ref!(ret, 0, 32));
@@ -545,6 +591,8 @@ impl Signature {
         ret
     }
 
+    /// Serialize a signature to a DER encoding. This is the reverse of
+    /// `parse_der`.
     pub fn serialize_der(&self) -> SignatureArray {
         fn fill_scalar_with_leading_zero(scalar: &Scalar) -> [u8; 33] {
             let mut ret = [0u8; 33];
