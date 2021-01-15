@@ -11,11 +11,6 @@ on:
     paths-ignore:
       - 'README.md'
 
-anchors:
-
-
-
-  
 jobs:
   check:
     name:              Check
@@ -106,7 +101,7 @@ jobs:
 
       - name:          Sccache statistics
         run:           sccache --show-stats
-      
+
       # here comes different part
       - name:          Checking ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@master
