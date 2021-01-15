@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -u
+
 export SCCACHE_CACHE_SIZE="1G"
 export SCCACHE_IDLE_TIMEOUT=0
 export SCCACHE_DIR="$HOME/sccache"
