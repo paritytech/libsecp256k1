@@ -17,7 +17,7 @@ echo "Download sccache from "+$URL
 curl -LO $URL
 tar -xzvf "$BASENAME.tar.gz"
 ls $BASENAME/
-echo "$(pwd)/$BASENAME" >> "$GITHUB_PATH"
+echo "$(pwd)/$BASENAME" >> $GITHUB_PATH
 echo $GITHUB_PATH
 echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
 echo $GITHUB_ENV
