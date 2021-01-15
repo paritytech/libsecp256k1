@@ -14,7 +14,7 @@ echo "Target arch: " $PLATFORM
 $BASENAME = "sccache-$VERSION-$PLATFORM"
 $URL = "https://github.com/mozilla/sccache/releases/download/"+"$VERSION/$BASENAME.tar.gz"
 echo "Download sccache from "+$URL
-cURL -LO $URL
+curl -LO $URL
 tar -xzvf "$BASENAME.tar.gz"
 ls $BASENAME/
 . $BASENAME/sccache --start-server
