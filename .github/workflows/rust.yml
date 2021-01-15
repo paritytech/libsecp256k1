@@ -32,8 +32,8 @@ jobs:
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
-          echo ::set-env name=CC::clang
-          echo ::set-env name=CXX::clang++
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
       - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
         if: matrix.platform == 'windows-latest'
         run: choco install sudo
@@ -41,8 +41,8 @@ jobs:
         if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
         run:           |
           choco install llvm
-          echo ::set-env name=CC::clang-cl.exe --enable-64-bit
-          echo ::set-env name=CXX::clang-cl.exe --enable-64-bit
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
           refreshenv
       - name:          Checkout sources & submodules
         uses:          actions/checkout@master
@@ -59,7 +59,7 @@ jobs:
           override:    true
       - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
         run:           |
-          echo ::set-env name=cache_hash::${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
           mkdir -p $HOME/sccache
           sudo chmod -R a+w $HOME/.cargo
         shell:         bash
@@ -119,8 +119,8 @@ jobs:
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
-          echo ::set-env name=CC::clang
-          echo ::set-env name=CXX::clang++
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
       - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
         if: matrix.platform == 'windows-latest'
         run: choco install sudo
@@ -128,8 +128,8 @@ jobs:
         if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
         run:           |
           choco install llvm
-          echo ::set-env name=CC::clang-cl.exe --enable-64-bit
-          echo ::set-env name=CXX::clang-cl.exe --enable-64-bit
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
           refreshenv
       - name:          Checkout sources & submodules
         uses:          actions/checkout@master
@@ -146,7 +146,7 @@ jobs:
           override:    true
       - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
         run:           |
-          echo ::set-env name=cache_hash::${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
           mkdir -p $HOME/sccache
           sudo chmod -R a+w $HOME/.cargo
         shell:         bash
@@ -216,8 +216,8 @@ jobs:
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
-          echo ::set-env name=CC::clang
-          echo ::set-env name=CXX::clang++
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
       - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
         if: matrix.platform == 'windows-latest'
         run: choco install sudo
@@ -225,8 +225,8 @@ jobs:
         if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
         run:           |
           choco install llvm
-          echo ::set-env name=CC::clang-cl.exe --enable-64-bit
-          echo ::set-env name=CXX::clang-cl.exe --enable-64-bit
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
           refreshenv
       - name:          Checkout sources & submodules
         uses:          actions/checkout@master
@@ -243,7 +243,7 @@ jobs:
           override:    true
       - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
         run:           |
-          echo ::set-env name=cache_hash::${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
           mkdir -p $HOME/sccache
           sudo chmod -R a+w $HOME/.cargo
         shell:         bash
