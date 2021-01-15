@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -u
+set -ex
 
 export SCCACHE_CACHE_SIZE="1G"
 export SCCACHE_IDLE_TIMEOUT=0
@@ -29,4 +29,4 @@ tar -xzvf "$BASENAME.tar.gz"
 ls $BASENAME/
 echo "$(pwd)/$BASENAME" >> "$GITHUB_PATH"
 echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
-sccache --start-server
+./$BASENAME/sccache --start-server
