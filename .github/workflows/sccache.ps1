@@ -19,4 +19,6 @@ tar -xzvf "$BASENAME.tar.gz"
 ls $BASENAME/
 . $BASENAME/sccache --start-server
 echo "$(pwd)/$BASENAME" >> "$GITHUB_PATH"
+echo $GITHUB_PATH
 echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+echo $GITHUB_ENV
