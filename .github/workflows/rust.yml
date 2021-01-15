@@ -29,6 +29,7 @@ jobs:
     env:
       RUST_BACKTRACE:  full
     steps:
+
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
@@ -94,12 +95,13 @@ jobs:
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         pwsh
-        run:           pwsh .github/workflows/sccache.ps1 ${{ runner.os}}
+        shell:         bash
+        run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
         run:           sccache --show-stats
-
+      
+      # here comes different part
       - name:          Checking ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@master
         with:
@@ -130,6 +132,7 @@ jobs:
     env:
       RUST_BACKTRACE:  full
     steps:
+
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
@@ -195,12 +198,13 @@ jobs:
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         pwsh
-        run:           pwsh .github/workflows/sccache.ps1 ${{ runner.os}}
+        shell:         bash
+        run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
         run:           sccache --show-stats
 
+      # here comes different part
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (debug build)
         uses:          actions-rs/cargo@master
         with:
@@ -218,6 +222,7 @@ jobs:
       - name:          Stop sccache
         if:            always()
         run:           sccache --stop-server
+
   build:
     name:              Build
     needs:             [check,test]
@@ -241,6 +246,7 @@ jobs:
       # If you change this please remember to also update .cargo/config
       RUSTFLAGS:       "-C target-feature=+aes,+sse2,+ssse3 -C link-arg=-s"
     steps:
+
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
@@ -306,12 +312,13 @@ jobs:
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         pwsh
-        run:           pwsh .github/workflows/sccache.ps1 ${{ runner.os}}
+        shell:         bash
+        run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
         run:           sccache --show-stats
 
+      # here comes different part
       - name:          Building ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@master
         with:
@@ -344,11 +351,11 @@ jobs:
         if:            always()
         run:           sccache --stop-server
 
-      - name:          Prepare artifact's
+      - name:          Prepare artifacts
         run:           .github/workflows/prepare_artifacts.sh ""
         shell:         bash
 
-      - name:          Upload artifact's
+      - name:          Upload artifacts
         uses:          actions/upload-artifact@v1
         with:
           name:        ${{ matrix.platform }}.${{ matrix.toolchain }}.${{ matrix.compiler }}.zip
