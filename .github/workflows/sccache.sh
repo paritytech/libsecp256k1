@@ -18,6 +18,7 @@ case $OS in
   ;;
 "Windows")
   PLATFORM="x86_64-pc-windows-msvc"
+  VERSION="0.2.14"
   ;;
 esac
 echo "Target arch: " $PLATFORM
