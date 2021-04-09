@@ -478,7 +478,7 @@ impl Signature {
         let overflowed_s = s.set_b32(array_ref!(p, 32, 32));
 
         if bool::from(overflowed_r | overflowed_s) {
-            return Err(Error::InvalidSignature)
+            return Err(Error::InvalidSignature);
         }
 
         Ok(Signature { r, s })
