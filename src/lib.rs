@@ -458,7 +458,7 @@ impl core::fmt::LowerHex for SecretKey {
 }
 
 impl Signature {
-    pub fn parse(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
+    pub fn parse_overflowing(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
@@ -469,14 +469,39 @@ impl Signature {
         Signature { r, s }
     }
 
-    pub fn parse_slice(p: &[u8]) -> Result<Signature, Error> {
+    pub fn parse_standard(p: &[u8; util::SIGNATURE_SIZE]) -> Result<Signature, Error> {
+        let mut r = Scalar::default();
+        let mut s = Scalar::default();
+
+        // Okay for signature to overflow
+        let overflowed_r = r.set_b32(array_ref!(p, 0, 32));
+        let overflowed_s = s.set_b32(array_ref!(p, 32, 32));
+
+        if bool::from(overflowed_r | overflowed_s) {
+            return Err(Error::InvalidSignature)
+        }
+
+        Ok(Signature { r, s })
+    }
+
+    pub fn parse_overflowing_slice(p: &[u8]) -> Result<Signature, Error> {
         if p.len() != util::SIGNATURE_SIZE {
             return Err(Error::InvalidInputLength);
         }
 
         let mut a = [0; util::SIGNATURE_SIZE];
         a.copy_from_slice(p);
-        Ok(Self::parse(&a))
+        Ok(Self::parse_overflowing(&a))
+    }
+
+    pub fn parse_standard_slice(p: &[u8]) -> Result<Signature, Error> {
+        if p.len() != util::SIGNATURE_SIZE {
+            return Err(Error::InvalidInputLength);
+        }
+
+        let mut a = [0; util::SIGNATURE_SIZE];
+        a.copy_from_slice(p);
+        Ok(Self::parse_standard(&a)?)
     }
 
     pub fn parse_der(p: &[u8]) -> Result<Signature, Error> {
