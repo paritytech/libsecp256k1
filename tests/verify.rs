@@ -170,7 +170,7 @@ fn test_verify() {
     let ctx_message = Message::parse(&message_arr);
     let signature_a = signature.serialize_compact();
     assert_eq!(signature_a.len(), 64);
-    let ctx_sig = Signature::parse(&signature_a);
+    let ctx_sig = Signature::parse_standard(&signature_a).expect("signature is valid");
 
     secp256k1.verify(&message, &signature, &pubkey).unwrap();
     assert!(verify(&ctx_message, &ctx_sig, &ctx_pubkey));
@@ -219,7 +219,7 @@ fn test_recover() {
     let ctx_message = Message::parse(&message_arr);
     let (rec_id, signature_a) = signature.serialize_compact();
     assert_eq!(signature_a.len(), 64);
-    let ctx_sig = Signature::parse(&signature_a);
+    let ctx_sig = Signature::parse_standard(&signature_a).expect("signature is valid");
 
     // secp256k1.recover(&message, &signature).unwrap();
     let ctx_pubkey = recover(
