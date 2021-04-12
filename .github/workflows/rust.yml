@@ -64,7 +64,8 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
+      - name:          Set cache_hash ENV and prepare cache dir
+      # cargo dirs permission https://github.com/actions/virtual-environments/issues/572
         run:           |
           echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
           mkdir -p $HOME/sccache
