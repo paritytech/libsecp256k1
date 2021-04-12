@@ -114,8 +114,8 @@ jobs:
           args:        --all  --verbose
 
       - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server || true
+        if:            matrix.platform != 'windows-latest' && always()
+        run:           sccache --stop-server
 
   test:
     name:              Test
@@ -226,8 +226,8 @@ jobs:
           args:        --all --release --verbose
 
       - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server || true
+        if:            matrix.platform != 'windows-latest' && always()
+        run:           sccache --stop-server
 
   build:
     name:              Build
@@ -340,25 +340,25 @@ jobs:
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
-          args:       --verbose --no-default-features
+          args:        --verbose --no-default-features
 
       - name:          Building `hmac` ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@master
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
-          args:       --verbose --no-default-features --features hmac
+          args:        --verbose --no-default-features --features hmac
 
       - name:          Building `static-context` ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@master
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
-          args:       --verbose --no-default-features --features static-context
+          args:        --verbose --no-default-features --features static-context
 
       - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server || true
+        if:            matrix.platform != 'windows-latest' && always()
+        run:           sccache --stop-server
 
       - name:          Prepare artifacts
         run:           .github/workflows/prepare_artifacts.sh ""
