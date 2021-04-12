@@ -65,7 +65,6 @@ jobs:
           override:    true
 
       - name:          Set cache_hash ENV and prepare cache dir
-      # cargo dirs permission https://github.com/actions/virtual-environments/issues/572
         run:           |
           echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
           mkdir -p $HOME/sccache
@@ -91,16 +90,19 @@ jobs:
           key:         cargo-target-${{ env['cache_hash'] }}
 
       - name:          Cache sccache
+        if:            matrix.platform != 'windows-latest'
         uses:          actions/cache@master
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
+        if:            matrix.platform != 'windows-latest'
         shell:         bash
         run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
+        if:            matrix.platform != 'windows-latest'
         run:           sccache --show-stats
 
       # here comes different part
@@ -113,7 +115,7 @@ jobs:
 
       - name:          Stop sccache
         if:            always()
-        run:           sccache --stop-server
+        run:           sccache --stop-server || true
 
   test:
     name:              Test
@@ -194,12 +196,14 @@ jobs:
           key:         cargo-target-${{ env['cache_hash'] }}
 
       - name:          Cache sccache
+        if:            matrix.platform != 'windows-latest'
         uses:          actions/cache@master
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
+        if:            matrix.platform != 'windows-latest'
         shell:         bash
         run:           .github/workflows/sccache.sh ${{ runner.os}}
 
@@ -223,7 +227,7 @@ jobs:
 
       - name:          Stop sccache
         if:            always()
-        run:           sccache --stop-server
+        run:           sccache --stop-server || true
 
   build:
     name:              Build
@@ -308,16 +312,19 @@ jobs:
           key:         cargo-target-${{ env['cache_hash'] }}
 
       - name:          Cache sccache
+        if:            matrix.platform != 'windows-latest'
         uses:          actions/cache@master
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
 
       - name:          Install & start sccache for ${{ matrix.platform }}
+        if:            matrix.platform != 'windows-latest'
         shell:         bash
         run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
+        if:            matrix.platform != 'windows-latest'
         run:           sccache --show-stats
 
       # here comes different part
@@ -351,7 +358,7 @@ jobs:
 
       - name:          Stop sccache
         if:            always()
-        run:           sccache --stop-server
+        run:           sccache --stop-server || true
 
       - name:          Prepare artifacts
         run:           .github/workflows/prepare_artifacts.sh ""
