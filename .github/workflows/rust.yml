@@ -208,6 +208,7 @@ jobs:
         run:           .github/workflows/sccache.sh ${{ runner.os}}
 
       - name:          Sccache statistics
+        if:            matrix.platform != 'windows-latest'
         run:           sccache --show-stats
 
       # here comes different part
