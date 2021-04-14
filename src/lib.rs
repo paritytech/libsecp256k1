@@ -496,7 +496,7 @@ impl Signature {
         Ok(Signature { r, s })
     }
 
-    /// Parse an possibly overflowing signature slice. See also
+    /// Parse a possibly overflowing signature slice. See also
     /// `parse_overflowing`.
     ///
     /// It's not recommended to use this function. Please use
