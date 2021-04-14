@@ -485,7 +485,7 @@ impl Signature {
         let mut r = Scalar::default();
         let mut s = Scalar::default();
 
-        // Okay for signature to overflow
+        // It's okay for the signature to overflow here, it's checked below.
         let overflowed_r = r.set_b32(array_ref!(p, 0, 32));
         let overflowed_s = s.set_b32(array_ref!(p, 32, 32));
 
