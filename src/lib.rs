@@ -466,7 +466,7 @@ impl Signature {
     ///
     /// Note that while this function is technically safe, it is non-standard,
     /// meaning you will have compatibility issues if you also use other
-    /// SECP256K! libraries. It's not recommended to use this function. Please
+    /// SECP256K1 libraries. It's not recommended to use this function. Please
     /// use `parse_standard` instead.
     pub fn parse_overflowing(p: &[u8; util::SIGNATURE_SIZE]) -> Signature {
         let mut r = Scalar::default();
