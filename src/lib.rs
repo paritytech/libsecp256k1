@@ -479,7 +479,7 @@ impl Signature {
         Signature { r, s }
     }
 
-    /// Parse a standard SECP256K! signature. The signature is required to be
+    /// Parse a standard SECP256K1 signature. The signature is required to be
     /// within 0 and curve order. Returns error if it overflows.
     pub fn parse_standard(p: &[u8; util::SIGNATURE_SIZE]) -> Result<Signature, Error> {
         let mut r = Scalar::default();
