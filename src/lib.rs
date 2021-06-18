@@ -111,7 +111,7 @@ impl PublicKey {
         PublicKey(p)
     }
 
-    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+    #[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
     pub fn from_secret_key(seckey: &SecretKey) -> PublicKey {
         Self::from_secret_key_with_context(seckey, &ECMULT_GEN_CONTEXT)
     }
@@ -264,7 +264,7 @@ impl PublicKey {
         Ok(())
     }
 
-    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+    #[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
     pub fn tweak_add_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         self.tweak_add_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
@@ -287,7 +287,7 @@ impl PublicKey {
         Ok(())
     }
 
-    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+    #[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
     pub fn tweak_mul_assign(&mut self, tweak: &SecretKey) -> Result<(), Error> {
         self.tweak_mul_assign_with_context(tweak, &ECMULT_CONTEXT)
     }
@@ -718,7 +718,7 @@ impl<D: Digest + Default> SharedSecret<D> {
         Ok(SharedSecret(inner))
     }
 
-    #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+    #[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
     pub fn new(pubkey: &PublicKey, seckey: &SecretKey) -> Result<SharedSecret<D>, Error> {
         Self::new_with_context(pubkey, seckey, &ECMULT_CONTEXT)
     }
@@ -740,7 +740,7 @@ pub fn verify_with_context(
     context.verify_raw(&signature.r, &signature.s, &pubkey.0, &message.0)
 }
 
-#[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+#[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
 /// Check signature is a valid message signed by public key.
 pub fn verify(message: &Message, signature: &Signature, pubkey: &PublicKey) -> bool {
     verify_with_context(message, signature, pubkey, &ECMULT_CONTEXT)
@@ -758,7 +758,7 @@ pub fn recover_with_context(
         .map(PublicKey)
 }
 
-#[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+#[cfg(any(feature = "static-context", feature = "lazy-static-context"))]
 /// Recover public key from a signed message.
 pub fn recover(
     message: &Message,
