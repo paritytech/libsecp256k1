@@ -1,8 +1,9 @@
-use core::convert::{AsRef, AsMut};
-use core::mem;
+use core::{
+    convert::{AsMut, AsRef},
+    mem,
+};
 
-use crate::scalar::Scalar;
-use crate::error::Error;
+use crate::{error::Error, scalar::Scalar};
 
 pub struct SignatureArray([u8; 6 + 33 + 33], usize);
 
@@ -13,6 +14,10 @@ impl SignatureArray {
 
     pub fn len(&self) -> usize {
         self.1
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
 
@@ -260,5 +265,4 @@ impl<'a> Decoder<'a> {
 
         Ok(int)
     }
-
 }

@@ -1,5 +1,8 @@
-use std::{io::{Write, Error}, fs::File};
 use libsecp256k1_core::curve::ECMultContext;
+use std::{
+    fs::File,
+    io::{Error, Write},
+};
 
 pub fn generate_to(file: &mut File) -> Result<(), Error> {
     let context = ECMultContext::new_boxed();
