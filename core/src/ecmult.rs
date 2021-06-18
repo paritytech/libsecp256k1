@@ -5,7 +5,8 @@ use crate::{
 };
 use alloc::{
     alloc::{alloc, Layout},
-    vec,
+    vec, vec::Vec,
+    boxed::Box,
 };
 use subtle::Choice;
 
