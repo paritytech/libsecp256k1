@@ -22,8 +22,6 @@ use rand::Rng;
 
 #[cfg(feature = "std")]
 use core::fmt;
-#[cfg(feature = "std")]
-use serde::{Serialize, Deserialize, ser::Serializer, de};
 #[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
 #[cfg(feature = "std")]
@@ -46,7 +44,6 @@ lazy_static::lazy_static! {
     /// A static ECMultGen context.
     pub static ref ECMULT_GEN_CONTEXT: Box<ECMultGenContext> = ECMultGenContext::new_boxed();
 }
-
 
 #[cfg(feature = "static-context")]
 /// A static ECMult context.
@@ -804,7 +801,10 @@ pub fn sign_with_context(
     (Signature { r: sigr, s: sigs }, RecoveryId(recid))
 }
 
-#[cfg(all(feature = "hmac", feature = "static-context", feature = "lazy-static-context"))]
+#[cfg(all(
+    feature = "hmac",
+    any(feature = "static-context", feature = "lazy-static-context")
+))]
 /// Sign a message using the secret key.
 pub fn sign(message: &Message, seckey: &SecretKey) -> (Signature, RecoveryId) {
     sign_with_context(message, seckey, &ECMULT_GEN_CONTEXT)
