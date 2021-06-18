@@ -37,6 +37,9 @@ use crate::{
 };
 
 #[cfg(all(feature = "static-context", feature = "lazy-static-context"))]
+compile_error!("Should only enable one of static-context or lazy-static-context");
+
+#[cfg(feature = "lazy-static-context")]
 lazy_static::lazy_static! {
     /// A static ECMult context.
     pub static ref ECMULT_CONTEXT: Box<ECMultContext> = ECMultContext::new_boxed();
