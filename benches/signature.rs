@@ -19,7 +19,7 @@ fn bench_signature_parse(b: &mut Bencher) {
     signature_a.copy_from_slice(&signature_arr[0..64]);
 
     b.iter(|| {
-        let _signature = Signature::parse(&signature_a);
+        let _signature = Signature::parse_standard_slice(&signature_a);
     });
 }
 
@@ -34,7 +34,7 @@ fn bench_signature_serialize(b: &mut Bencher) {
     assert!(signature_arr.len() == 64);
     let mut signature_a = [0u8; 64];
     signature_a.copy_from_slice(&signature_arr[0..64]);
-    let signature = Signature::parse(&signature_a);
+    let signature = Signature::parse_standard_slice(&signature_a).expect("parsed signature");
 
     b.iter(|| {
         let _serialized = signature.serialize();
