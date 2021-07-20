@@ -2,7 +2,7 @@
 name = "libsecp256k1-gen-ecmult"
 description = "Generator function of const_gen for libsecp256k1."
 license = "Apache-2.0"
-version = "0.2.1-dev"
+version = "0.2.1"
 authors = ["Wei Tang <hi@that.world>"]
 edition = "2018"
 repository = "https://github.com/paritytech/libsecp256k1"

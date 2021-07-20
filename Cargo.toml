@@ -2,14 +2,14 @@
 name = "libsecp256k1"
 description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
-version = "0.6.0-dev"
+version = "0.6.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/paritytech/libsecp256k1"
 keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
 edition = "2018"
 
 [dependencies]
-libsecp256k1-core = { version = "0.2.2-dev", path = "core", default-features = false }
+libsecp256k1-core = { version = "0.2.2", path = "core", default-features = false }
 arrayref = "0.3"
 rand = { version = "0.7", default-features = false }
 digest = "0.9"
