@@ -2,11 +2,11 @@
 name = "libsecp256k1-gen-genmult"
 description = "Generator function of const for libsecp256k1."
 license = "Apache-2.0"
-version = "0.2.1-dev"
+version = "0.2.1"
 authors = ["Wei Tang <hi@that.world>"]
 edition = "2018"
 repository = "https://github.com/paritytech/libsecp256k1"
 keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
 
 [dependencies]
-libsecp256k1-core = { version = "0.2.2-dev", path = "../../core" }
+libsecp256k1-core = { version = "0.2.2", path = "../../core" }
