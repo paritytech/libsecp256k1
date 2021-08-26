@@ -7,6 +7,7 @@ authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/paritytech/libsecp256k1"
 keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
 edition = "2018"
+resolver = "2"
 
 [dependencies]
 libsecp256k1-core = { version = "0.2.2", path = "core", default-features = false }
@@ -23,7 +24,7 @@ lazy_static = { version = "1.4.0", optional = true }
 [dev-dependencies]
 secp256k1-test = { package = "secp256k1", version = "0.17", features = ["rand-std", "recovery"] }
 clear_on_drop = "0.2"
-serde-json-core = "0.4.0"
+serde_json = "1"
 hex-literal = "0.2.1"
 
 [build-dependencies]
