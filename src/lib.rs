@@ -303,6 +303,12 @@ impl Into<Affine> for PublicKey {
     }
 }
 
+impl From<Affine> for PublicKey {
+    fn from(affine: Affine) -> Self {
+        PublicKey(affine)
+    }
+}
+
 #[cfg(feature = "std")]
 impl Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
