@@ -11,19 +11,19 @@ edition = "2018"
 [dependencies]
 libsecp256k1-core = { version = "0.1.0", path = "core", default-features = false }
 arrayref = "0.3"
-rand = { version = "0.7", default-features = false }
+rand = { version = "0.8", default-features = false }
 digest = "0.9"
-base64 = { version = "0.12", default-features = false }
+base64 = { version = "0.13", default-features = false }
 hmac-drbg = { version = "0.3", optional = true }
 sha2 = { version = "0.9", optional = true, default-features = false }
 typenum = { version = "1.12", optional = true }
 serde = { version = "1.0.104", features = ["derive"], default-features = false }
 
 [dev-dependencies]
-secp256k1-test = { package = "secp256k1", version = "0.17", features = ["rand-std", "recovery"] }
+secp256k1-test = { package = "secp256k1", version = "0.20.3", features = ["rand-std", "recovery"] }
 clear_on_drop = "0.2"
 serde_json = "1.0"
-hex-literal = "0.2.1"
+hex-literal = "0.3.3"
 
 [build-dependencies]
 libsecp256k1-gen-ecmult = { version = "0.1.0", path = "gen/ecmult" }

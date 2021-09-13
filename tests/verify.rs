@@ -420,7 +420,7 @@ fn test_pubkey_combine() {
 #[test]
 fn test_pubkey_equality() {
     for _ in 0..10 {
-        let secret = SecretKey::random(&mut rand::thread_rng());
+        let secret = SecretKey::random(&mut rand::rngs::OsRng);
         let public = PublicKey::from_secret_key(&secret);
 
         let public2 = PublicKey::parse(&public.serialize()).unwrap();
