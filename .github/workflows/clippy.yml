@@ -34,4 +34,10 @@ jobs:
         with:
           command:     clippy
           toolchain:   stable
-          args:        --all --all-features
+          args:        --all
+      - name:          Checking clippy
+        uses:          actions-rs/cargo@master
+        with:
+          command:     clippy
+          toolchain:   stable
+          args:        --all --no-default-features --features std,hmac,lazy-static-context
