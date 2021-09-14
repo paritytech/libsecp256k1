@@ -7,6 +7,7 @@ pub enum Error {
     InvalidMessage,
     InvalidInputLength,
     TweakOutOfRange,
+    InvalidAffine
 }
 
 #[cfg(feature = "std")]
@@ -22,6 +23,7 @@ impl core::fmt::Display for Error {
             Error::InvalidMessage => write!(f, "Invalid message"),
             Error::InvalidInputLength => write!(f, "Invalid input length"),
             Error::TweakOutOfRange => write!(f, "Tweak out of range"),
+            Error::InvalidAffine => write!(f, "Invalid Affine"),
         }
     }
 }
