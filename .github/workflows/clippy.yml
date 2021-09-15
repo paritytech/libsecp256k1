@@ -17,11 +17,15 @@ jobs:
     env:
       RUST_BACKTRACE:  full
     steps:
+      - name:          Cancel Previous Runs
+        uses:          styfle/cancel-workflow-action@0.9.1
+
       - name:          Checkout sources & submodules
         uses:          actions/checkout@v1
         with:
           fetch-depth: 5
           submodules:  recursive
+
       - name:          Install toolchain
         uses:          actions-rs/toolchain@v1
         with:
@@ -29,12 +33,14 @@ jobs:
           toolchain:   stable
           components:  clippy, rustfmt
           override:    true
+
       - name:          Checking clippy
         uses:          actions-rs/cargo@v1
         with:
           command:     clippy
           toolchain:   stable
           args:        --all
+
       - name:          Checking clippy
         uses:          actions-rs/cargo@v1
         with:
