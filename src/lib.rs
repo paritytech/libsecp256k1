@@ -3,14 +3,14 @@
 //! Ethereum-alike cryptocurrencies.
 
 #![deny(
-unused_import_braces,
-unused_imports,
-unused_comparisons,
-unused_must_use,
-unused_variables,
-non_shorthand_field_patterns,
-unreachable_code,
-unused_parens
+    unused_import_braces,
+    unused_imports,
+    unused_comparisons,
+    unused_must_use,
+    unused_variables,
+    non_shorthand_field_patterns,
+    unreachable_code,
+    unused_parens
 )]
 
 pub use libsecp256k1_core::*;
@@ -76,10 +76,11 @@ pub struct Message(pub Scalar);
 pub struct SharedSecret<D: Digest>(GenericArray<u8, D::OutputSize>);
 
 impl<D> Copy for SharedSecret<D>
-    where
-        D: Copy + Digest,
-        GenericArray<u8, D::OutputSize>: Copy,
-{}
+where
+    D: Copy + Digest,
+    GenericArray<u8, D::OutputSize>: Copy,
+{
+}
 
 /// Format for public key parsing.
 pub enum PublicKeyFormat {
@@ -322,8 +323,8 @@ impl TryFrom<Affine> for PublicKey {
 #[cfg(feature = "std")]
 impl Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         if serializer.is_human_readable() {
             serializer.serialize_str(&base64::encode(&self.serialize()[..]))
@@ -346,8 +347,8 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
     }
 
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+    where
+        E: de::Error,
     {
         let value: &[u8] = &base64::decode(value).unwrap();
         let key_format = match value.len() {
@@ -364,8 +365,8 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
 #[cfg(feature = "std")]
 impl<'de> Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: de::Deserializer<'de>,
+    where
+        D: de::Deserializer<'de>,
     {
         if deserializer.is_human_readable() {
             deserializer.deserialize_str(PublicKeyVisitor)
@@ -800,9 +801,9 @@ pub fn sign_with_context(
     }
 
     #[allow(unused_assignments)]
-        {
-            nonce = Scalar::default();
-        }
+    {
+        nonce = Scalar::default();
+    }
     let (sigr, sigs, recid) = result;
 
     (Signature { r: sigr, s: sigs }, RecoveryId(recid))
@@ -831,7 +832,7 @@ mod tests {
             SecretKey::parse(&hex!(
                 "1536f1d756d1abf83aaf173bc5ee3fc487c93010f18624d80bd6d4038fadd59e"
             ))
-                .unwrap()
+            .unwrap()
         )
     }
 }

@@ -7,7 +7,7 @@ pub enum Error {
     InvalidMessage,
     InvalidInputLength,
     TweakOutOfRange,
-    InvalidAffine
+    InvalidAffine,
 }
 
 #[cfg(feature = "std")]
