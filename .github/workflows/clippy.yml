@@ -18,7 +18,7 @@ jobs:
       RUST_BACKTRACE:  full
     steps:
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@master
+        uses:          actions/checkout@v2.3.4
         with:
           fetch-depth: 5
           submodules:  recursive
