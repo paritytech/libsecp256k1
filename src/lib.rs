@@ -311,7 +311,7 @@ impl TryFrom<Affine> for PublicKey {
     type Error = Error;
 
     fn try_from(value: Affine) -> Result<Self, Self::Error> {
-        if value.is_infinity() | !value.is_valid_var() {
+        if value.is_infinity() || !value.is_valid_var() {
             Err(Error::InvalidAffine)
         } else {
             Ok(PublicKey(value))
