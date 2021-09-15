@@ -36,7 +36,7 @@ default = ["std", "hmac", "static-context"]
 std = ["libsecp256k1-core/std", "sha2/std", "rand/std", "serde/std", "base64/std"]
 hmac = ["hmac-drbg", "sha2", "typenum"]
 static-context = []
-lazy-static-context = ["lazy_static", "std"]
+lazy-static-context = ["static-context", "lazy_static", "std"]
 
 [workspace]
 members = [
