@@ -64,21 +64,26 @@ pub static ECMULT_GEN_CONTEXT: ECMultGenContext =
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Public key on a secp256k1 curve.
 pub struct PublicKey(Affine);
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Secret key (256-bit) on a secp256k1 curve.
 pub struct SecretKey(Scalar);
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// An ECDSA signature.
 pub struct Signature {
     pub r: Scalar,
     pub s: Scalar,
 }
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Tag used for public key recovery from signatures.
 pub struct RecoveryId(u8);
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 /// Hashed message input to an ECDSA signature.
 pub struct Message(pub Scalar);
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 /// Shared secret using ECDH.
 pub struct SharedSecret<D: Digest>(GenericArray<u8, D::OutputSize>);
@@ -313,6 +318,18 @@ impl PublicKey {
 impl Into<Affine> for PublicKey {
     fn into(self) -> Affine {
         self.0
+    }
+}
+
+impl TryFrom<Affine> for PublicKey {
+    type Error = Error;
+
+    fn try_from(value: Affine) -> Result<Self, Self::Error> {
+        if value.is_infinity() || !value.is_valid_var() {
+            Err(Error::InvalidAffine)
+        } else {
+            Ok(PublicKey(value))
+        }
     }
 }
 
