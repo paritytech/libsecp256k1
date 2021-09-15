@@ -373,7 +373,7 @@ jobs:
         shell:         bash
 
       - name:          Upload artifacts
-        uses:          actions/upload-artifact@v1
+        uses:          actions/upload-artifact@v2.2.4
         with:
           name:        ${{ matrix.platform }}.${{ matrix.toolchain }}.${{ matrix.compiler }}.zip
           path:        artifacts/
