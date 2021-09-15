@@ -31,6 +31,9 @@ jobs:
       RUST_BACKTRACE:  full
     steps:
 
+      - name:          Cancel Previous Runs
+        uses:          styfle/cancel-workflow-action@0.9
+
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
@@ -113,6 +116,9 @@ jobs:
     env:
       RUST_BACKTRACE:  full
     steps:
+
+      - name:          Cancel Previous Runs
+        uses:          styfle/cancel-workflow-action@0.9
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
@@ -207,6 +213,9 @@ jobs:
       # If you change this please remember to also update .cargo/config
       RUSTFLAGS:       "-C target-feature=+aes,+sse2,+ssse3 -C link-arg=-s"
     steps:
+
+      - name:          Cancel Previous Runs
+        uses:          styfle/cancel-workflow-action@0.9
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
