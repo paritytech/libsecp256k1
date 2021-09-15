@@ -53,14 +53,14 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@master
+        uses:          actions/checkout@v2
         with:
           fetch-depth: 5
           submodules:  recursive
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@master
+        uses:          actions-rs/toolchain@v1
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
@@ -71,7 +71,7 @@ jobs:
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
-        uses:          actions/cache@master
+        uses:          actions/cache@v2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -87,7 +87,7 @@ jobs:
 
       # here comes different part
       - name:          Checking ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     check
           toolchain:   ${{ matrix.toolchain }}
@@ -139,14 +139,14 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@master
+        uses:          actions/checkout@v2
         with:
           fetch-depth: 5
           submodules:  recursive
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@master
+        uses:          actions-rs/toolchain@v1
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
@@ -157,7 +157,7 @@ jobs:
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
-        uses:          actions/cache@master
+        uses:          actions/cache@v2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -173,14 +173,14 @@ jobs:
 
       # here comes different part
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (debug build)
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     test
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --verbose
 
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (release build)
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     test
           toolchain:   ${{ matrix.toolchain }}
@@ -236,14 +236,14 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@master
+        uses:          actions/checkout@v2
         with:
           fetch-depth: 5
           submodules:  recursive
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@master
+        uses:          actions-rs/toolchain@v1
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
@@ -254,7 +254,7 @@ jobs:
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
-        uses:          actions/cache@master
+        uses:          actions/cache@v2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -270,35 +270,35 @@ jobs:
 
       # here comes different part
       - name:          Building ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --verbose --release
 
       - name:          Building `no default` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features
 
       - name:          Building `hmac` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features --features hmac
 
       - name:          Building `static-context` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features --features static-context
 
       - name:          Building `lazy-static-context` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
