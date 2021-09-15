@@ -64,30 +64,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - name:          Set cache_hash ENV and prepare cache dir
-        run:           |
-          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
-          mkdir -p $HOME/sccache
-          sudo chmod -R a+w $HOME/.cargo
-        shell:         bash
-
-      - name:          Cache cargo registry
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/registry
-          key:         cargo-registry-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo index
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/git
-          key:         cargo-git-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo build
-        uses:          actions/cache@master
-        with:
-          path:        target
-          key:         cargo-target-${{ env['cache_hash'] }}
+      - uses:          Swatinem/rust-cache@v1
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
@@ -170,30 +147,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
-        run:           |
-          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
-          mkdir -p $HOME/sccache
-          sudo chmod -R a+w $HOME/.cargo
-        shell:         bash
-
-      - name:          Cache cargo registry
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/registry
-          key:         cargo-registry-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo index
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/git
-          key:         cargo-git-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo build
-        uses:          actions/cache@master
-        with:
-          path:        target
-          key:         cargo-target-${{ env['cache_hash'] }}
+      - uses:          Swatinem/rust-cache@v1
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
@@ -287,30 +241,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - name:          Set cache_hash ENV and prepare cache dir's #cargo dirs permission https://github.com/actions/virtual-environments/issues/572
-        run:           |
-          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
-          mkdir -p $HOME/sccache
-          sudo chmod -R a+w $HOME/.cargo
-        shell:         bash
-
-      - name:          Cache cargo registry
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/registry
-          key:         cargo-registry-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo index
-        uses:          actions/cache@master
-        with:
-          path:        $HOME/.cargo/git
-          key:         cargo-git-${{ env['cache_hash'] }}
-
-      - name:          Cache cargo build
-        uses:          actions/cache@master
-        with:
-          path:        target
-          key:         cargo-target-${{ env['cache_hash'] }}
+      - uses:          Swatinem/rust-cache@v1
 
       - name:          Cache sccache
         if:            matrix.platform != 'windows-latest'
