@@ -18,19 +18,19 @@ jobs:
       RUST_BACKTRACE:  full
     steps:
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@master
+        uses:          actions/checkout@v1
         with:
           fetch-depth: 5
           submodules:  recursive
       - name:          Install toolchain
-        uses:          actions-rs/toolchain@master
+        uses:          actions-rs/toolchain@v1
         with:
           profile:     minimal
           toolchain:   stable
           components:  clippy, rustfmt
           override:    true
       - name:          Checking style
-        uses:          actions-rs/cargo@master
+        uses:          actions-rs/cargo@v1
         with:
           command:     fmt
           toolchain:   stable
