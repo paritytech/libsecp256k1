@@ -22,9 +22,8 @@ SECP256K1 implementation with `no_std` support. Currently we have implementation
   heap manually. Increases binary size, enabled by default.
 * `lazy-static-context`: Instead of storing the pre-computed table context as
   static variables, store it as a variable that dynamically allocates the
-  context in heap via `lazy_static`. Only one of `static-context` and
-  `lazy-static-context` can be enabled, or both disabled. Impact bootstrap
-  performance, disabled by default.
+  context in heap via `lazy_static`. It overwrites `static-context`. Impact
+  bootstrap performance and only available in `std`, disabled by default.
 
 ## Development workflow
 
