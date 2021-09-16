@@ -1,4 +1,7 @@
-name:                  Check, Test and Build Suite
+# almost a copy of .github/workflows/rust.yml made in https://github.com/paritytech/libsecp256k1/pull/84
+# windows causes some troubles with sudo sccache and
+# caching within GHA https://github.com/Swatinem/rust-cache/issues/31
+name:                  Check, Test and Build on Windows
 
 on:
   pull_request:
@@ -17,8 +20,7 @@ jobs:
     strategy:
       matrix:
         platform:
-          - ubuntu-latest
-          - macos-latest
+          - windows-latest
         toolchain:
           - stable
           - nightly
@@ -33,11 +35,17 @@ jobs:
       - name:          Cancel Previous Runs
         uses:          styfle/cancel-workflow-action@0.9.1
 
-      - name:          Set default compiler
-        if:            matrix.compiler == 'clang'
-        run: |
-          echo "CC=clang" >> "$GITHUB_ENV"
-          echo "CXX=clang++" >> "$GITHUB_ENV"
+      - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
+        if: matrix.platform == 'windows-latest'
+        run: choco install sudo
+
+      - name:          Install LLVM for Windows
+        if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
+        run:           |
+          choco install llvm
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          refreshenv
 
       - name:          Checkout sources & submodules
         uses:          actions/checkout@v2.3.4
@@ -54,22 +62,31 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - name:          Set cache_hash ENV and prepare cache dir
+        run:           |
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
+          mkdir -p $HOME/sccache
+          sudo chmod -R a+w $HOME/.cargo
+        shell:         bash
 
-      - name:          Cache sccache
+      - name:          Cache cargo registry
         uses:          actions/cache@v2.1.6
         with:
-          path:        "$HOME/sccache"
-          key:         sccache-${{ env['cache_hash'] }}
+          path:        $HOME/.cargo/registry
+          key:         cargo-registry-${{ env['cache_hash'] }}
 
-      - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         bash
-        run:           .github/workflows/sccache.sh ${{ runner.os}}
+      - name:          Cache cargo index
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        $HOME/.cargo/git
+          key:         cargo-git-${{ env['cache_hash'] }}
 
-      - name:          Sccache statistics
-        run:           sccache --show-stats
+      - name:          Cache cargo build
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        target
+          key:         cargo-target-${{ env['cache_hash'] }}
 
-      # here comes different part
       - name:          Checking ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@v1.0.1
         with:
@@ -77,18 +94,13 @@ jobs:
           toolchain:   ${{ matrix.toolchain }}
           args:        --all  --verbose
 
-      - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server
-
   test:
     name:              Test
     needs:             [check]
     strategy:
       matrix:
         platform:
-          - ubuntu-latest
-          - macos-latest
+          - windows-latest
         toolchain:
           - stable
           - nightly
@@ -104,10 +116,22 @@ jobs:
         uses:          styfle/cancel-workflow-action@0.9.1
 
       - name:          Set default compiler
-        if:            matrix.compiler == 'clang'
+        if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
           echo "CC=clang" >> "$GITHUB_ENV"
           echo "CXX=clang++" >> "$GITHUB_ENV"
+
+      - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
+        if:            matrix.platform == 'windows-latest'
+        run:           choco install sudo
+
+      - name:          Install LLVM for Windows
+        if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
+        run:           |
+          choco install llvm
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          refreshenv
 
       - name:          Checkout sources & submodules
         uses:          actions/checkout@v2.3.4
@@ -124,22 +148,31 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - name:          Set cache_hash ENV and prepare cache dir
+        run:           |
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
+          mkdir -p $HOME/sccache
+          sudo chmod -R a+w $HOME/.cargo
+        shell:         bash
 
-      - name:          Cache sccache
+      - name:          Cache cargo registry
         uses:          actions/cache@v2.1.6
         with:
-          path:        "$HOME/sccache"
-          key:         sccache-${{ env['cache_hash'] }}
+          path:        $HOME/.cargo/registry
+          key:         cargo-registry-${{ env['cache_hash'] }}
 
-      - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         bash
-        run:           .github/workflows/sccache.sh ${{ runner.os}}
+      - name:          Cache cargo index
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        $HOME/.cargo/git
+          key:         cargo-git-${{ env['cache_hash'] }}
 
-      - name:          Sccache statistics
-        run:           sccache --show-stats
+      - name:          Cache cargo build
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        target
+          key:         cargo-target-${{ env['cache_hash'] }}
 
-      # here comes different part
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (debug build)
         uses:          actions-rs/cargo@v1.0.1
         with:
@@ -154,18 +187,13 @@ jobs:
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --release --verbose
 
-      - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server
-
   build:
     name:              Build
     needs:             [check,test]
     strategy:
       matrix:
         platform:
-          - ubuntu-latest
-          - macos-latest
+          - windows-latest
         toolchain:
           - stable
           - nightly
@@ -185,10 +213,22 @@ jobs:
         uses:          styfle/cancel-workflow-action@0.9.1
 
       - name:          Set default compiler
-        if:            matrix.compiler == 'clang'
+        if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
         run: |
           echo "CC=clang" >> "$GITHUB_ENV"
           echo "CXX=clang++" >> "$GITHUB_ENV"
+
+      - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
+        if: matrix.platform == 'windows-latest'
+        run: choco install sudo
+
+      - name:          Install LLVM for Windows
+        if:            matrix.platform == 'windows-latest'  && matrix.compiler == 'clang'
+        run:           |
+          choco install llvm
+          echo "CC=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          echo "CXX=clang-cl.exe --enable-64-bit" >> "$GITHUB_ENV"
+          refreshenv
 
       - name:          Checkout sources & submodules
         uses:          actions/checkout@v2.3.4
@@ -205,22 +245,31 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - name:          Set cache_hash ENV and prepare cache dir
+        run:           |
+          echo "cache_hash=${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.compiler }}-${{ hashFiles('**/Cargo.toml') }}" >> "$GITHUB_ENV"
+          mkdir -p $HOME/sccache
+          sudo chmod -R a+w $HOME/.cargo
+        shell:         bash
 
-      - name:          Cache sccache
+      - name:          Cache cargo registry
         uses:          actions/cache@v2.1.6
         with:
-          path:        "$HOME/sccache"
-          key:         sccache-${{ env['cache_hash'] }}
+          path:        $HOME/.cargo/registry
+          key:         cargo-registry-${{ env['cache_hash'] }}
 
-      - name:          Install & start sccache for ${{ matrix.platform }}
-        shell:         bash
-        run:           .github/workflows/sccache.sh ${{ runner.os}}
+      - name:          Cache cargo index
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        $HOME/.cargo/git
+          key:         cargo-git-${{ env['cache_hash'] }}
 
-      - name:          Sccache statistics
-        run:           sccache --show-stats
+      - name:          Cache cargo build
+        uses:          actions/cache@v2.1.6
+        with:
+          path:        target
+          key:         cargo-target-${{ env['cache_hash'] }}
 
-      # here comes different part
       - name:          Building ${{ matrix.platform }}-${{ matrix.toolchain }}
         uses:          actions-rs/cargo@v1.0.1
         with:
@@ -255,10 +304,6 @@ jobs:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features --features lazy-static-context
-
-      - name:          Stop sccache
-        if:            always()
-        run:           sccache --stop-server
 
       - name:          Prepare artifacts
         run:           .github/workflows/prepare_artifacts.sh ""
