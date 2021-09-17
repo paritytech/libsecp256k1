@@ -47,7 +47,7 @@ jobs:
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@v1.0.6
+        uses:          actions-rs/toolchain@v1.0.7
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
@@ -117,7 +117,7 @@ jobs:
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@v1.0.6
+        uses:          actions-rs/toolchain@v1.0.7
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
@@ -198,7 +198,7 @@ jobs:
 
       - name:          Install toolchain
         id:            toolchain
-        uses:          actions-rs/toolchain@v1.0.6
+        uses:          actions-rs/toolchain@v1.0.7
         with:
           profile:     minimal
           toolchain:   ${{ matrix.toolchain }}
