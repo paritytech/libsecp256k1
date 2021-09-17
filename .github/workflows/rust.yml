@@ -71,7 +71,7 @@ jobs:
 
       # here comes different part
       - name:          Checking ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     check
           toolchain:   ${{ matrix.toolchain }}
@@ -141,14 +141,14 @@ jobs:
 
       # here comes different part
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (debug build)
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     test
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --verbose
 
       - name:          Testing ${{ matrix.platform }}-${{ matrix.toolchain }} (release build)
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     test
           toolchain:   ${{ matrix.toolchain }}
@@ -222,35 +222,35 @@ jobs:
 
       # here comes different part
       - name:          Building ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --all --verbose --release
 
       - name:          Building `no default` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features
 
       - name:          Building `hmac` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features --features hmac
 
       - name:          Building `static-context` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}
           args:        --verbose --no-default-features --features static-context
 
       - name:          Building `lazy-static-context` ${{ matrix.platform }}-${{ matrix.toolchain }}
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     build
           toolchain:   ${{ matrix.toolchain }}

@@ -35,14 +35,14 @@ jobs:
           override:    true
 
       - name:          Checking clippy
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     clippy
           toolchain:   stable
           args:        --all
 
       - name:          Checking clippy
-        uses:          actions-rs/cargo@v1.0.1
+        uses:          actions-rs/cargo@v1.0.3
         with:
           command:     clippy
           toolchain:   stable
