@@ -39,7 +39,7 @@ your PR against `develop` branch.
 
 ### Versioning
 
-Frontier follows [Semantic Versioning](https://semver.org/). An unreleased crate
+`libsecp256k1` follows [Semantic Versioning](https://semver.org/). An unreleased crate
 in the repository will have the `-dev` suffix in the end, and we do rolling
 releases.
 
