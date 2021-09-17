@@ -2,7 +2,7 @@
 name = "libsecp256k1"
 description = "Pure Rust secp256k1 implementation."
 license = "Apache-2.0"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Wei Tang <hi@that.world>"]
 repository = "https://github.com/paritytech/libsecp256k1"
 keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
@@ -10,7 +10,7 @@ edition = "2018"
 resolver = "2"
 
 [dependencies]
-libsecp256k1-core = { version = "0.2.2", path = "core", default-features = false }
+libsecp256k1-core = { version = "0.3.0", path = "core", default-features = false }
 arrayref = "0.3"
 rand = { version = "0.8", default-features = false }
 digest = "0.9"
@@ -28,8 +28,8 @@ serde_json = "1.0"
 hex-literal = "0.3.3"
 
 [build-dependencies]
-libsecp256k1-gen-ecmult = { version = "0.2.1", path = "gen/ecmult" }
-libsecp256k1-gen-genmult = { version = "0.2.1", path = "gen/genmult" }
+libsecp256k1-gen-ecmult = { version = "0.3.0", path = "gen/ecmult" }
+libsecp256k1-gen-genmult = { version = "0.3.0", path = "gen/genmult" }
 
 [features]
 default = ["std", "hmac", "static-context"]
