@@ -24,3 +24,11 @@ fn test_deserialize_public_key() {
     let pkey: PublicKey = serde_json::from_str(&SERIALIZED_DEBUG_PUBLIC_KEY).unwrap();
     assert_eq!(pkey, debug_public_key());
 }
+
+#[test]
+fn test_public_key_bincode_serde() {
+    let pkey = debug_public_key();
+    let serialized_pkey: Vec<u8> = bincode::serialize(&pkey).unwrap();
+    let pkey2 = bincode::deserialize(&serialized_pkey).unwrap();
+    assert_eq!(pkey, pkey2);
+}
