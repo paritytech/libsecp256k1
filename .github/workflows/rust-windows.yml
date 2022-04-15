@@ -48,7 +48,7 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@v2.3.4
+        uses:          actions/checkout@v3.0.1
         with:
           fetch-depth: 5
           submodules:  recursive
@@ -134,7 +134,7 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@v2.3.4
+        uses:          actions/checkout@v3.0.1
         with:
           fetch-depth: 5
           submodules:  recursive
@@ -231,7 +231,7 @@ jobs:
           refreshenv
 
       - name:          Checkout sources & submodules
-        uses:          actions/checkout@v2.3.4
+        uses:          actions/checkout@v3.0.1
         with:
           fetch-depth: 5
           submodules:  recursive
