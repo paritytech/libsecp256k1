@@ -345,10 +345,10 @@ impl Serialize for PublicKey {
 }
 
 #[cfg(feature = "std")]
-struct PublicKeyVisitor;
+struct PublicKeyStrVisitor;
 
 #[cfg(feature = "std")]
-impl<'de> de::Visitor<'de> for PublicKeyVisitor {
+impl<'de> de::Visitor<'de> for PublicKeyStrVisitor {
     type Value = PublicKey;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -360,7 +360,7 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
     where
         E: de::Error,
     {
-        let value: &[u8] = &base64::decode(value).unwrap();
+        let value: &[u8] = &base64::decode(value).map_err(|e| E::custom(e))?;
         let key_format = match value.len() {
             33 => PublicKeyFormat::Compressed,
             64 => PublicKeyFormat::Raw,
@@ -373,15 +373,36 @@ impl<'de> de::Visitor<'de> for PublicKeyVisitor {
 }
 
 #[cfg(feature = "std")]
+struct PublicKeyBytesVisitor;
+
+#[cfg(feature = "std")]
+impl<'de> de::Visitor<'de> for PublicKeyBytesVisitor {
+    type Value = PublicKey;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str(
+            "a byte slice that is either 33 (compressed), 64 (raw), or 65 bytes in length",
+        )
+    }
+
+    fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        PublicKey::parse_slice(value, None).map_err(|_e| E::custom(Error::InvalidPublicKey))
+    }
+}
+
+#[cfg(feature = "std")]
 impl<'de> Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: de::Deserializer<'de>,
     {
         if deserializer.is_human_readable() {
-            deserializer.deserialize_str(PublicKeyVisitor)
+            deserializer.deserialize_str(PublicKeyStrVisitor)
         } else {
-            deserializer.deserialize_bytes(PublicKeyVisitor)
+            deserializer.deserialize_bytes(PublicKeyBytesVisitor)
         }
     }
 }
