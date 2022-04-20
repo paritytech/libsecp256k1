@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use serde::Deserialize;
 use sha2::Digest;
+use std::collections::HashMap;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -58,7 +58,7 @@ struct TestUnit {
 enum TestResult {
     Valid,
     Acceptable,
-    Invalid
+    Invalid,
 }
 
 enum TestError {
@@ -74,8 +74,10 @@ fn test_unit(test: &TestUnit, key: &libsecp256k1::PublicKey) -> Result<(), TestE
     let sig_raw = hex::decode(&test.sig).unwrap();
 
     let msg_hashed_raw = sha2::Sha256::digest(&msg_raw);
-    let msg = libsecp256k1::Message::parse_slice(&msg_hashed_raw).map_err(|_| TestError::MessageDecoding)?;
-    let sig = libsecp256k1::Signature::parse_der(&sig_raw).map_err(|_| TestError::SignatureDecoding)?;
+    let msg = libsecp256k1::Message::parse_slice(&msg_hashed_raw)
+        .map_err(|_| TestError::MessageDecoding)?;
+    let sig =
+        libsecp256k1::Signature::parse_der(&sig_raw).map_err(|_| TestError::SignatureDecoding)?;
 
     if libsecp256k1::verify(&msg, &sig, &key) {
         Ok(())
@@ -107,8 +109,7 @@ fn test_wycheproof() {
                 // libsecp256k1 do not use any legacy formats, so "acceptable"
                 // result in wycheproof is considered the same as invalid.
                 Err(TestError::SignatureDecoding) => assert!(
-                    test.result == TestResult::Acceptable ||
-                        test.result == TestResult::Invalid
+                    test.result == TestResult::Acceptable || test.result == TestResult::Invalid
                 ),
             }
         }
