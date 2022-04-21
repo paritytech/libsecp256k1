@@ -54,7 +54,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
@@ -124,7 +124,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
@@ -205,7 +205,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
