@@ -57,7 +57,7 @@ jobs:
       - uses:          Swatinem/rust-cache@v1.3.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -127,7 +127,7 @@ jobs:
       - uses:          Swatinem/rust-cache@v1.3.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -208,7 +208,7 @@ jobs:
       - uses:          Swatinem/rust-cache@v1.3.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
