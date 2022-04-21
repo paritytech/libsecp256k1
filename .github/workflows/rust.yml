@@ -54,10 +54,10 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -124,10 +124,10 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
@@ -205,10 +205,10 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.3.0
+      - uses:          Swatinem/rust-cache@v1.4.0
 
       - name:          Cache sccache
-        uses:          actions/cache@v2.1.6
+        uses:          actions/cache@v3.0.2
         with:
           path:        "$HOME/sccache"
           key:         sccache-${{ env['cache_hash'] }}
