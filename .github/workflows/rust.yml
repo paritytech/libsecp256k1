@@ -31,7 +31,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@bb6001c4ea612bf59c3abfc4756fbceee4f870c7 # 0.10.0
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang'
@@ -54,7 +54,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.4.0
+      - uses:          Swatinem/rust-cache@6720f05bc48b77f96918929a9019fb2203ff71f8 # v2.0.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
@@ -101,7 +101,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@bb6001c4ea612bf59c3abfc4756fbceee4f870c7 # 0.10.0
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang'
@@ -124,7 +124,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.4.0
+      - uses:          Swatinem/rust-cache@6720f05bc48b77f96918929a9019fb2203ff71f8 # v2.0.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
@@ -182,7 +182,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@bb6001c4ea612bf59c3abfc4756fbceee4f870c7 # 0.10.0
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang'
@@ -205,7 +205,7 @@ jobs:
           components:  clippy, rustfmt
           override:    true
 
-      - uses:          Swatinem/rust-cache@v1.4.0
+      - uses:          Swatinem/rust-cache@6720f05bc48b77f96918929a9019fb2203ff71f8 # v2.0.0
 
       - name:          Cache sccache
         uses:          actions/cache@v3.0.2
