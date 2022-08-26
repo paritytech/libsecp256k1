@@ -33,7 +33,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@0.10.0
 
       - name:          Install sudo for windows #https://github.com/actions/virtual-environments/issues/572
         if: matrix.platform == 'windows-latest'
@@ -113,7 +113,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@0.10.0
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
@@ -210,7 +210,7 @@ jobs:
     steps:
 
       - name:          Cancel Previous Runs
-        uses:          styfle/cancel-workflow-action@0.9.1
+        uses:          styfle/cancel-workflow-action@0.10.0
 
       - name:          Set default compiler
         if:            matrix.compiler == 'clang' && matrix.platform != 'windows-latest'
@@ -310,7 +310,7 @@ jobs:
         shell:         bash
 
       - name:          Upload artifacts
-        uses:          actions/upload-artifact@v3.0.0
+        uses:          actions/upload-artifact@v3.1.0
         with:
           name:        ${{ matrix.platform }}.${{ matrix.toolchain }}.${{ matrix.compiler }}.zip
           path:        artifacts/
