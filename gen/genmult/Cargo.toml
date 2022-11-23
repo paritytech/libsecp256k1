@@ -9,4 +9,4 @@ repository = "https://github.com/paritytech/libsecp256k1"
 keywords = ["crypto", "ECDSA", "secp256k1", "bitcoin", "no_std"]
 
 [dependencies]
-libsecp256k1-core = { version = "0.3.0", path = "../../core" }
+libsecp256k1-core = { version = "0.3.0", path = "../../core", default-features = false }
