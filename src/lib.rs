@@ -428,6 +428,14 @@ impl SecretKey {
     pub fn inv(&self) -> Self {
         SecretKey(self.0.inv())
     }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.0.is_zero()
+    }
 }
 
 impl Default for SecretKey {
@@ -833,5 +841,12 @@ mod tests {
             ))
             .unwrap()
         )
+    }
+
+    #[test]
+    fn secret_key_clear_is_correct() {
+        let mut sk = SecretKey::parse(&[1; 32]).unwrap();
+        sk.clear();
+        assert_eq!(sk.is_zero(), true);
     }
 }
