@@ -22,6 +22,8 @@ use digest::{generic_array::GenericArray, Digest};
 use rand::Rng;
 
 #[cfg(feature = "std")]
+use base64::prelude::{Engine as _, BASE64_STANDARD as BASE64};
+#[cfg(feature = "std")]
 use core::fmt;
 #[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
@@ -337,7 +339,7 @@ impl Serialize for PublicKey {
         S: Serializer,
     {
         if serializer.is_human_readable() {
-            serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+            serializer.serialize_str(&BASE64.encode(&self.serialize()[..]))
         } else {
             serializer.serialize_bytes(&self.serialize())
         }
@@ -360,7 +362,7 @@ impl<'de> de::Visitor<'de> for PublicKeyStrVisitor {
     where
         E: de::Error,
     {
-        let value: &[u8] = &base64::decode(value).map_err(|e| E::custom(e))?;
+        let value: &[u8] = &BASE64.decode(value).map_err(|e| E::custom(e))?;
         let key_format = match value.len() {
             33 => PublicKeyFormat::Compressed,
             64 => PublicKeyFormat::Raw,
