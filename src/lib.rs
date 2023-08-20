@@ -25,8 +25,6 @@ use rand::Rng;
 use core::fmt;
 #[cfg(feature = "hmac")]
 use hmac_drbg::HmacDRBG;
-#[cfg(feature = "std")]
-use serde::{de, ser::Serializer, Deserialize, Serialize};
 #[cfg(feature = "hmac")]
 use sha2::Sha256;
 #[cfg(feature = "hmac")]
@@ -330,25 +328,38 @@ impl TryFrom<Affine> for PublicKey {
     }
 }
 
-#[cfg(feature = "std")]
-impl Serialize for PublicKey {
+#[cfg(feature = "serde")]
+impl serde::Serialize for PublicKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: Serializer,
+        S: serde::ser::Serializer,
     {
+        use base64::Engine;
+
+        // base64 encodes every three input bytes to four output characters
+        // rounding up.
+        const ENCODED_SIZE: usize = (util::FULL_PUBLIC_KEY_SIZE + 2) / 3 * 4;
+
+        let bytes: [u8; util::FULL_PUBLIC_KEY_SIZE] = self.serialize();
         if serializer.is_human_readable() {
-            serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+            let mut buf = [0; ENCODED_SIZE];
+            base64::engine::general_purpose::STANDARD
+                .encode_slice(&bytes[..], &mut buf[..])
+                .unwrap();
+            // SAFETY: base64 generates ASCII characters
+            let val = unsafe { core::str::from_utf8_unchecked(&buf[..]) };
+            serializer.serialize_str(val)
         } else {
-            serializer.serialize_bytes(&self.serialize())
+            serializer.serialize_bytes(&bytes)
         }
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "serde")]
 struct PublicKeyStrVisitor;
 
-#[cfg(feature = "std")]
-impl<'de> de::Visitor<'de> for PublicKeyStrVisitor {
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Visitor<'de> for PublicKeyStrVisitor {
     type Value = PublicKey;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -358,25 +369,28 @@ impl<'de> de::Visitor<'de> for PublicKeyStrVisitor {
 
     fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
     where
-        E: de::Error,
+        E: serde::de::Error,
     {
-        let value: &[u8] = &base64::decode(value).map_err(|e| E::custom(e))?;
-        let key_format = match value.len() {
-            33 => PublicKeyFormat::Compressed,
-            64 => PublicKeyFormat::Raw,
-            65 => PublicKeyFormat::Full,
-            _ => return Err(E::custom(Error::InvalidInputLength)),
-        };
-        PublicKey::parse_slice(value, Some(key_format))
-            .map_err(|_e| E::custom(Error::InvalidPublicKey))
+        use base64::Engine;
+
+        let mut buf = [0; 128];
+        let len = base64::engine::general_purpose::STANDARD
+            .decode_slice(value.as_bytes(), &mut buf[..])
+            .map_err(|err| match err {
+                base64::DecodeSliceError::DecodeError(err) => E::custom(err),
+                base64::DecodeSliceError::OutputSliceTooSmall => {
+                    E::custom(Error::InvalidInputLength)
+                }
+            })?;
+        PublicKey::parse_slice(&buf[..len], None).map_err(|_e| E::custom(Error::InvalidPublicKey))
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "serde")]
 struct PublicKeyBytesVisitor;
 
-#[cfg(feature = "std")]
-impl<'de> de::Visitor<'de> for PublicKeyBytesVisitor {
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Visitor<'de> for PublicKeyBytesVisitor {
     type Value = PublicKey;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -387,17 +401,17 @@ impl<'de> de::Visitor<'de> for PublicKeyBytesVisitor {
 
     fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
     where
-        E: de::Error,
+        E: serde::de::Error,
     {
         PublicKey::parse_slice(value, None).map_err(|_e| E::custom(Error::InvalidPublicKey))
     }
 }
 
-#[cfg(feature = "std")]
-impl<'de> Deserialize<'de> for PublicKey {
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for PublicKey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: de::Deserializer<'de>,
+        D: serde::de::Deserializer<'de>,
     {
         if deserializer.is_human_readable() {
             deserializer.deserialize_str(PublicKeyStrVisitor)
