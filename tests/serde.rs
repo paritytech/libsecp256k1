@@ -1,4 +1,4 @@
-#![cfg(feature = "std")]
+#![cfg(feature = "serde")]
 
 use libsecp256k1::*;
 
