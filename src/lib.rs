@@ -724,7 +724,7 @@ impl RecoveryId {
 
     /// Parse recovery ID as Ethereum RPC format, starting with 27.
     pub fn parse_rpc(p: u8) -> Result<RecoveryId, Error> {
-        if p >= 27 && p < 27 + 4 {
+        if p >= 27 && p < 27 + 2 {
             RecoveryId::parse(p - 27)
         } else {
             Err(Error::InvalidRecoveryId)
