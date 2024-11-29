@@ -187,7 +187,7 @@ impl ECMultGenContext {
 
     /// Generate a new `ECMultGenContext` on the heap. Note that this function is expensive.
     pub fn new_boxed() -> Box<Self> {
-        // This unsafe block allocates a new, unitialized `ECMultGenContext` and
+        // This unsafe block allocates a new, uninitialized `ECMultGenContext` and
         // then fills in the value. This is to avoid allocating it on stack
         // because the struct is big. All values in `ECMultGenContext` are
         // manually initialized after allocation.
