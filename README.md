@@ -1,3 +1,5 @@
+_Please note that this repository is no longer maintained. You can use [rust-secp256k1](https://crates.io/crates/secp256k1) instead._
+
 # SECP256K1 implementation in pure Rust
 
 * [Cargo](https://crates.io/crates/libsecp256k1)
