@@ -17,6 +17,7 @@
 pub use libsecp256k1_core::*;
 
 use arrayref::{array_mut_ref, array_ref};
+use base64::{engine::Engine as _, prelude::BASE64_STANDARD};
 use core::convert::TryFrom;
 use digest::{generic_array::GenericArray, Digest};
 use rand::Rng;
@@ -337,7 +338,7 @@ impl Serialize for PublicKey {
         S: Serializer,
     {
         if serializer.is_human_readable() {
-            serializer.serialize_str(&base64::encode(&self.serialize()[..]))
+            serializer.serialize_str(&BASE64_STANDARD.encode(&self.serialize()[..]))
         } else {
             serializer.serialize_bytes(&self.serialize())
         }
@@ -360,7 +361,7 @@ impl<'de> de::Visitor<'de> for PublicKeyStrVisitor {
     where
         E: de::Error,
     {
-        let value: &[u8] = &base64::decode(value).map_err(|e| E::custom(e))?;
+        let value: &[u8] = &BASE64_STANDARD.decode(value).map_err(|e| E::custom(e))?;
         let key_format = match value.len() {
             33 => PublicKeyFormat::Compressed,
             64 => PublicKeyFormat::Raw,
