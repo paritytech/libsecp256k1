@@ -1,4 +1,4 @@
-_Please note that this repository is no longer maintained. You can use [rust-secp256k1](https://crates.io/crates/secp256k1) instead._
+_Please note that this repository is no longer maintained. You can use [k256](https://crates.io/crates/k256) instead._
 
 # SECP256K1 implementation in pure Rust
 
