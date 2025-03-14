@@ -16,7 +16,7 @@ pub struct Field {
     /// X = sum(i=0..9, n[i]*2^(i*26)) mod p
     /// where p = 2^256 - 0x1000003D1
     ///
-    /// The least signifiant byte is in the front.
+    /// The least significant byte is in the front.
     n: [u32; 10],
     magnitude: u32,
     normalized: bool,
